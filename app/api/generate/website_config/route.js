@@ -1,5 +1,5 @@
-import { WebsiteConfig } from "@/admin/db/models";
-import { connectToDB } from "@/lib/db/utilsDB";
+import { createOneDoc } from "@/lib/db/createOperationDB";
+import { deleteManyDocs } from "@/lib/db/deleteOperationDB";
 
 const config = {
   maintenanceMode: {
@@ -22,9 +22,8 @@ const config = {
 };
 
 const uploadWebsiteConfigDB = async () => {
-  await connectToDB();
-  await WebsiteConfig.deleteMany({}).exec();
-  await WebsiteConfig.create(config);
+  await deleteManyDocs("WebsiteConfig");
+  await createOneDoc("WebsiteConfig", config);
 };
 
 export async function POST(req) {

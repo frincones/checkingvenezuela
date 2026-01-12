@@ -1,7 +1,6 @@
 import { auth } from "@/lib/auth";
 import { cancelBooking, isRoomTakenByElse } from "@/lib/services/hotels";
-import { getOneDoc } from "@/lib/db/getOperationDB";
-import { HotelBooking } from "@/lib/db/models";
+import { getOneDoc, getManyDocs } from "@/lib/db/getOperationDB";
 import { strToObjectId } from "@/lib/db/utilsDB";
 
 export async function POST(req) {
@@ -17,20 +16,43 @@ export async function POST(req) {
   try {
     const hotel = await getOneDoc("Hotel", { slug: body.slug }, ["hotels"], 0);
 
-    const reservedHotelBooking = await HotelBooking.findOne({
-      hotelId: strToObjectId(hotel._id),
-      checkInDate: new Date(body.checkInDate),
-      checkOutDate: new Date(body.checkOutDate),
-      userId: strToObjectId(session.user.id),
-      $or: [
-        { bookingStatus: "pending", paymentStatus: "pending" },
-        {
-          bookingStatus: "confirmed",
-          paymentStatus: "pending",
-          paymentMethod: "cash",
-        },
-      ],
-    }).sort({ createdAt: -1 });
+    // Get pending bookings
+    const pendingBookings = await getManyDocs(
+      "HotelBooking",
+      {
+        hotelId: strToObjectId(hotel._id),
+        checkInDate: new Date(body.checkInDate),
+        checkOutDate: new Date(body.checkOutDate),
+        userId: strToObjectId(session.user.id),
+        bookingStatus: "pending",
+        paymentStatus: "pending",
+      },
+      ["hotelBookings"],
+      0,
+      { order: { createdAt: -1 }, limit: 1 },
+    );
+
+    // Get confirmed bookings with cash payment pending
+    const confirmedCashBookings = await getManyDocs(
+      "HotelBooking",
+      {
+        hotelId: strToObjectId(hotel._id),
+        checkInDate: new Date(body.checkInDate),
+        checkOutDate: new Date(body.checkOutDate),
+        userId: strToObjectId(session.user.id),
+        bookingStatus: "confirmed",
+        paymentStatus: "pending",
+        paymentMethod: "cash",
+      },
+      ["hotelBookings"],
+      0,
+      { order: { createdAt: -1 }, limit: 1 },
+    );
+
+    // Combine and sort by createdAt to get the most recent
+    const allBookings = [...pendingBookings, ...confirmedCashBookings];
+    allBookings.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+    const reservedHotelBooking = allBookings[0];
 
     if (!reservedHotelBooking) {
       return Response.json(

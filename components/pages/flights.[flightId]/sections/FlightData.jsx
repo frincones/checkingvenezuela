@@ -7,7 +7,7 @@ import { FLIGHT_CLASS_PLACEHOLDERS } from "@/lib/constants";
 
 import routes from "@/data/routes.json";
 import { cn } from "@/lib/utils";
-import { multiSegmentCombinedFareBreakDown } from "@/lib/db/schema/flightItineraries";
+import { multiSegmentCombinedFareBreakDown } from "@/lib/helpers/flights/fareCalculations";
 export function FlightData({ data, searchState, metaData, className }) {
   const { flightCode, _id } = data;
   const { flightClass, isBookmarked } = metaData;

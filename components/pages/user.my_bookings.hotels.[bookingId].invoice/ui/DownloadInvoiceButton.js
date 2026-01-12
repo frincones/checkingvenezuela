@@ -1,20 +1,35 @@
 "use client";
 import { Button } from "@/components/ui/button";
-import html2pdf from "html2pdf.js";
 
 export default function DownloadInvoiceButton({ documentId, bookingId }) {
-  function handleDownload(documentId, bookingId, e) {
+  async function handleDownload(documentId, bookingId, e) {
     e.target.disabled = true;
     const element = document.getElementById(documentId);
-    const opt = {
-      margin: 0,
-      filename: `hotel_invoice_${bookingId}.pdf`,
-      image: { type: "jpeg", quality: 0.98 },
-      html2canvas: { scale: 2, backgroundColor: "#ffffff" },
-      jsPDF: { unit: "mm", format: "a4", orientation: "portrait" },
-    };
+    if (!element) {
+      e.target.disabled = false;
+      return;
+    }
 
-    html2pdf().set(opt).from(element).save();
+    // Dynamic imports to avoid SSR issues with canvas
+    const html2canvas = (await import("html2canvas")).default;
+    const { default: jsPDF } = await import("jspdf");
+
+    const canvas = await html2canvas(element, {
+      scale: 2,
+      useCORS: true,
+      backgroundColor: "#ffffff",
+      allowTaint: true,
+    });
+
+    const imgData = canvas.toDataURL("image/jpeg", 0.98);
+    const pdf = new jsPDF("p", "mm", "a4");
+
+    const imgWidth = pdf.internal.pageSize.getWidth();
+    const imgHeight = (canvas.height * imgWidth) / canvas.width;
+
+    pdf.addImage(imgData, "JPEG", 0, 0, imgWidth, imgHeight);
+    pdf.save(`hotel_invoice_${bookingId}.pdf`);
+
     e.target.disabled = false;
   }
 

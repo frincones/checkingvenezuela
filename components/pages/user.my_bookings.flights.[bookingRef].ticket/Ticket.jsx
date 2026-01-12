@@ -11,8 +11,6 @@ import airLineSeatMint from "@/public/icons/airline-seat-mint.svg";
 import ShowTimeInClientSide from "@/components/helpers/ShowTimeInClientSide";
 import NoSSR from "@/components/helpers/NoSSR";
 
-import html2canvas from "html2canvas";
-import jsPDF from "jspdf";
 import { Separator } from "@/components/ui/separator";
 import { toDataURL } from "qrcode";
 import { useEffect, useState } from "react";
@@ -57,6 +55,10 @@ export default function FlightTicket({ ticketData }) {
     await new Promise((r) => setTimeout(r, 100));
 
     const scaleFactor = 1;
+
+    // Dynamic imports to avoid SSR issues with canvas
+    const html2canvas = (await import("html2canvas")).default;
+    const { default: jsPDF } = await import("jspdf");
 
     const canvas = await html2canvas(clone, {
       scale: scaleFactor,

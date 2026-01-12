@@ -3,7 +3,7 @@ import { capitalize, cn } from "@/lib/utils";
 import { Dropdown } from "./local-ui/Dropdown";
 import { useEffect, useState } from "react";
 import { Loader2Icon } from "lucide-react";
-import { multiSegmentCombinedFareBreakDown } from "@/lib/db/schema/flightItineraries";
+import { multiSegmentCombinedFareBreakDown } from "@/lib/helpers/flights/fareCalculations";
 import { multiRoomCombinedFareBreakDown } from "@/lib/helpers/hotels/priceCalculation";
 import { useDispatch, useSelector } from "react-redux";
 import { setRooms } from "@/reduxStore/features/hotelRoomSelectorSlice";

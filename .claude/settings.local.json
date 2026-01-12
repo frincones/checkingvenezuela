@@ -13,7 +13,10 @@
       "Bash(git add:*)",
       "Bash(git commit -m \"$\\(cat <<''EOF''\nfeat: migrate from MongoDB to Supabase\n\n- Replace MongoDB/Mongoose with Supabase PostgreSQL\n- Add Supabase client configuration \\(client.js, server.js, middleware.js\\)\n- Create CRUD operations layer compatible with existing code \\(operations.js\\)\n- Implement Supabase Auth replacing NextAuth with MongoDB adapter\n- Add OAuth callback route for social login\n- Create complete database schema \\(27+ tables\\) in supabase/schema.sql\n- Update all services \\(flights, hotels, index\\) to use Supabase operations\n- Add graceful handling for missing Stripe/Mailjet credentials\n- Remove all mongoose dependencies from services layer\n\nCo-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>\nEOF\n\\)\")",
       "Bash(git push:*)",
-      "Bash(npm run build:*)"
+      "Bash(npm run build:*)",
+      "Bash(git commit -m \"$\\(cat <<''EOF''\nfix: prepare for Vercel deployment\n\n- Remove MongoDB/mongoose/next-auth dependencies from package.json\n- Update API routes to use Supabase instead of MongoDBAdapter\n- Fix booking variable scope in refundPaymentFlightBooking\n- Create .env.example with required environment variables\n- Update cronjob and generate routes to check SUPABASE_URL instead of MONGODB_URI\n\nCo-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>\nEOF\n\\)\")",
+      "Bash(git commit:*)",
+      "Bash(npm ls:*)"
     ]
   }
 }

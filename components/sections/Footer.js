@@ -1,14 +1,20 @@
 import "server-only";
 import { SubscribeNewsletter } from "@/components/SubscribeNewsletter";
 import { QuickLinks } from "@/components/sections/QuickLinks";
-import { Subscription } from "@/lib/db/models";
+import { getOneDoc } from "@/lib/db/getOperationDB";
 import { auth } from "@/lib/auth";
 import Link from "next/link";
 export async function Footer() {
   const user = (await auth())?.user;
-  let isSubscribed;
+  let isSubscribed = false;
   if (user) {
-    isSubscribed = (await Subscription.exists({ userId: user.id }))?.subscribed;
+    const subscription = await getOneDoc(
+      "Subscription",
+      { userId: user.id },
+      ["subscriptions"],
+      0,
+    );
+    isSubscribed = subscription?.subscribed || false;
   }
   return (
     <footer className="relative pb-5">

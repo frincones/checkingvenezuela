@@ -1,10 +1,5 @@
-import {
-  FlightBooking,
-  FlightItinerary,
-  FlightSeat,
-  FlightSegment,
-} from "@/lib/db/models";
-import { connectToDB } from "@/lib/db/utilsDB";
+import { getManyDocs } from "@/lib/db/getOperationDB";
+import { deleteManyDocs } from "@/lib/db/deleteOperationDB";
 import { subDays } from "date-fns";
 
 // cleanup unneeded data to save space
@@ -17,7 +12,6 @@ export async function GET(req) {
     return new Response("401", { status: 401 });
   }
 
-  await connectToDB();
   try {
     await cleanupFlights();
     console.log("cleanupFlights done");
@@ -32,45 +26,63 @@ export async function GET(req) {
 }
 
 async function cleanupFlights() {
-  const bookedFlightItinerarieIds =
-    await FlightBooking.distinct("flightItineraryId");
+  // Get all booked flight itinerary IDs
+  const bookedFlights = await getManyDocs(
+    "FlightBooking",
+    {},
+    ["userFlightBooking"],
+    0,
+  );
+  const bookedFlightItinerarieIds = bookedFlights.map((b) => b.flightItineraryId);
 
-  const itinerariesToDelete = await FlightItinerary.find({
-    _id: { $nin: bookedFlightItinerarieIds },
-    date: { $lt: subDays(new Date(), 2) },
-  }).limit(1000);
+  // Get old itineraries that are not booked
+  const twoDaysAgo = subDays(new Date(), 2);
+  const allOldItineraries = await getManyDocs(
+    "FlightItinerary",
+    {},
+    ["flightItineraries"],
+    0,
+    { limit: 1000 },
+  );
+
+  const itinerariesToDelete = allOldItineraries.filter((itinerary) => {
+    const itineraryDate = new Date(itinerary.date);
+    const isOld = itineraryDate < twoDaysAgo;
+    const isNotBooked = !bookedFlightItinerarieIds.includes(itinerary._id);
+    return isOld && isNotBooked;
+  });
 
   if (!itinerariesToDelete.length) {
     console.log("nothing to delete in flights");
     return;
   }
 
-  const segmentsToDelete = itinerariesToDelete.flatMap(
+  const segmentIdsToDelete = itinerariesToDelete.flatMap(
     (itinerary) => itinerary.segmentIds || [],
   );
 
   const itineraryIdsToDelete = itinerariesToDelete.map(
     (itinerary) => itinerary._id,
   );
-  const segmentIdsToDelete = segmentsToDelete.map((segment) => segment._id);
-  const seatIdsToDelete = segmentsToDelete.flatMap((segment) => segment.seats);
 
   console.log("bookedFlightItinerarieIds", bookedFlightItinerarieIds.length);
   console.log("itineraries to delete:", itinerariesToDelete.length);
-  console.log("segments to delete:", segmentsToDelete.length);
-  console.log("seats to delete:", seatIdsToDelete.length);
+  console.log("segments to delete:", segmentIdsToDelete.length);
 
-  const itinerariesResult = await FlightItinerary.deleteMany({
-    _id: { $in: itineraryIdsToDelete },
-  });
-  const segmentsResult = await FlightSegment.deleteMany({
-    _id: { $in: segmentIdsToDelete },
-  });
-  const seatsResult = await FlightSeat.deleteMany({
-    _id: { $in: seatIdsToDelete },
-  });
+  // Delete itineraries
+  for (const id of itineraryIdsToDelete) {
+    await deleteManyDocs("FlightItinerary", { _id: id });
+  }
 
-  console.log("itineraries deleted:", itinerariesResult.deletedCount);
-  console.log("segments deleted:", segmentsResult.deletedCount);
-  console.log("seats deleted:", seatsResult.deletedCount);
+  // Delete segments
+  for (const id of segmentIdsToDelete) {
+    await deleteManyDocs("FlightSegment", { _id: id });
+  }
+
+  // Delete seats for those segments
+  for (const segmentId of segmentIdsToDelete) {
+    await deleteManyDocs("FlightSeat", { segmentId });
+  }
+
+  console.log("cleanup completed");
 }
