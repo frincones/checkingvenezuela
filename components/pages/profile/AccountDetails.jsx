@@ -10,10 +10,15 @@ import { ChangeEmailPopup } from "./ui/ChangeEmailPopup";
 import { AddAnotherEmailPopup } from "./ui/AddAnotherEmailPopup";
 export function AccountDetails({ userDetails }) {
   const sendAgainAt = cookies().get("sai")?.expires?.toISOString();
+
+  // Handle both MongoDB (emails array in document) and Supabase (email field only) structures
+  const userEmails = userDetails?.emails || (userDetails?.email ? [{ email: userDetails.email, primary: true, emailVerifiedAt: userDetails.emailVerifiedAt }] : []);
+  const userPhones = userDetails?.phoneNumbers || [];
+
   const accountDetails = {
-    name: userDetails.firstName + " " + userDetails.lastName,
-    emails: userDetails.emails,
-    phone: userDetails?.phoneNumbers,
+    name: (userDetails?.firstName || "") + " " + (userDetails?.lastName || ""),
+    emails: userEmails,
+    phone: userPhones,
     address: userDetails?.address,
     dateOfBirth: userDetails?.dateOfBirth,
   };
@@ -77,7 +82,7 @@ export function AccountDetails({ userDetails }) {
           <h4 className="opacity-75">Phone</h4>
           <div className="flex items-center justify-between">
             <p className="text-[1.25rem] font-semibold">
-              {accountDetails.phone.length
+              {accountDetails.phone?.length
                 ? accountDetails.phone[0].dialCode +
                   " " +
                   accountDetails.phone[0].number

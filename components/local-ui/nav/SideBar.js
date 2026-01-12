@@ -8,21 +8,24 @@ import {
   SheetClose,
 } from "@/components/ui/sheet";
 import { Separator } from "@/components/ui/separator";
-import Image from "next/image";
 import Link from "next/link";
 import LogoutBtn from "@/components/LogoutBtn";
 
-import { LogIn } from "lucide-react";
-import love from "@/public/icons/love.svg";
-import plane from "@/public/icons/airplane-filled.svg";
-import hotel from "@/public/icons/building.svg";
-import support from "@/public/icons/support.svg";
-import logout from "@/public/icons/logout.svg";
+import { LogIn, LayoutDashboard, User, BookCopy, CreditCard, Settings, HeadphonesIcon, LogOut, Heart, Plane, Building2 } from "lucide-react";
 
 import { useState } from "react";
 import { usePathname } from "next/navigation";
 
 import routes from "@/data/routes.json";
+
+// Icon mapping for serializable data from server
+const iconMap = {
+  dashboard: <LayoutDashboard width={20} />,
+  user: <User width={20} />,
+  bookings: <BookCopy width={20} />,
+  card: <CreditCard width={20} />,
+  settings: <Settings width={20} />,
+};
 export function SideBar({ isLoggedIn, sideBarLinksUser }) {
   const pathname = encodeURIComponent(usePathname());
   const [sheetOpen, setSheetOpen] = useState(false);
@@ -58,7 +61,7 @@ export function SideBar({ isLoggedIn, sideBarLinksUser }) {
             <SheetClose asChild>
               <Button className={"h-auto gap-2 p-0"} variant="link" asChild>
                 <Link href={routes.flights.path}>
-                  <Image src={plane} alt="plane_icon" width={20} />
+                  <Plane width={20} />
                   <span>{routes.flights.title}</span>
                 </Link>
               </Button>
@@ -68,7 +71,7 @@ export function SideBar({ isLoggedIn, sideBarLinksUser }) {
             <SheetClose asChild>
               <Button className={"h-auto gap-2 p-0"} variant="link" asChild>
                 <Link href={routes.hotels.path}>
-                  <Image src={hotel} alt="hotel_icon" width={20} />
+                  <Building2 width={20} />
                   <span>{routes.hotels.title}</span>
                 </Link>
               </Button>
@@ -141,7 +144,7 @@ export function SideBar({ isLoggedIn, sideBarLinksUser }) {
                 <SheetClose asChild>
                   <Button className={"h-auto gap-2 p-0"} variant="link" asChild>
                     <Link href={routes.favourites.path}>
-                      <Image src={love} alt="heart_icon" width={20} />
+                      <Heart width={20} />
                       <span>{routes.favourites.title}</span>
                     </Link>
                   </Button>
@@ -158,7 +161,7 @@ export function SideBar({ isLoggedIn, sideBarLinksUser }) {
                         asChild
                       >
                         <Link href={option.href}>
-                          {option.icon}
+                          {option.iconType ? iconMap[option.iconType] : option.icon}
                           <span>{option.title}</span>
                         </Link>
                       </Button>
@@ -171,11 +174,7 @@ export function SideBar({ isLoggedIn, sideBarLinksUser }) {
                 <SheetClose asChild>
                   <Button className={"h-auto gap-2 p-0"} variant="link" asChild>
                     <Link href={routes.support.path}>
-                      <Image
-                        src={support}
-                        alt={routes.support.title}
-                        width={20}
-                      />
+                      <HeadphonesIcon width={20} />
                       <span>{routes.support.title}</span>
                     </Link>
                   </Button>
@@ -188,7 +187,7 @@ export function SideBar({ isLoggedIn, sideBarLinksUser }) {
                   variant="link"
                   btnContent={
                     <>
-                      <Image src={logout} alt="logout_icon" width={20} />
+                      <LogOut width={20} />
                       <span>Logout</span>
                     </>
                   }

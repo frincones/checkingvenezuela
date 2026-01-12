@@ -63,7 +63,7 @@ function RoomDetailsModal({ customTriggerElement, roomDetails = {} }) {
       <DialogTrigger asChild>
         {customTriggerElement || <Button>Details</Button>}
       </DialogTrigger>
-      <DialogContent className="golobe-scrollbar max-h-[90vh] max-w-3xl overflow-y-auto">
+      <DialogContent className="app-scrollbar max-h-[90vh] max-w-3xl overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="mb-2 text-2xl font-bold">
             Room Details

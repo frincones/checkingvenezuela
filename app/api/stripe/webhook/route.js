@@ -121,7 +121,7 @@ export async function POST(req) {
           });
           await sendEmail(
             [{ Email: charge.metadata.userEmail }],
-            "Thank you for booking flight with golobe",
+            "Gracias por reservar tu vuelo con CHECK-IN VENEZUELA",
             htmlEmail,
           );
         }

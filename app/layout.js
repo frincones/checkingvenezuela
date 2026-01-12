@@ -12,6 +12,7 @@ import openGraph from "./opengraph-image.jpg";
 import MaintenancePage from "./MaintenancePage";
 import { MaintenanceNotice } from "./MaintenanceNotice";
 import SetNecessaryCookies from "./SetNecessaryCookies";
+import { WhatsAppButton } from "@/components/WhatsAppButton";
 import { getOneDoc } from "@/lib/db/getOperationDB";
 import { headers } from "next/headers";
 import { Analytics } from "@vercel/analytics/next";
@@ -28,31 +29,29 @@ const tradegothic = localFont({
 });
 
 export const metadata = {
-  title: "Golob Travel Agency",
+  title: "CHECK-IN VENEZUELA | Tu Agencia de Viajes 24/7",
   description:
-    "Golob Travel Agency is a travel agency that provides top-notch travel services.",
+    "CHECK-IN VENEZUELA es tu agencia de viajes en Caracas. Reserva vuelos, hoteles y paquetes turísticos con atención 24/7. Tu aventura comienza aquí.",
   keywords: [
-    "travel",
-    "agency",
-    "golob",
+    "viajes",
+    "agencia de viajes",
+    "check-in venezuela",
+    "vuelos",
+    "hoteles",
+    "caracas",
+    "venezuela",
+    "turismo",
+    "reservas",
+    "paquetes turísticos",
     "travel agency",
-    "golob travel agency",
-    "nextjs",
-    "react",
-    "javascript",
-    "tailwind css",
-    "next auth",
-    "mongodb",
-    "node js",
-    "redux",
-    "web app",
+    "24/7",
   ],
-  metadataBase: new URL("https://golob-travel-agency.vercel.app"),
+  metadataBase: new URL("https://checkinvenezuela.com"),
   openGraph: {
-    title: "Golob Travel Agency",
+    title: "CHECK-IN VENEZUELA | Tu Agencia de Viajes 24/7",
     description:
-      "Golob Travel Agency is a travel agency that provides top-notch travel services (fake, personal project).",
-    siteName: "Golob Travel Agency",
+      "Tu agencia de viajes en Caracas, Venezuela. Reserva vuelos, hoteles y paquetes turísticos con atención personalizada 24/7.",
+    siteName: "CHECK-IN VENEZUELA",
     images: [
       {
         url: openGraph.src,
@@ -60,7 +59,7 @@ export const metadata = {
         height: openGraph.height,
       },
     ],
-    locale: "en_US",
+    locale: "es_VE",
     type: "website",
   },
 };
@@ -108,9 +107,10 @@ export default async function RootLayout({ children }) {
             </div>
           </StoreProvider>
         )}
-        <NextTopLoader showSpinner={false} color="hsl(159, 44%, 69%)" />
+        <NextTopLoader showSpinner={false} color="#004077" />
         <Toaster richColors closeButton expand position="top-right" />
         <SetNecessaryCookies />
+        <WhatsAppButton />
         <Analytics />
       </body>
     </html>

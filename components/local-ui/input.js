@@ -109,15 +109,16 @@ export function Input({
   };
 
   return (
-    <>
-      <div className={cn("relative block h-auto", className)}>
+    <div className={cn("relative block h-auto", className)}>
+      {label && (
         <p className="absolute -top-[8px] left-5 z-10 bg-background px-1 text-sm font-normal leading-4">
           <span>{label}</span>
           {props.required === true && (
             <span className="text-destructive"> *</span>
           )}
         </p>
-        <div className="relative h-auto">
+      )}
+      <div className="relative h-auto">
           {type !== "textarea" ? (
             type === "tel" ? (
               <div
@@ -210,30 +211,33 @@ export function Input({
               {...props}
             ></textarea>
           )}
-          <div className="absolute right-3 top-1/2 flex w-auto -translate-y-1/2 gap-[6px]">
-            {type === "password" && (
-              <button
-                type="button"
-                onClick={toggleEye}
-                className="h-auto w-auto"
-              >
-                <Image
-                  width={16}
-                  height={16}
-                  src={inputType === "password" ? eyeOff : eye}
-                  alt="eye_on_off_icon"
-                />
-              </button>
-            )}
-            {error && (
-              <Image width={16} height={16} src={error_icon} alt="error_icon" />
-            )}
-          </div>
+          {(type === "password" || error) && (
+            <div className="absolute right-3 top-1/2 flex w-auto -translate-y-1/2 gap-[6px]">
+              {type === "password" && (
+                <button
+                  type="button"
+                  onClick={toggleEye}
+                  className="h-auto w-auto"
+                >
+                  <Image
+                    width={16}
+                    height={16}
+                    src={inputType === "password" ? eyeOff : eye}
+                    alt="eye_on_off_icon"
+                  />
+                </button>
+              )}
+              {error && (
+                <Image width={16} height={16} src={error_icon} alt="error_icon" />
+              )}
+            </div>
+          )}
         </div>
+      {error && (
         <p className="mt-1 pl-4 text-sm font-medium text-destructive">
           {error}
         </p>
-      </div>
-    </>
+      )}
+    </div>
   );
 }

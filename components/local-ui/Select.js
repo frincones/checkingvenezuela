@@ -63,7 +63,7 @@ const SelectPopover = forwardRef(
           width: width,
         }}
         className={cn(
-          "golobe-scrollbar z-[9999] flex h-96 min-w-[300px] flex-col gap-3 overflow-y-scroll rounded-lg border bg-white p-3 shadow-lg transition-[opacity,_visibility] duration-300 ease-in-out",
+          "app-scrollbar z-[9999] flex h-96 min-w-[300px] flex-col gap-3 overflow-y-scroll rounded-lg border bg-white p-3 shadow-lg transition-[opacity,_visibility] duration-300 ease-in-out",
           className,
           cntx.isOpen ? "visible opacity-100" : "invisible opacity-0",
         )}

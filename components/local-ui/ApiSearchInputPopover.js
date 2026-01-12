@@ -134,7 +134,7 @@ function SearchResults({
           ))}
         </div>
       ) : (
-        <div className="golobe-scrollbar flex h-80 flex-col gap-2 overflow-auto">
+        <div className="app-scrollbar flex h-80 flex-col gap-2 overflow-auto">
           {data.length < 1 ? (
             <div className="flex h-full items-center justify-center p-2 text-center text-sm font-bold">
               No results found

@@ -6,13 +6,17 @@ export function ProfileImages({ avatar, cover, name, email }) {
   return (
     <div className="relative mt-[40px]">
       <div className="relative">
-        <Image
-          width={ 1440 }
-          height={ 350 }
-          src={ cover }
-          alt="defaultCoverPhoto"
-          className="h-[350px] w-full rounded-md sm:rounded-[12px] object-cover object-center"
-        />
+        {cover ? (
+          <Image
+            width={1440}
+            height={350}
+            src={cover}
+            alt="Cover photo"
+            className="h-[350px] w-full rounded-md sm:rounded-[12px] object-cover object-center"
+          />
+        ) : (
+          <div className="h-[350px] w-full rounded-md sm:rounded-[12px] bg-gradient-to-r from-primary/30 via-primary/50 to-primary/30" />
+        )}
         <div className="absolute z-50 bottom-[24px] right-[24px]">
           <UploadCoverPhoto />
         </div>

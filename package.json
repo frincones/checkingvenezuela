@@ -1,5 +1,5 @@
 {
-  "name": "golob_travel_agency",
+  "name": "checkin-venezuela",
   "version": "0.1.0",
   "private": true,
   "browserslist": [
@@ -54,12 +54,13 @@
     "html2canvas": "^1.4.1",
     "image-to-base64": "^2.2.0",
     "jose": "^6.1.0",
-    "jspdf": "^3.0.1",
+    "jspdf": "^4.0.0",
     "lucide-react": "^0.372.0",
     "next": "14.2.33",
     "next-themes": "^0.4.6",
     "nextjs-toploader": "^1.6.12",
     "node-mailjet": "^6.0.6",
+    "pdf-lib": "^1.17.1",
     "qrcode": "^1.5.4",
     "react": "^18",
     "react-avatar-editor": "^13.0.2",
