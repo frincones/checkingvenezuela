@@ -6,11 +6,17 @@ import { Footer } from "@/components/sections/Footer";
 import Image from "next/image";
 
 import { auth } from "@/lib/auth";
-import { FlightDestinations } from "@/components/pages/flights/sections/FlightDestinations";
-import { PopularHotelDestinations } from "@/components/pages/hotels/sections/PopularHotelDestinations";
+import { getActiveHeroContent } from "@/data/heroConfig";
+
+// HU-003 + HU-004: Nuevas secciones
+import { ServicesSection } from "@/components/pages/home/sections/ServicesSection";
+import { VenezuelaDestinations } from "@/components/pages/home/sections/VenezuelaDestinations";
+import { PopularFlightDestinations } from "@/components/pages/home/sections/PopularFlightDestinations";
+import { PopularHotelDestinations } from "@/components/pages/home/sections/PopularHotelDestinations";
 
 export default async function HomePage() {
   const session = await auth();
+  const heroContent = getActiveHeroContent();
 
   return (
     <>
@@ -27,22 +33,31 @@ export default async function HomePage() {
             src={
               "https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?q=70&amp;w=870&amp;auto=format&amp;fit=crop&amp;ixlib=rb-4.0.3&amp;ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
             }
-            alt="home-header"
+            alt="Venezuela landscape - Caribbean paradise"
             fill
             sizes="(max-width: 640px) 50vw, 90vw"
             className="-z-10 object-cover object-[center_40%]"
             loading={"eager"}
           />
-          <div className="w-full text-center text-white">
-            <h2 className="text-2xl font-bold leading-[5rem] md:text-[2rem] lg:text-[2.8125rem]">
-              Helping Others
-            </h2>
-            <h1 className="text-[3rem] font-bold uppercase md:text-[4rem] md:tracking-[.15em] lg:text-[5rem]">
-              Live & Travel
+          {/* Overlay para mejorar legibilidad del texto */}
+          <div className="absolute inset-0 -z-[5] bg-gradient-to-b from-black/40 via-black/20 to-black/50" />
+          <div className="w-full px-4 text-center text-white">
+            {/* Headline principal - HU-002 */}
+            <h1 className="mx-auto max-w-4xl font-tradegothic text-[1.75rem] font-bold leading-tight tracking-wide drop-shadow-lg sm:text-[2.25rem] md:text-[3rem] lg:text-[3.5rem] xl:text-[4rem]">
+              {heroContent.headline}
             </h1>
-            <p className="text-[1rem] font-semibold lg:text-[1.25rem]">
-              Special offers to suit your plan
-            </p>
+            {/* Subtítulo - TBD en HU-003 */}
+            {heroContent.subtitle && (
+              <p className="mx-auto mt-4 max-w-2xl text-[1rem] font-medium drop-shadow-md lg:text-[1.25rem]">
+                {heroContent.subtitle}
+              </p>
+            )}
+            {/* CTA - TBD en HU-004 */}
+            {heroContent.cta && (
+              <div className="mt-8">
+                {/* CTA button will be added here */}
+              </div>
+            )}
           </div>
         </section>
         <SearchFlightsAndStaysFormShortcut
@@ -53,9 +68,19 @@ export default async function HomePage() {
       </header>
 
       <main className="mx-auto mb-10 w-[90%] space-y-10 md:mb-20 md:space-y-20">
-        <FlightDestinations />
-        <PopularHotelDestinations
-        />
+        {/* HU-003: Catálogo de Servicios */}
+        <ServicesSection />
+
+        {/* HU-003: Destinos de Venezuela */}
+        <VenezuelaDestinations />
+
+        {/* HU-004: Destinos Populares de Vuelos */}
+        <PopularFlightDestinations />
+
+        {/* HU-004: Destinos Populares de Hoteles */}
+        <PopularHotelDestinations />
+
+        {/* Secciones existentes */}
         <FindFlightAndHotelcards />
         <Reviews />
       </main>
