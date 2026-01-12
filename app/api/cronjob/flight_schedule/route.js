@@ -1,8 +1,7 @@
 import { createManyDocs } from "@/lib/db/createOperationDB";
 import generateOneDayFlight from "@/lib/db/generateForDB/flights/generateOneDayFlight";
-import { getManyDocs } from "@/lib/db/getOperationDB";
-import { FlightItinerary } from "@/lib/db/models";
-import mongoose from "mongoose";
+import { getManyDocs, getOneDoc } from "@/lib/db/getOperationDB";
+
 export async function GET(req) {
   if (
     req.headers.get("Authorization") !== `Bearer ${process.env.CRON_SECRET}`
@@ -12,10 +11,6 @@ export async function GET(req) {
 
   const pre = performance.now();
 
-  if (mongoose.connection.readyState !== 1) {
-    await mongoose.connect(process.env.MONGODB_URI);
-  }
-
   const [airports, airlines, airplanes, airlineFlightPrices] =
     await Promise.all([
       getManyDocs("Airport", {}),
@@ -24,10 +19,16 @@ export async function GET(req) {
       getManyDocs("AirlineFlightPrice", {}),
     ]);
 
-  const lastFlight = await FlightItinerary.findOne({})
-    .sort({ date: -1 })
-    .lean();
+  // Get the last flight to determine the next date
+  const lastFlights = await getManyDocs(
+    "FlightItinerary",
+    {},
+    ["flightItineraries"],
+    0,
+    { order: { date: "desc" }, limit: 1 }
+  );
 
+  const lastFlight = lastFlights[0];
   const lastFlightDate = new Date(lastFlight?.date || new Date());
   console.log("generating flight for the day after:", lastFlightDate);
 

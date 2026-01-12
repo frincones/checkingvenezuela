@@ -1,6 +1,8 @@
-import MongoDBAdapter from "@/lib/db/MongoDBAdapter";
+import { getOneDoc } from "@/lib/db/getOperationDB";
+import { deleteOneDoc } from "@/lib/db/deleteOperationDB";
 import { cookies } from "next/headers";
 import routes from "@/data/routes.json";
+
 export async function GET(req) {
   const searchParams = new URL(req.url).searchParams;
 
@@ -36,12 +38,26 @@ export async function GET(req) {
     }
     const vdObj = JSON.parse(vdStr);
 
-    // eslint-disable-next-line react-hooks/rules-of-hooks
-    const isMatched = await MongoDBAdapter.useVerificationToken({
-      identifier: vdObj.id,
-      token: p_reset_v_token,
-    });
+    // Check if verification token exists
+    const verificationToken = await getOneDoc(
+      "Verification_Token",
+      {
+        identifier: vdObj.id,
+        token: p_reset_v_token,
+      },
+      ["verificationToken"],
+      0
+    );
+
+    const isMatched = verificationToken && Object.keys(verificationToken).length > 0;
+
     if (isMatched) {
+      // Delete the used token
+      await deleteOneDoc("Verification_Token", {
+        identifier: vdObj.id,
+        token: p_reset_v_token,
+      });
+
       cookies().set("e_i", vdStr, {
         maxAge: 60 * 60 * 24,
         httpOnly: true,

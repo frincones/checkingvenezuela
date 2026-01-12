@@ -5,8 +5,6 @@ import "./globals.css";
 import NextTopLoader from "nextjs-toploader";
 import { Toaster } from "@/components/ui/sonner";
 import { StoreProvider } from "@/app/StoreProvider";
-import { SessionProvider } from "next-auth/react";
-import mongoose from "mongoose";
 
 import dynamic from "next/dynamic";
 
@@ -68,14 +66,6 @@ export const metadata = {
 };
 
 export default async function RootLayout({ children }) {
-  if (mongoose.connection.readyState === 0) {
-    try {
-      await mongoose.connect(process.env.MONGODB_URI);
-    } catch (e) {
-      console.log(e);
-    }
-  }
-
   const Notice = dynamic(
     () => import("@/app/_notice").then((mod) => mod.Notice),
     {
@@ -111,13 +101,11 @@ export default async function RootLayout({ children }) {
           />
         ) : (
           <StoreProvider>
-            <SessionProvider>
-              <div className="mx-auto max-w-[1440px]">
-                <Notice />
-                <MaintenanceNotice maintenanceMode={maintenanceMode} />
-                {children}
-              </div>
-            </SessionProvider>
+            <div className="mx-auto max-w-[1440px]">
+              <Notice />
+              <MaintenanceNotice maintenanceMode={maintenanceMode} />
+              {children}
+            </div>
           </StoreProvider>
         )}
         <NextTopLoader showSpinner={false} color="hsl(159, 44%, 69%)" />
