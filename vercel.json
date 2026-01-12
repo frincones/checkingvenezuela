@@ -1,5 +1,4 @@
 {
-  "installCommand": "npm install --omit=optional",
   "crons": [
     {
       "path": "/api/cronjob/flight_schedule",
