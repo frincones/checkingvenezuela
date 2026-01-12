@@ -1,0 +1,16 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm install:*)",
+      "Bash(npm run dev:*)",
+      "Bash(ping:*)",
+      "Bash(curl:*)",
+      "Bash(powershell -Command:*)",
+      "Bash(timeout:*)",
+      "Bash(powershell Start-Sleep -Seconds 15)",
+      "Bash(Get-Content \"C:\\\\Users\\\\freddyrs\\\\AppData\\\\Local\\\\Temp\\\\claude\\\\c--Users-freddyrs-Desktop-Checkin-Venezuela-fullstack-nextjs-golobe-travel-agency\\\\tasks\\\\b4f5124.output\" -Tail 80)",
+      "Bash(taskkill:*)",
+      "Bash(git add:*)"
+    ]
+  }
+}
