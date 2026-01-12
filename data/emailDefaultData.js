@@ -32,7 +32,7 @@ const emailDefaultData = {
         text: "Terms & Conditions",
       },
     ],
-    companyAddress: "Golobe, 1, rue de la République, 75001 Paris, France",
+    companyAddress: "CHECK-IN VENEZUELA, Caracas, Venezuela | WhatsApp: +58 426 4034052",
   },
 };
 

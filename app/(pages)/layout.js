@@ -14,10 +14,17 @@ export default async function PagesLayout({ children }) {
     routes["set-new-password"].path,
   ];
 
-  const session = await auth();
-  const currentPathname = headers().get("x-pathname");
+  // Dashboard has its own layout, so don't show nav/footer
+  const dashboardPaths = ["/dashboard"];
 
-  const isNavAllowed = !navNotAllowedPaths.some((path) =>
+  const session = await auth();
+  const currentPathname = headers().get("x-pathname") || "";
+
+  const isDashboard = dashboardPaths.some((path) =>
+    currentPathname.startsWith(path)
+  );
+
+  const isNavAllowed = !isDashboard && !navNotAllowedPaths.some((path) =>
     path.startsWith(currentPathname)
   );
 

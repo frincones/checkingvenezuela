@@ -1,9 +1,6 @@
-import { ChevronRight } from "lucide-react";
-import user from "@/public/icons/user.svg";
-import card from "@/public/icons/card.svg";
-import settings from "@/public/icons/settings.svg";
-import support from "@/public/icons/support.svg";
-import logout from "@/public/icons/logout.svg";
+"use client";
+
+import { LayoutDashboard, User, BookCopy, CreditCard, Settings, HeadphonesIcon, LogOut } from "lucide-react";
 
 import {
   DropdownMenu,
@@ -15,13 +12,21 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
-import Image from "next/image";
 import Link from "next/link";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 import { signOutAction } from "@/lib/actions";
 
 import routes from "@/data/routes.json";
+
+// Icon mapping for serializable data from server
+const iconMap = {
+  dashboard: <LayoutDashboard height={18} width={18} />,
+  user: <User height={18} width={18} />,
+  bookings: <BookCopy height={18} width={18} />,
+  card: <CreditCard height={18} width={18} />,
+  settings: <Settings height={18} width={18} />,
+};
 export function AvatarWithName({
   sideBarLinksUser,
   onlineStatus = "Online",
@@ -33,8 +38,10 @@ export function AvatarWithName({
       <DropdownMenuTrigger asChild className="focus-visible:ring-offset-[none]">
         <Button variant="link" className={"gap-2 text-inherit"}>
           <Avatar>
-            <AvatarImage src={profilePic} className="rounded-full" />
-            <AvatarFallback></AvatarFallback>
+            {profilePic && <AvatarImage src={profilePic} className="rounded-full" />}
+            <AvatarFallback className="bg-primary text-white font-bold">
+              {profileName?.charAt(0)?.toUpperCase() || "U"}
+            </AvatarFallback>
           </Avatar>
           <span>{profileName}</span>
         </Button>
@@ -46,13 +53,12 @@ export function AvatarWithName({
       >
         <DropdownMenuLabel>
           <div className="flex items-center gap-3">
-            <Image
-              src={profilePic}
-              alt="profile_pic"
-              height={50}
-              width={50}
-              className="rounded-full"
-            />
+            <Avatar className="h-[50px] w-[50px]">
+              {profilePic && <AvatarImage src={profilePic} alt="profile_pic" className="rounded-full" />}
+              <AvatarFallback className="bg-primary text-white font-bold text-lg">
+                {profileName?.charAt(0)?.toUpperCase() || "U"}
+              </AvatarFallback>
+            </Avatar>
             <div>
               <p className="font-semibold">{profileName}</p>
               <p className="text-sm opacity-75">{onlineStatus}</p>
@@ -70,7 +76,8 @@ export function AvatarWithName({
               >
                 <Link href={option.href}>
                   <div className="flex items-center gap-2">
-                    {option.icon} <span>{option.title}</span>
+                    {option.iconType ? iconMap[option.iconType] : option.icon}
+                    <span>{option.title}</span>
                   </div>
                 </Link>
               </DropdownMenuItem>
@@ -82,12 +89,7 @@ export function AvatarWithName({
           <DropdownMenuItem asChild className="cursor-pointer justify-between">
             <Link href={routes.support.path}>
               <div className="flex items-center gap-2">
-                <Image
-                  src={support}
-                  alt="support_icon"
-                  height={18}
-                  width={18}
-                />
+                <HeadphonesIcon height={18} width={18} />
                 <span>{routes.support.title}</span>
               </div>
             </Link>
@@ -95,13 +97,13 @@ export function AvatarWithName({
           <DropdownMenuItem asChild className="cursor-pointer">
             <form action={signOutAction}>
               <Button
-                variant="Ghost"
+                variant="ghost"
                 className={
                   "h-auto w-full justify-start gap-2 p-0 font-medium text-inherit"
                 }
                 type={"submit"}
               >
-                <Image src={logout} alt="logout_icon" height={18} width={18} />
+                <LogOut height={18} width={18} />
                 <span>Logout</span>
               </Button>
             </form>

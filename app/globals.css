@@ -13,13 +13,13 @@
     --popover: 0 0% 100%;
     --popover-foreground: 222.2 84% 4.9%;
 
-    --primary: 159 44% 69%;
-    --primary-foreground: 120 33% 10%;
+    --primary: 207 100% 23%;
+    --primary-foreground: 0 0% 100%;
 
-    --secondary: 120 33% 10%;
+    --secondary: 162 59% 41%;
     --secondary-foreground: 0 0% 100%;
 
-    --tertiary: 6 93% 71%;
+    --tertiary: 0 0% 30%;
     --tertiary-foreground: 0 0% 100%;
 
     --muted: 210 40% 96.1%;
@@ -93,7 +93,7 @@
   .active {
     @apply border-b-2 border-b-primary;
   }
-  .golobe-scrollbar {
+  .app-scrollbar {
     scrollbar-color: hsl(var(--primary)) hsl(var(--secondary));
     scrollbar-width: thin;
     scrollbar-gutter: none;

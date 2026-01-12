@@ -17,6 +17,16 @@ export function SubscribeNewsletter({ isSubscribed }) {
   const [height, setHeight] = useState(0);
   const [error, setError] = useState();
   const [subscribed, setSubscribed] = useState(isSubscribed);
+  const [isMounted, setIsMounted] = useState(false);
+
+  // Handle client-side mounting to prevent hydration mismatch
+  useEffect(() => {
+    setIsMounted(true);
+    const storedSubscribed = localStorage.getItem("subscribed");
+    if (storedSubscribed) {
+      setSubscribed(true);
+    }
+  }, []);
 
   useEffect(() => {
     const getId = document.getElementById("newsletter");
@@ -50,14 +60,6 @@ export function SubscribeNewsletter({ isSubscribed }) {
     }
   }, [state?.success, state?.error]);
 
-  useEffect(() => {
-    const subscribed = localStorage.getItem("subscribed");
-
-    if (subscribed) {
-      setSubscribed(true);
-    }
-  }, []);
-
   function handleChange(e) {
     const isValid = e.target.value !== "" ? isEmailValid(e.target.value) : null;
 
@@ -83,7 +85,7 @@ export function SubscribeNewsletter({ isSubscribed }) {
             stories.
           </p>
           <div>
-            {subscribed ? (
+            {isMounted && subscribed ? (
               <h3 className="rounded-[8px] bg-primary px-[16px] py-[8px] text-xl font-bold text-white">
                 Thank you for your subscription!!&nbsp;
               </h3>
@@ -130,6 +132,7 @@ export function SubscribeNewsletter({ isSubscribed }) {
         </div>
       </section>
       <div
+        suppressHydrationWarning
         style={{
           position: "absolute",
           width: "100%",

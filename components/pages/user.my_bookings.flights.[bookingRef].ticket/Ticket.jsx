@@ -268,11 +268,11 @@ export default function FlightTicket({ ticketData }) {
                       Additional verification may be required for certain
                       transactions. The cardholder may be asked to complete a
                       verification process online, at the airport, or at a
-                      designated Golobe service center.
+                      designated CHECK-IN VENEZUELA service center.
                     </li>
                     <li className="mb-[16px]">
                       If the original payment card cannot be presented at
-                      check-in or ticket collection, Golobe reserves the right
+                      check-in or ticket collection, CHECK-IN VENEZUELA reserves the right
                       to deny boarding or require payment with an alternative
                       method. Stored payment information is managed in a PCI-DSS
                       compliant and secure environment.
@@ -293,7 +293,7 @@ export default function FlightTicket({ ticketData }) {
                     </li>
                     <li className="mb-[16px]">
                       Passengers must comply with all applicable immigration,
-                      customs, and travel regulations. Golobe is not responsible
+                      customs, and travel regulations. CHECK-IN VENEZUELA is not responsible
                       for denied boarding or entry due to incomplete
                       documentation.
                     </li>
@@ -307,17 +307,17 @@ export default function FlightTicket({ ticketData }) {
                       If you have any questions regarding these Terms and
                       Conditions, please contact us at:
                     </p>
-                    <p className="mt-2 font-medium">Golobe Group Q.C.S.C</p>
-                    <p>Golobe Tower</p>
-                    <p>Doha, State of Qatar</p>
+                    <p className="mt-2 font-medium">CHECK-IN VENEZUELA</p>
+                    <p>Caracas, Venezuela</p>
+                    <p>WhatsApp: +58 426 4034052</p>
                     <p>
-                      For more information, visit:{" "}
+                      Para más información, visita:{" "}
                       <Button
                         asChild
                         variant="link"
                         className="h-auto p-0 text-tertiary"
                       >
-                        <Link href="/support">golobe.com/support</Link>
+                        <Link href="/support">checkinvenezuela.com/support</Link>
                       </Button>
                     </p>
                   </address>

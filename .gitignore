@@ -48,3 +48,5 @@ generated
 #diagram
 *.bkp
 *.dtmp
+nul
+Contexto/

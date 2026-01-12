@@ -8,21 +8,23 @@ import { SideBar } from "@/components/local-ui/nav/SideBar";
 import { cn } from "@/lib/utils";
 
 import routes from "@/data/routes.json";
-
-import user from "@/public/icons/user.svg";
-import card from "@/public/icons/card.svg";
-import settings from "@/public/icons/settings.svg";
-import Image from "next/image";
-import { BookCopyIcon } from "lucide-react";
 import { getUserDetails } from "@/lib/services/user";
 
 export async function Nav({ className, type = "default", session, ...props }) {
   const isLoggedIn = !!session?.user;
   let nameOfUser, avatar;
   if (isLoggedIn) {
-    const userData = await getUserDetails(session?.user?.id);
-    avatar = userData.profileImage;
-    nameOfUser = userData.firstName + " " + userData.lastName;
+    try {
+      const userData = await getUserDetails(session?.user?.id);
+      avatar = userData?.profileImage || session?.user?.image || "";
+      nameOfUser = userData?.firstName && userData?.lastName
+        ? `${userData.firstName} ${userData.lastName}`
+        : session?.user?.name || session?.user?.email || "Usuario";
+    } catch (error) {
+      console.error("Error fetching user details:", error);
+      avatar = session?.user?.image || "";
+      nameOfUser = session?.user?.name || session?.user?.email || "Usuario";
+    }
   }
   const types = {
     home: {
@@ -39,26 +41,32 @@ export async function Nav({ className, type = "default", session, ...props }) {
     },
   };
 
+  // Pass only serializable data - icons will be rendered in the client component
   const sideBarLinksUser = [
+    {
+      title: "Dashboard",
+      href: "/dashboard",
+      iconType: "dashboard",
+    },
     {
       title: "Profile",
       href: "/user/profile",
-      icon: <Image src={user} alt="user_icon" height={18} width={18} />,
+      iconType: "user",
     },
     {
       title: "My Bookings",
       href: "/user/my_bookings",
-      icon: <BookCopyIcon height={18} width={18} />,
+      iconType: "bookings",
     },
     {
       title: "Payments",
       href: "/user/payments",
-      icon: <Image src={card} alt="card_icon" height={18} width={18} />,
+      iconType: "card",
     },
     {
       title: "Settings",
       href: "/user/settings",
-      icon: <Image src={settings} alt="settings_icon" height={18} width={18} />,
+      iconType: "settings",
     },
   ];
 
@@ -84,7 +92,7 @@ export async function Nav({ className, type = "default", session, ...props }) {
       />
 
       <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2">
-        <Logo className={"h-[36px] w-fit"} otherFill={types[type].logoFill} />
+        <Logo className={"h-[36px] w-fit"} />
       </div>
 
       {isLoggedIn === true ? (

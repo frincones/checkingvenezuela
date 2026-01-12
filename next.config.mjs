@@ -1,15 +1,16 @@
 import { join, resolve } from "path";
 const cspHeader = `
     default-src 'self';
-    script-src 'self' 'unsafe-eval' 'unsafe-inline' https://js.stripe.com;
+    script-src 'self' 'unsafe-eval' 'unsafe-inline' https://js.stripe.com https://va.vercel-scripts.com https://*.vercel-scripts.com;
     style-src 'self' 'unsafe-inline';
-    img-src 'self' blob: data: https://images.unsplash.com/ https://images.pexels.com/ https://platform-lookaside.fbsbx.com/;
-    font-src 'self';
+    img-src 'self' blob: data: https://images.unsplash.com/ https://images.pexels.com/ https://platform-lookaside.fbsbx.com/ https://api.dicebear.com/;
+    font-src 'self' data:;
     object-src 'self';
     frame-src 'self' https://www.openstreetmap.org/ https://js.stripe.com;
     base-uri 'self';
     form-action 'self';
     frame-ancestors 'none';
+    connect-src 'self' https://va.vercel-scripts.com https://*.vercel-scripts.com https://*.supabase.co;
     upgrade-insecure-requests;
 `;
 /** @type {import('next').NextConfig} */
@@ -65,6 +66,14 @@ const nextConfig = {
       {
         protocol: "https",
         hostname: "www.airplane-pictures.net",
+      },
+      {
+        protocol: "https",
+        hostname: "api.dicebear.com",
+      },
+      {
+        protocol: "https",
+        hostname: "stbbckupkuxasfthlsys.supabase.co",
       },
       {
         protocol: "http",

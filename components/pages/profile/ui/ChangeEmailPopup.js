@@ -89,7 +89,7 @@ export function ChangeEmailPopup({ emails }) {
         </DialogHeader>
         <div
           className={
-            "flex flex-col gap-4 overflow-y-auto golobe-scrollbar pr-2 pt-2"
+            "flex flex-col gap-4 overflow-y-auto app-scrollbar pr-2 pt-2"
           }
         >
           {emails?.map((email, i) => (
