@@ -1,6 +1,6 @@
 import { FlightsFilter } from "@/components/pages/flights.search/sections/FlightFilter";
 import { getManyDocs } from "@/lib/db/getOperationDB";
-import { multiSegmentCombinedFareBreakDown } from "@/lib/db/schema/flightItineraries";
+import { multiSegmentCombinedFareBreakDown } from "@/lib/helpers/flights/fareCalculations";
 import { parseFlightSearchParams } from "@/lib/utils";
 import validateFlightSearchFilter from "@/lib/zodSchemas/flightSearchFilterValidation";
 import { endOfDay, startOfDay } from "date-fns";

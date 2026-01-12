@@ -11,7 +11,7 @@ import { usePathname, useSearchParams } from "next/navigation";
 import { flightReserveAction } from "@/lib/actions/flightReserveAction";
 import { useRouter } from "next/navigation";
 import BookingPayment from "./sections/BookingPayment";
-import { multiSegmentCombinedFareBreakDown } from "@/lib/db/schema/flightItineraries";
+import { multiSegmentCombinedFareBreakDown } from "@/lib/helpers/flights/fareCalculations";
 
 export default function BookingSteps({ flight, metaData, searchStateObj }) {
   const pathname = usePathname();

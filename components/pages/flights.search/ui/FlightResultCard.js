@@ -9,7 +9,7 @@ import { minutesToHMFormat } from "@/lib/utils";
 import { RatingShow } from "@/components/local-ui/ratingShow";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
-import { multiSegmentCombinedFareBreakDown } from "@/lib/db/schema/flightItineraries";
+import { multiSegmentCombinedFareBreakDown } from "@/lib/helpers/flights/fareCalculations";
 import NoSSR from "@/components/helpers/NoSSR";
 import ShowTimeInClientSide from "@/components/helpers/ShowTimeInClientSide";
 export function FlightResultCard({ data, searchState, metaData }) {

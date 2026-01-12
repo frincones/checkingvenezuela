@@ -11,10 +11,10 @@ import dynamic from "next/dynamic";
 import FlightOrHotelReviewsSectionSkeleton from "@/components/local-ui/skeleton/FlightOrHotelReviewsSectionSkeleton";
 import { FareCard } from "@/components/FareCard";
 import { auth } from "@/lib/auth";
-import { FlightBooking } from "@/lib/db/models";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { getAvailableSeats } from "@/lib/services/flights";
+import { strToObjectId } from "@/lib/db/utilsDB";
 
 export default async function FlightDetailsPage({ params }) {
   const session = await auth();
@@ -62,13 +62,18 @@ export default async function FlightDetailsPage({ params }) {
       return el.flightId?._id === flight._id;
     });
 
-    const flightBookings = await FlightBooking.findOne({
-      flightItineraryId: flight._id,
-      userId: userDetails._id,
-      ticketStatus: "pending",
-    });
+    const flightBooking = await getOneDoc(
+      "FlightBooking",
+      {
+        flightItineraryId: strToObjectId(flight._id),
+        userId: strToObjectId(userDetails._id),
+        ticketStatus: "pending",
+      },
+      ["userFlightBooking"],
+      0,
+    );
 
-    bookingId = flightBookings?._id;
+    bookingId = flightBooking?._id;
   }
   const FlightOrHotelReview = dynamic(
     () => import("@/components/sections/FlightOrHotelReview"),

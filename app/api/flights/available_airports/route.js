@@ -1,21 +1,28 @@
-import { Airport } from "@/lib/db/models";
+import { getManyDocs } from "@/lib/db/getOperationDB";
 
 export async function GET(req) {
   const searchParams = Object.fromEntries(new URL(req.url).searchParams);
-  const limit = searchParams?.limit || 10;
+  const limit = parseInt(searchParams?.limit) || 10;
   const searchQuery = searchParams?.searchQuery;
 
-  const airports = await Airport.find({})
-    .limit(limit)
-    .select("iataCode name city -_id")
-    .exec();
-
   try {
+    const airports = await getManyDocs(
+      "Airport",
+      {},
+      ["airports"],
+      0,
+      { limit, select: "iata_code,name,city" },
+    );
+
     if (!searchQuery || searchQuery.trim() === "") {
       return Response.json({
         success: true,
         message: "Available airports fetched successfully",
-        data: airports,
+        data: airports.map(a => ({
+          iataCode: a.iataCode,
+          name: a.name,
+          city: a.city,
+        })),
       });
     }
 
@@ -32,7 +39,11 @@ export async function GET(req) {
     return Response.json({
       success: true,
       message: "Available airports fetched successfully",
-      data: filteredAirports,
+      data: filteredAirports.map(a => ({
+        iataCode: a.iataCode,
+        name: a.name,
+        city: a.city,
+      })),
     });
   } catch (error) {
     return Response.json(

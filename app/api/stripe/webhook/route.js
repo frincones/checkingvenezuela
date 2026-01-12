@@ -7,7 +7,6 @@ import { strToObjectId } from "@/lib/db/utilsDB";
 import sendEmail from "@/lib/email/sendEmail";
 import { flightBookingConfirmedEmailTemplate } from "@/lib/email/templates";
 import initStripe from "@/lib/paymentIntegration/stripe";
-import mongoose from "mongoose";
 import { revalidateTag } from "next/cache";
 
 const stripe = initStripe();
@@ -32,8 +31,7 @@ export async function POST(req) {
     case "charge.updated":
       const charge = event.data.object;
       const methodtype = charge.payment_method_details.type;
-      const session = await mongoose.startSession();
-      session.startTransaction();
+
       try {
         if (charge.metadata?.type === "flightBooking") {
           const flightPayment = {
@@ -60,13 +58,13 @@ export async function POST(req) {
             ["userFlightBooking"],
             0,
           );
+
           try {
             const paymentInfo = await createOneDoc(
               "FlightPayment",
               flightPayment,
-              { session },
             );
-            const bookingInfo = await updateOneDoc(
+            await updateOneDoc(
               "FlightBooking",
               {
                 _id: strToObjectId(charge.metadata.flightBookingId),
@@ -77,20 +75,13 @@ export async function POST(req) {
                 paymentId: paymentInfo._id,
                 bookedAt: new Date(charge.created * 1000),
               },
-              { session },
             );
 
-            await assignSeatsToFlightBooking(booking, "permanent", 0, session);
-            await session.commitTransaction();
+            await assignSeatsToFlightBooking(booking, "permanent", 0);
+            revalidateTag("userFlightBooking");
           } catch (err) {
             console.log(err);
-            if (session.inTransaction()) {
-              await session.abortTransaction();
-            }
             return Response.json({ success: false, message: err.message });
-          } finally {
-            await session.endSession();
-            revalidateTag("userFlightBooking");
           }
 
           const flight = await getOneDoc(
@@ -135,25 +126,21 @@ export async function POST(req) {
           );
         }
         if (charge.metadata?.type === "hotelBooking") {
-          const paymentInfo = await createOneDoc(
-            "HotelPayment",
-            {
-              bookingId: charge.metadata.hotelBookingId,
-              transactionId: charge.balance_transaction,
-              stripe_paymentIntentId: charge.payment_intent,
-              stripe_chargeId: charge.id,
-              paymentDate: charge.created,
-              paymentMethod: {
-                id: charge.payment_method,
-                methodType: methodtype,
-                brand: charge.payment_method_details[methodtype].brand,
-                last4: charge.payment_method_details[methodtype].last4,
-              },
-              amount: Number(charge.amount) / 100, // Stripe returns amount in cents
-              receiptUrl: charge.receipt_url,
+          const paymentInfo = await createOneDoc("HotelPayment", {
+            bookingId: charge.metadata.hotelBookingId,
+            transactionId: charge.balance_transaction,
+            stripe_paymentIntentId: charge.payment_intent,
+            stripe_chargeId: charge.id,
+            paymentDate: charge.created,
+            paymentMethod: {
+              id: charge.payment_method,
+              methodType: methodtype,
+              brand: charge.payment_method_details[methodtype].brand,
+              last4: charge.payment_method_details[methodtype].last4,
             },
-            { session },
-          );
+            amount: Number(charge.amount) / 100, // Stripe returns amount in cents
+            receiptUrl: charge.receipt_url,
+          });
           await updateOneDoc(
             "HotelBooking",
             {
@@ -166,9 +153,7 @@ export async function POST(req) {
               paymentId: paymentInfo._id,
               bookedAt: new Date(charge.created * 1000),
             },
-            { session },
           );
-          await session.commitTransaction();
           revalidateTag("hotelBookings");
         }
         console.log("Received webhook:", event.type);

@@ -1,6 +1,6 @@
 import { FlightResultList } from "./FlightResultList";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { multiSegmentCombinedFareBreakDown } from "@/lib/db/schema/flightItineraries";
+import { multiSegmentCombinedFareBreakDown } from "@/lib/helpers/flights/fareCalculations";
 import { minutesToHMFormat } from "@/lib/utils";
 export async function FlightResult({ flightResults, searchState, metaData }) {
   const sortByCheapest = flightResults.slice(0).sort((a, b) => {
