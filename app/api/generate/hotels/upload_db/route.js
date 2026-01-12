@@ -31,8 +31,8 @@ export async function POST(req) {
 }
 
 async function uploadHotelsDB() {
-  if (!process.env.MONGODB_URI) {
-    throw new Error("MONGODB_URI not found in .env file.");
+  if (!process.env.NEXT_PUBLIC_SUPABASE_URL) {
+    throw new Error("NEXT_PUBLIC_SUPABASE_URL not found in .env file.");
   }
 
   const datas = await generateHotelsDB();
