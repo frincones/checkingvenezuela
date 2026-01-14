@@ -71,7 +71,7 @@ export function SubscribeNewsletter({ isSubscribed }) {
     <>
       <section
         id="newsletter"
-        className="relative z-10 mx-auto mb-[80px] flex h-[305px] w-[90%] items-end justify-between gap-[16px] rounded-[20px] bg-[#CDEAE1] px-[24px]"
+        className="relative z-10 mx-auto mb-[80px] flex h-[305px] w-[90%] items-end justify-between gap-[16px] rounded-[20px] bg-accent/30 px-[24px]"
       >
         <div className="self-center">
           <h2 className="mb-[10px] text-[1.5rem] font-bold leading-[3.375rem] text-secondary lg:text-[2.5rem] xl:text-[2.75rem]">
@@ -137,7 +137,7 @@ export function SubscribeNewsletter({ isSubscribed }) {
           position: "absolute",
           width: "100%",
           bottom: 0,
-          backgroundColor: "#8DD3BB",
+          background: "linear-gradient(180deg, #1B498B, #0A1A44)",
           height: height + "px",
         }}
       ></div>

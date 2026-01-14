@@ -70,11 +70,16 @@ module.exports = {
         },
       },
       backgroundImage: {
+        // Venezuela Voyages Gradientes
+        "gradient-solar": "linear-gradient(45deg, #F2A93B, #FFD275)",
+        "gradient-abyss": "linear-gradient(180deg, #1B498B, #0A1A44)",
+        "gradient-abyss-horizontal": "linear-gradient(90deg, #0A1A44, #1B498B)",
+        // Overlays para headers (actualizados con nuevo azul profundo)
         "home-header": `linear-gradient(to top, rgba(0, 0, 0, 0.00) 0%, rgba(0, 0, 0, 0.60) 100%)`,
         "flight-header":
-          "linear-gradient(90deg, rgba(0, 35, 77, 0.63) 11.46%, rgba(0, 35, 77, 0.00) 77.37%), url('https://images.unsplash.com/photo-1542296332-2e4473faf563?q=80&w=870&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D')",
+          "linear-gradient(90deg, rgba(10, 26, 68, 0.75) 11.46%, rgba(10, 26, 68, 0.00) 77.37%), url('https://images.unsplash.com/photo-1542296332-2e4473faf563?q=80&w=870&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D')",
         "stay-header":
-          "linear-gradient(90deg, rgba(0, 35, 77, 0.63) 11.46%, rgba(0, 35, 77, 0.00) 77.37%), url('https://images.unsplash.com/photo-1566073771259-6a8506099945?q=80&w=870&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D')",
+          "linear-gradient(90deg, rgba(10, 26, 68, 0.75) 11.46%, rgba(10, 26, 68, 0.00) 77.37%), url('https://images.unsplash.com/photo-1566073771259-6a8506099945?q=80&w=870&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D')",
       },
       borderRadius: {
         lg: "var(--radius)",

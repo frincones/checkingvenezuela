@@ -48,9 +48,9 @@ export default function MaintenancePage({ message, startsAt, endsAt }) {
               width="233"
               height="212"
               viewBox="0 0 233 212"
-              fill="#8DD3BB"
+              fill="#F2A93B"
               xmlns="http://www.w3.org/2000/svg"
-              className="h-[40px] w-[40px] transition-all hover:fill-[#112211]"
+              className="h-[40px] w-[40px] transition-all hover:fill-[#0A1A44]"
             >
               <path
                 fill-rule="evenodd"

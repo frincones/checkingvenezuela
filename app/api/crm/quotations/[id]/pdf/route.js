@@ -31,9 +31,11 @@ async function generateQuotationPDF(quotation) {
   const helvetica = await pdfDoc.embedFont(StandardFonts.Helvetica);
   const helveticaBold = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
 
-  // Colors
-  const primaryColor = rgb(141 / 255, 211 / 255, 187 / 255); // #8DD3BB
-  const secondaryColor = rgb(17 / 255, 34 / 255, 17 / 255); // #112211
+  // Colors - Venezuela Voyages branding
+  const primaryColor = rgb(10 / 255, 26 / 255, 68 / 255); // #0A1A44 Azul Profundo
+  const secondaryColor = rgb(242 / 255, 169 / 255, 59 / 255); // #F2A93B Naranja Atardecer
+  const accentColor = rgb(255 / 255, 210 / 255, 117 / 255); // #FFD275 Dorado Arena
+  const darkBlue = rgb(27 / 255, 73 / 255, 139 / 255); // #1B498B
   const grayColor = rgb(102 / 255, 102 / 255, 102 / 255);
   const whiteColor = rgb(1, 1, 1);
 
@@ -48,8 +50,8 @@ async function generateQuotationPDF(quotation) {
     color: primaryColor,
   });
 
-  // Company name
-  page.drawText("CHECK-IN VENEZUELA", {
+  // Company name - Venezuela Voyages
+  page.drawText("VENEZUELA VOYAGES", {
     x: 50,
     y: height - 60,
     size: 24,
@@ -57,12 +59,12 @@ async function generateQuotationPDF(quotation) {
     color: whiteColor,
   });
 
-  page.drawText("Tu agencia de viajes de confianza", {
+  page.drawText("Explore Now - Tu aventura comienza aqui", {
     x: 50,
     y: height - 85,
     size: 12,
     font: helvetica,
-    color: whiteColor,
+    color: accentColor,
   });
 
   // Quotation number box
@@ -194,13 +196,13 @@ async function generateQuotationPDF(quotation) {
   // Items table
   y = height - 280;
 
-  // Table header
+  // Table header - usando el color secundario (naranja)
   page.drawRectangle({
     x: 50,
     y: y - 5,
     width: 512,
     height: 25,
-    color: primaryColor,
+    color: secondaryColor,
   });
 
   page.drawText("DESCRIPCION", {
@@ -368,14 +370,14 @@ async function generateQuotationPDF(quotation) {
     );
   }
 
-  // Total box
+  // Total box - usando el color secundario (naranja)
   y -= 25;
   page.drawRectangle({
     x: totalsX - 10,
     y: y - 8,
     width: 180,
     height: 30,
-    color: primaryColor,
+    color: secondaryColor,
   });
 
   page.drawText("TOTAL:", {
@@ -422,7 +424,7 @@ async function generateQuotationPDF(quotation) {
     });
   }
 
-  // Footer
+  // Footer - Venezuela Voyages branding
   page.drawRectangle({
     x: 0,
     y: 0,
@@ -431,20 +433,20 @@ async function generateQuotationPDF(quotation) {
     color: primaryColor,
   });
 
-  page.drawText("Check-In Venezuela - Tu viaje comienza aqui", {
-    x: 150,
+  page.drawText("VENEZUELA VOYAGES - Explore Now", {
+    x: 200,
     y: 45,
     size: 11,
-    font: helvetica,
+    font: helveticaBold,
     color: whiteColor,
   });
 
-  page.drawText("www.checkinvenezuela.com | info@checkinvenezuela.com", {
-    x: 130,
+  page.drawText("www.venezuelavoyages.com | info@venezuelavoyages.com", {
+    x: 145,
     y: 25,
     size: 10,
     font: helvetica,
-    color: whiteColor,
+    color: accentColor,
   });
 
   const pdfBytes = await pdfDoc.save();
