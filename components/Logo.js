@@ -5,15 +5,15 @@ import { cn } from "@/lib/utils";
 /**
  * Logo Component - Venezuela Voyages
  * @param {string} className - Clases adicionales de Tailwind
- * @param {string} size - "sm" (60px) | "md" (90px) | "lg" (120px) | "xl" (150px)
+ * @param {string} size - "sm" (78px) | "md" (117px) | "lg" (156px) | "xl" (195px)
  */
 export function Logo({ className, size = "md" }) {
-  // Tamaños aumentados 50%: sm 40->60, md 60->90, lg 80->120, xl 100->150
+  // Tamaños aumentados 30% adicional: sm 60->78, md 90->117, lg 120->156, xl 150->195
   const sizeClasses = {
-    sm: "h-[60px]",
-    md: "h-[90px]",
-    lg: "h-[120px]",
-    xl: "h-[150px]",
+    sm: "h-[78px]",
+    md: "h-[117px]",
+    lg: "h-[156px]",
+    xl: "h-[195px]",
   };
 
   return (
@@ -21,8 +21,8 @@ export function Logo({ className, size = "md" }) {
       <Image
         src="/images/venezuela-voyages-logo.png"
         alt="Venezuela Voyages Logo - Explore Now"
-        width={330}
-        height={120}
+        width={430}
+        height={156}
         className={cn(
           "w-auto object-contain transition-transform hover:scale-105",
           sizeClasses[size] || sizeClasses.md,
