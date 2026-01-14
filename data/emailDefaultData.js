@@ -32,7 +32,7 @@ const emailDefaultData = {
         text: "Terms & Conditions",
       },
     ],
-    companyAddress: "CHECK-IN VENEZUELA, Caracas, Venezuela | WhatsApp: +58 426 4034052",
+    companyAddress: "VENEZUELA VOYAGES | Explore Now | Venezuela | WhatsApp: +58 426 4034052",
   },
 };
 

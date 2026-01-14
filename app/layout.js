@@ -29,16 +29,16 @@ const tradegothic = localFont({
 });
 
 export const metadata = {
-  title: "CHECK-IN VENEZUELA | Tu Agencia de Viajes 24/7",
+  title: "VENEZUELA VOYAGES | Explore Now - Tu Agencia de Viajes",
   description:
-    "CHECK-IN VENEZUELA es tu agencia de viajes en Caracas. Reserva vuelos, hoteles y paquetes turísticos con atención 24/7. Tu aventura comienza aquí.",
+    "VENEZUELA VOYAGES es tu agencia de viajes en Venezuela. Reserva vuelos, hoteles y paquetes turísticos con atención 24/7. Explore Now - Tu aventura comienza aquí.",
   keywords: [
     "viajes",
     "agencia de viajes",
-    "check-in venezuela",
+    "venezuela voyages",
+    "explore now",
     "vuelos",
     "hoteles",
-    "caracas",
     "venezuela",
     "turismo",
     "reservas",
@@ -46,12 +46,12 @@ export const metadata = {
     "travel agency",
     "24/7",
   ],
-  metadataBase: new URL("https://checkinvenezuela.com"),
+  metadataBase: new URL("https://venezuelavoyages.com"),
   openGraph: {
-    title: "CHECK-IN VENEZUELA | Tu Agencia de Viajes 24/7",
+    title: "VENEZUELA VOYAGES | Explore Now - Tu Agencia de Viajes",
     description:
-      "Tu agencia de viajes en Caracas, Venezuela. Reserva vuelos, hoteles y paquetes turísticos con atención personalizada 24/7.",
-    siteName: "CHECK-IN VENEZUELA",
+      "Tu agencia de viajes en Venezuela. Reserva vuelos, hoteles y paquetes turísticos con atención personalizada 24/7. Explore Now.",
+    siteName: "VENEZUELA VOYAGES",
     images: [
       {
         url: openGraph.src,
@@ -107,7 +107,7 @@ export default async function RootLayout({ children }) {
             </div>
           </StoreProvider>
         )}
-        <NextTopLoader showSpinner={false} color="#004077" />
+        <NextTopLoader showSpinner={false} color="#F2A93B" />
         <Toaster richColors closeButton expand position="top-right" />
         <SetNecessaryCookies />
         <WhatsAppButton />
