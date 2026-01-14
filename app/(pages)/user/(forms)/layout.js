@@ -53,7 +53,7 @@ export default async function FormsLayout({ children }) {
       </div>
       <div className="grow text-left">
         <div className="mb-[20px] w-fit lg:mb-[64px]">
-          <Logo otherFill={"black"} />
+          <Logo size="lg" />
         </div>
 
         {children}

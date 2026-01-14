@@ -71,16 +71,16 @@ export function SubscribeNewsletter({ isSubscribed }) {
     <>
       <section
         id="newsletter"
-        className="relative z-10 mx-auto mb-[80px] flex h-[305px] w-[90%] items-end justify-between gap-[16px] rounded-[20px] bg-accent/30 px-[24px]"
+        className="relative z-10 mx-auto mb-[80px] flex h-[305px] w-[90%] items-end justify-between gap-[16px] rounded-[20px] bg-gradient-to-r from-[#FFD275] to-[#F2A93B] px-[24px] shadow-lg"
       >
         <div className="self-center">
-          <h2 className="mb-[10px] text-[1.5rem] font-bold leading-[3.375rem] text-secondary lg:text-[2.5rem] xl:text-[2.75rem]">
+          <h2 className="mb-[10px] text-[1.5rem] font-bold leading-[3.375rem] text-primary lg:text-[2.5rem] xl:text-[2.75rem]">
             Subscribe Newsletter
           </h2>
-          <h3 className="mb-[8px] text-[1rem] font-bold text-secondary/80 xl:text-[1.25rem]">
+          <h3 className="mb-[8px] text-[1rem] font-bold text-primary/80 xl:text-[1.25rem]">
             The Travel
           </h3>
-          <p className="mb-[16px] text-[0.875rem] font-medium text-secondary/70 md:text-[1rem]">
+          <p className="mb-[16px] text-[0.875rem] font-medium text-primary/70 md:text-[1rem]">
             Get inspired! Receive travel discounts, tips and behind the scenes
             stories.
           </p>
@@ -103,18 +103,18 @@ export function SubscribeNewsletter({ isSubscribed }) {
                   type="email"
                   placeholder="Your email address"
                   onChange={handleChange}
-                  className={"grow"}
+                  className={"grow bg-white"}
                 />
 
                 <SubmitBtn
                   formId={"subscribe"}
-                  variant={"secondary"}
+                  variant={"default"}
                   customTitle={{
                     default: "Subscribe",
                     onSubmitting: "Subscibing...",
                   }}
                   className={
-                    "h-full grow-0 disabled:bg-[#737373] disabled:text-[#ffffff]"
+                    "h-full grow-0 bg-primary text-white hover:bg-primary/90 disabled:bg-[#737373] disabled:text-[#ffffff]"
                   }
                 />
               </form>
