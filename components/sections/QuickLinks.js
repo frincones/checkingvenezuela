@@ -93,28 +93,28 @@ export function QuickLinks() {
   return (
     <section className="relative z-10 mx-auto mb-[80px] flex w-[90%] gap-[40px] max-sm:flex-col sm:gap-[80px]">
       <div className="min-w-[200px]">
-        <Logo className={"mb-[24px] block h-[40px] w-fit"} />
+        <Logo size="lg" className={"mb-[24px] block w-fit"} />
 
         {/* Ubicación */}
-        <div className="mb-4 flex items-center gap-2 text-secondary">
-          <MapPin className="h-4 w-4" />
+        <div className="mb-4 flex items-center gap-2 text-white/90">
+          <MapPin className="h-4 w-4 text-accent" />
           <span className="text-sm font-medium">Caracas - Venezuela</span>
         </div>
 
         {/* Teléfono/WhatsApp */}
-        <div className="mb-4 flex items-center gap-2 text-secondary">
-          <Phone className="h-4 w-4" />
+        <div className="mb-4 flex items-center gap-2 text-white/90">
+          <Phone className="h-4 w-4 text-accent" />
           <a
             href="tel:+584264034052"
-            className="text-sm font-medium hover:underline"
+            className="text-sm font-medium hover:text-accent transition-colors"
           >
             +58 426 4034052
           </a>
         </div>
 
         {/* Horario */}
-        <div className="mb-6 flex items-center gap-2 text-secondary">
-          <Clock className="h-4 w-4" />
+        <div className="mb-6 flex items-center gap-2 text-white/90">
+          <Clock className="h-4 w-4 text-accent" />
           <span className="text-sm font-medium">Atención 24/7</span>
         </div>
 
@@ -131,7 +131,7 @@ export function QuickLinks() {
                   target="_blank"
                   rel="noopener noreferrer"
                   aria-label={`Síguenos en ${social.name}`}
-                  className="flex h-9 w-9 items-center justify-center rounded-full bg-secondary/10 text-secondary transition-all duration-200 hover:bg-secondary hover:text-white"
+                  className="flex h-9 w-9 items-center justify-center rounded-full border border-accent/50 text-accent transition-all duration-200 hover:bg-accent hover:text-primary"
                 >
                   {social.name === "TikTok" ? (
                     <TikTokIcon className="h-4 w-4" />
@@ -148,9 +148,9 @@ export function QuickLinks() {
           return (
             <div
               key={link[0]}
-              className="text-[0.875rem] font-medium text-secondary/70"
+              className="text-[0.875rem] font-medium text-white/70"
             >
-              <h3 className="mb-[16px] font-bold text-secondary">{link[0]}</h3>
+              <h3 className="mb-[16px] font-bold text-accent">{link[0]}</h3>
               <div className="flex flex-col gap-3">
                 {link[1].map((item) => {
                   return (
@@ -158,7 +158,7 @@ export function QuickLinks() {
                       <Link
                         aria-label={"Ir a " + item.name}
                         href={item.href}
-                        className="text-[0.875rem] hover:underline inline font-medium text-secondary/70"
+                        className="text-[0.875rem] hover:text-accent inline font-medium text-white/70 transition-colors"
                       >
                         {item.name}
                       </Link>
@@ -171,18 +171,18 @@ export function QuickLinks() {
         })}
 
         {/* Contacto section */}
-        <div className="text-[0.875rem] font-medium text-secondary/70">
-          <h3 className="mb-[16px] font-bold text-secondary">Contacto</h3>
+        <div className="text-[0.875rem] font-medium text-white/70">
+          <h3 className="mb-[16px] font-bold text-accent">Contacto</h3>
           <div className="flex flex-col gap-3">
             <a
               href="https://wa.me/584264034052"
               target="_blank"
               rel="noopener noreferrer"
-              className="text-[0.875rem] hover:underline inline font-medium text-secondary/70"
+              className="text-[0.875rem] hover:text-accent inline font-medium text-white/70 transition-colors"
             >
               WhatsApp
             </a>
-            <span className="text-[0.875rem] font-medium text-secondary/40">
+            <span className="text-[0.875rem] font-medium text-white/40">
               Email: Próximamente
             </span>
           </div>

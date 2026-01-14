@@ -92,7 +92,7 @@ export async function Nav({ className, type = "default", session, ...props }) {
       />
 
       <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2">
-        <Logo className={"h-[36px] w-fit"} />
+        <Logo size="md" />
       </div>
 
       {isLoggedIn === true ? (
