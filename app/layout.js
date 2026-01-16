@@ -79,7 +79,20 @@ export default async function RootLayout({ children }) {
     60,
   );
 
-  const maintenanceMode = websiteConfig?.maintenanceMode ?? { enabled: false };
+  // Soporte para variable de entorno MAINTENANCE_MODE (más simple que DB)
+  // Configurar en Vercel: MAINTENANCE_MODE=true
+  // Opcionalmente: MAINTENANCE_MESSAGE="Tu mensaje personalizado"
+  // Opcionalmente: MAINTENANCE_ENDS_AT="2025-01-20T18:00:00Z"
+  const envMaintenanceEnabled = process.env.MAINTENANCE_MODE === "true";
+
+  const maintenanceMode = envMaintenanceEnabled
+    ? {
+        enabled: true,
+        message: process.env.MAINTENANCE_MESSAGE || "Estamos realizando mejoras para brindarte una mejor experiencia. Volvemos pronto.",
+        endsAt: process.env.MAINTENANCE_ENDS_AT || null,
+        allowlistedRoutes: ["/support", "/api"],
+      }
+    : (websiteConfig?.maintenanceMode ?? { enabled: false });
 
   const alloweRoutesWhileMaintenance = maintenanceMode?.allowlistedRoutes ?? [];
   const currentPathname = headers().get("x-pathname");
