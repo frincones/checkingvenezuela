@@ -2,6 +2,7 @@ import { SectionTitle } from "@/components/SectionTitle";
 import { Card, CardContent } from "@/components/ui/card";
 import { DualCTA } from "@/components/ui/DualCTA";
 import { getEnabledServices } from "@/data/servicesConfig";
+import { getServicesFromDB } from "@/lib/cms";
 import {
   Plane,
   Building2,
@@ -32,12 +33,24 @@ const iconMap = {
 /**
  * ServicesSection - Catálogo de Servicios
  *
- * HU-003: Muestra los 10 servicios con dual CTA
+ * HU-003: Muestra los servicios con dual CTA
  * - Comprar online (si está disponible)
  * - Cotizar con asesor (WhatsApp)
+ *
+ * Obtiene datos de la BD con fallback a datos estáticos
  */
-export function ServicesSection() {
-  const services = getEnabledServices();
+export async function ServicesSection() {
+  // Intentar obtener servicios de la BD, fallback a datos estáticos
+  let services = [];
+  try {
+    services = await getServicesFromDB();
+    if (!services || services.length === 0) {
+      services = getEnabledServices();
+    }
+  } catch (error) {
+    console.error("Error loading services from DB, using fallback:", error);
+    services = getEnabledServices();
+  }
 
   return (
     <section className="mx-auto mb-[80px]">

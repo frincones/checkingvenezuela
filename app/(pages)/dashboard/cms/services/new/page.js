@@ -1,0 +1,241 @@
+"use client";
+
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import Link from "next/link";
+
+const ICONS = [
+  "Plane", "Building2", "Package", "Compass", "Car", "Shield",
+  "CarFront", "Ship", "Briefcase", "Star", "Map", "Globe",
+  "Hotel", "Umbrella", "Camera", "Heart"
+];
+
+export default function NewServicePage() {
+  const router = useRouter();
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState(null);
+  const [formData, setFormData] = useState({
+    name: "",
+    slug: "",
+    description: "",
+    icon: "Plane",
+    status: "active",
+    hasOnlinePurchase: false,
+    hasQuoteRequest: true,
+    href: "",
+    displayOrder: 0,
+  });
+
+  function handleChange(e) {
+    const { name, value, type, checked } = e.target;
+    setFormData((prev) => ({
+      ...prev,
+      [name]: type === "checkbox" ? checked : value,
+    }));
+
+    // Auto-generar slug desde el nombre
+    if (name === "name") {
+      const slug = value
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, "-")
+        .replace(/(^-|-$)/g, "");
+      setFormData((prev) => ({ ...prev, slug }));
+    }
+  }
+
+  async function handleSubmit(e) {
+    e.preventDefault();
+    setSaving(true);
+    setError(null);
+
+    try {
+      const response = await fetch("/api/cms/services", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(formData),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        setError(data.error || "Error al crear servicio");
+        return;
+      }
+
+      router.push("/dashboard/cms/services");
+    } catch (err) {
+      setError("Error al crear servicio");
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  return (
+    <div>
+      <div className="mb-6">
+        <Link
+          href="/dashboard/cms/services"
+          className="text-sm text-gray-500 hover:text-gray-700"
+        >
+          ← Volver a Servicios
+        </Link>
+        <h1 className="mt-2 text-2xl font-bold text-gray-900">Nuevo Servicio</h1>
+      </div>
+
+      {error && (
+        <div className="mb-4 rounded-md bg-red-50 p-4 text-red-700">
+          {error}
+        </div>
+      )}
+
+      <form onSubmit={handleSubmit} className="rounded-lg bg-white p-6 shadow-md">
+        <div className="grid gap-6 md:grid-cols-2">
+          <div>
+            <label className="block text-sm font-medium text-gray-700">
+              Nombre *
+            </label>
+            <input
+              type="text"
+              name="name"
+              value={formData.name}
+              onChange={handleChange}
+              required
+              className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
+              placeholder="Ej: Vuelos"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700">
+              Slug *
+            </label>
+            <input
+              type="text"
+              name="slug"
+              value={formData.slug}
+              onChange={handleChange}
+              required
+              className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
+              placeholder="Ej: vuelos"
+            />
+          </div>
+
+          <div className="md:col-span-2">
+            <label className="block text-sm font-medium text-gray-700">
+              Descripción
+            </label>
+            <textarea
+              name="description"
+              value={formData.description}
+              onChange={handleChange}
+              rows={3}
+              className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
+              placeholder="Descripción breve del servicio"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700">
+              Icono
+            </label>
+            <select
+              name="icon"
+              value={formData.icon}
+              onChange={handleChange}
+              className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
+            >
+              {ICONS.map((icon) => (
+                <option key={icon} value={icon}>
+                  {icon}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700">
+              Estado
+            </label>
+            <select
+              name="status"
+              value={formData.status}
+              onChange={handleChange}
+              className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
+            >
+              <option value="active">Activo</option>
+              <option value="coming_soon">Próximamente</option>
+              <option value="disabled">Desactivado</option>
+            </select>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700">
+              URL de compra (si aplica)
+            </label>
+            <input
+              type="text"
+              name="href"
+              value={formData.href}
+              onChange={handleChange}
+              className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
+              placeholder="Ej: /flights"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700">
+              Orden de visualización
+            </label>
+            <input
+              type="number"
+              name="displayOrder"
+              value={formData.displayOrder}
+              onChange={handleChange}
+              className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
+            />
+          </div>
+
+          <div className="flex items-center gap-6 md:col-span-2">
+            <label className="flex items-center gap-2">
+              <input
+                type="checkbox"
+                name="hasOnlinePurchase"
+                checked={formData.hasOnlinePurchase}
+                onChange={handleChange}
+                className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
+              />
+              <span className="text-sm text-gray-700">Permite compra online</span>
+            </label>
+
+            <label className="flex items-center gap-2">
+              <input
+                type="checkbox"
+                name="hasQuoteRequest"
+                checked={formData.hasQuoteRequest}
+                onChange={handleChange}
+                className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
+              />
+              <span className="text-sm text-gray-700">Permite solicitar cotización</span>
+            </label>
+          </div>
+        </div>
+
+        <div className="mt-6 flex justify-end gap-3">
+          <Link
+            href="/dashboard/cms/services"
+            className="rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
+          >
+            Cancelar
+          </Link>
+          <button
+            type="submit"
+            disabled={saving}
+            className="rounded-md bg-primary px-4 py-2 text-sm font-medium text-white hover:bg-primary/90 disabled:opacity-50"
+          >
+            {saving ? "Guardando..." : "Crear Servicio"}
+          </button>
+        </div>
+      </form>
+    </div>
+  );
+}

@@ -3,7 +3,8 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { DualCTA } from "@/components/ui/DualCTA";
 import { venezuelaDestinations } from "@/data/venezuelaDestinations";
-import { Umbrella, Mountain, Church, Zap } from "lucide-react";
+import { getCategoriesWithDestinationsFromDB } from "@/lib/cms";
+import { Umbrella, Mountain, Church, Zap, Compass } from "lucide-react";
 import Image from "next/image";
 
 // Mapa de iconos por categoría
@@ -12,6 +13,7 @@ const categoryIcons = {
   Mountain,
   Church,
   Zap,
+  Compass,
 };
 
 /**
@@ -19,9 +21,21 @@ const categoryIcons = {
  *
  * HU-003: Muestra los destinos de Venezuela agrupados por categoría
  * con descripciones exactas del requerimiento
+ *
+ * Obtiene datos de la BD con fallback a datos estáticos
  */
-export function VenezuelaDestinations() {
-  const { categories } = venezuelaDestinations;
+export async function VenezuelaDestinations() {
+  // Intentar obtener categorías con destinos de la BD, fallback a datos estáticos
+  let categories = [];
+  try {
+    categories = await getCategoriesWithDestinationsFromDB();
+    if (!categories || categories.length === 0) {
+      categories = venezuelaDestinations.categories;
+    }
+  } catch (error) {
+    console.error("Error loading destinations from DB, using fallback:", error);
+    categories = venezuelaDestinations.categories;
+  }
 
   return (
     <section className="mx-auto mb-[80px]">
