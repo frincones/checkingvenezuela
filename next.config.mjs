@@ -3,7 +3,7 @@ const cspHeader = `
     default-src 'self';
     script-src 'self' 'unsafe-eval' 'unsafe-inline' https://js.stripe.com https://va.vercel-scripts.com https://*.vercel-scripts.com;
     style-src 'self' 'unsafe-inline';
-    img-src 'self' blob: data: https://images.unsplash.com/ https://images.pexels.com/ https://platform-lookaside.fbsbx.com/ https://api.dicebear.com/;
+    img-src 'self' blob: data: https://images.unsplash.com/ https://images.pexels.com/ https://platform-lookaside.fbsbx.com/ https://api.dicebear.com/ https://*.supabase.co/;
     font-src 'self' data:;
     object-src 'self';
     frame-src 'self' https://www.openstreetmap.org/ https://js.stripe.com;

@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { useRouter, useParams } from "next/navigation";
 import Link from "next/link";
+import { ImageUpload } from "@/components/cms/ImageUpload";
 
 export default function EditDestinationPage() {
   const router = useRouter();
@@ -251,16 +252,12 @@ export default function EditDestinationPage() {
           </div>
 
           <div className="md:col-span-2">
-            <label className="block text-sm font-medium text-gray-700">
-              URL de Imagen
-            </label>
-            <input
-              type="url"
-              name="image_url"
+            <ImageUpload
               value={formData.image_url}
-              onChange={handleChange}
-              placeholder="https://..."
-              className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
+              onChange={(url) => setFormData((prev) => ({ ...prev, image_url: url }))}
+              folder="destinations"
+              label="Imagen del destino"
+              placeholder="Sube una imagen del destino"
             />
           </div>
 

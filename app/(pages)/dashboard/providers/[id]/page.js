@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { useRouter, useParams } from "next/navigation";
 import Link from "next/link";
+import { ImageUpload } from "@/components/cms/ImageUpload";
 
 const providerTypes = [
   { value: "airline", label: "Aerolínea" },
@@ -35,6 +36,7 @@ export default function EditProviderPage() {
     payment_terms: "",
     notes: "",
     status: "active",
+    logo_url: "",
   });
 
   useEffect(() => {
@@ -64,6 +66,7 @@ export default function EditProviderPage() {
           payment_terms: p.payment_terms || "",
           notes: p.notes || "",
           status: p.status || "active",
+          logo_url: p.logo_url || "",
         });
       }
     } catch (err) {
@@ -155,6 +158,17 @@ export default function EditProviderPage() {
       )}
 
       <form onSubmit={handleSubmit} className="rounded-lg bg-white p-6 shadow-md">
+        {/* Logo */}
+        <div className="mb-6">
+          <ImageUpload
+            value={formData.logo_url}
+            onChange={(url) => setFormData((prev) => ({ ...prev, logo_url: url }))}
+            folder="providers"
+            label="Logo del proveedor"
+            placeholder="Sube el logo del proveedor"
+          />
+        </div>
+
         {/* Información básica */}
         <h3 className="text-sm font-semibold text-gray-700 mb-4">Información Básica</h3>
         <div className="grid gap-6 md:grid-cols-3">

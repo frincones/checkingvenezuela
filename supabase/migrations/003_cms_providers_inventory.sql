@@ -507,5 +507,115 @@ CREATE TRIGGER update_service_inventory_updated_at
     FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
 -- =============================================
+-- 9. POLÍTICAS DE ESCRITURA PARA USUARIOS AUTENTICADOS
+-- =============================================
+
+-- Políticas para catalog_services (solo usuarios autenticados)
+DROP POLICY IF EXISTS "Authenticated users can insert services" ON public.catalog_services;
+DROP POLICY IF EXISTS "Authenticated users can update services" ON public.catalog_services;
+DROP POLICY IF EXISTS "Authenticated users can delete services" ON public.catalog_services;
+
+CREATE POLICY "Authenticated users can insert services" ON public.catalog_services
+    FOR INSERT WITH CHECK (auth.role() = 'authenticated');
+
+CREATE POLICY "Authenticated users can update services" ON public.catalog_services
+    FOR UPDATE USING (auth.role() = 'authenticated');
+
+CREATE POLICY "Authenticated users can delete services" ON public.catalog_services
+    FOR DELETE USING (auth.role() = 'authenticated');
+
+-- Políticas para destination_categories
+DROP POLICY IF EXISTS "Authenticated users can insert categories" ON public.destination_categories;
+DROP POLICY IF EXISTS "Authenticated users can update categories" ON public.destination_categories;
+DROP POLICY IF EXISTS "Authenticated users can delete categories" ON public.destination_categories;
+
+CREATE POLICY "Authenticated users can insert categories" ON public.destination_categories
+    FOR INSERT WITH CHECK (auth.role() = 'authenticated');
+
+CREATE POLICY "Authenticated users can update categories" ON public.destination_categories
+    FOR UPDATE USING (auth.role() = 'authenticated');
+
+CREATE POLICY "Authenticated users can delete categories" ON public.destination_categories
+    FOR DELETE USING (auth.role() = 'authenticated');
+
+-- Políticas para destinations
+DROP POLICY IF EXISTS "Authenticated users can insert destinations" ON public.destinations;
+DROP POLICY IF EXISTS "Authenticated users can update destinations" ON public.destinations;
+DROP POLICY IF EXISTS "Authenticated users can delete destinations" ON public.destinations;
+
+CREATE POLICY "Authenticated users can insert destinations" ON public.destinations
+    FOR INSERT WITH CHECK (auth.role() = 'authenticated');
+
+CREATE POLICY "Authenticated users can update destinations" ON public.destinations
+    FOR UPDATE USING (auth.role() = 'authenticated');
+
+CREATE POLICY "Authenticated users can delete destinations" ON public.destinations
+    FOR DELETE USING (auth.role() = 'authenticated');
+
+-- Políticas para tourism_providers
+DROP POLICY IF EXISTS "Authenticated users can insert providers" ON public.tourism_providers;
+DROP POLICY IF EXISTS "Authenticated users can update providers" ON public.tourism_providers;
+DROP POLICY IF EXISTS "Authenticated users can delete providers" ON public.tourism_providers;
+DROP POLICY IF EXISTS "Authenticated read all providers" ON public.tourism_providers;
+
+CREATE POLICY "Authenticated read all providers" ON public.tourism_providers
+    FOR SELECT USING (auth.role() = 'authenticated');
+
+CREATE POLICY "Authenticated users can insert providers" ON public.tourism_providers
+    FOR INSERT WITH CHECK (auth.role() = 'authenticated');
+
+CREATE POLICY "Authenticated users can update providers" ON public.tourism_providers
+    FOR UPDATE USING (auth.role() = 'authenticated');
+
+CREATE POLICY "Authenticated users can delete providers" ON public.tourism_providers
+    FOR DELETE USING (auth.role() = 'authenticated');
+
+-- Políticas para provider_contracts
+DROP POLICY IF EXISTS "Authenticated users can manage contracts" ON public.provider_contracts;
+
+CREATE POLICY "Authenticated users can manage contracts" ON public.provider_contracts
+    FOR ALL USING (auth.role() = 'authenticated');
+
+-- Políticas para service_inventory
+DROP POLICY IF EXISTS "Authenticated users can insert inventory" ON public.service_inventory;
+DROP POLICY IF EXISTS "Authenticated users can update inventory" ON public.service_inventory;
+DROP POLICY IF EXISTS "Authenticated users can delete inventory" ON public.service_inventory;
+DROP POLICY IF EXISTS "Authenticated read all inventory" ON public.service_inventory;
+
+CREATE POLICY "Authenticated read all inventory" ON public.service_inventory
+    FOR SELECT USING (auth.role() = 'authenticated');
+
+CREATE POLICY "Authenticated users can insert inventory" ON public.service_inventory
+    FOR INSERT WITH CHECK (auth.role() = 'authenticated');
+
+CREATE POLICY "Authenticated users can update inventory" ON public.service_inventory
+    FOR UPDATE USING (auth.role() = 'authenticated');
+
+CREATE POLICY "Authenticated users can delete inventory" ON public.service_inventory
+    FOR DELETE USING (auth.role() = 'authenticated');
+
+-- Políticas para inventory_price_history
+DROP POLICY IF EXISTS "Authenticated users can view price history" ON public.inventory_price_history;
+DROP POLICY IF EXISTS "Authenticated users can insert price history" ON public.inventory_price_history;
+
+CREATE POLICY "Authenticated users can view price history" ON public.inventory_price_history
+    FOR SELECT USING (auth.role() = 'authenticated');
+
+CREATE POLICY "Authenticated users can insert price history" ON public.inventory_price_history
+    FOR INSERT WITH CHECK (auth.role() = 'authenticated');
+
+-- =============================================
+-- 10. FUNCIÓN update_updated_at_column (si no existe)
+-- =============================================
+
+CREATE OR REPLACE FUNCTION update_updated_at_column()
+RETURNS TRIGGER AS $$
+BEGIN
+    NEW.updated_at = NOW();
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+-- =============================================
 -- FIN DE LA MIGRACIÓN
 -- =============================================
