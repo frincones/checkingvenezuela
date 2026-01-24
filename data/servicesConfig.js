@@ -1,9 +1,12 @@
 /**
- * Configuración del Catálogo de Servicios - CHECK-IN VENEZUELA
+ * Configuración del Catálogo de Servicios - VENEZUELA VOYAGES
  *
  * Todos los servicios tienen:
  * - Comprar online (o flujo definido si pagos no están listos)
  * - Cotizar con asesor (WhatsApp)
+ *
+ * NOTA: Este archivo contiene datos estáticos de fallback.
+ * Los componentes ahora pueden obtener datos de la BD usando lib/cms.js
  */
 
 export const servicesConfig = {
