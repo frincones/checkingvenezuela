@@ -7,6 +7,7 @@ import { Separator } from "@/components/ui/separator";
 import { PackageDetailsTab } from "@/components/pages/packages/sections/PackageDetailsTab";
 import { PackageItinerary } from "@/components/pages/packages/sections/PackageItinerary";
 import { PackageIncludes } from "@/components/pages/packages/sections/PackageIncludes";
+import { PackageActions } from "@/components/pages/packages/components/PackageActions";
 import { formatCurrency } from "@/lib/utils";
 import { createClient } from "@/lib/db/supabase/server";
 import { createAdminClient } from "@/lib/db/supabase/server";
@@ -79,6 +80,17 @@ export default async function PackageDetailPage({ params }) {
   const mainImage = packageData.images?.[0] || packageData.destination?.image_url || "/images/default-package.jpg";
   const displayPrice = packageData.sale_price || packageData.cost_price || 0;
 
+  // WhatsApp configuration
+  const phoneNumber = "584264034052";
+  const whatsappMessage = encodeURIComponent(
+    `Hola! Estoy interesado en el paquete "${packageData.name}". Me gustaría recibir más información y cotización. Precio visto: ${formatCurrency(displayPrice)}`
+  );
+  const whatsappUrl = `https://wa.me/${phoneNumber}?text=${whatsappMessage}`;
+
+  // Share URL
+  const currentUrl = typeof window !== 'undefined' ? window.location.href : '';
+  const shareUrl = currentUrl || `https://checkinvenezuela.com/packages/${params.slug}`;
+
   return (
     <main className="mx-auto mb-[90px] mt-10 w-[90%]">
       <BreadcrumbUI />
@@ -127,16 +139,11 @@ export default async function PackageDetailPage({ params }) {
             )}
           </div>
 
-          <div className="flex gap-3">
-            <Button variant="outline" size="lg" className="flex-1">
-              Compartir
-            </Button>
-            <Button asChild size="lg" className="flex-1 lg:min-w-[200px]">
-              <Link href={`/packages/${params.slug}/book`}>
-                Reservar Ahora
-              </Link>
-            </Button>
-          </div>
+          <PackageActions
+            packageName={packageData.name}
+            whatsappUrl={whatsappUrl}
+            shareUrl={shareUrl}
+          />
         </div>
       </div>
 
@@ -222,9 +229,9 @@ export default async function PackageDetailPage({ params }) {
           Reserva ahora y asegura tu lugar en esta experiencia única
         </p>
         <Button asChild size="lg" className="min-w-[200px]">
-          <Link href={`/packages/${params.slug}/book`}>
+          <a href={whatsappUrl} target="_blank" rel="noopener noreferrer">
             Reservar {packageData.name}
-          </Link>
+          </a>
         </Button>
       </div>
     </main>
