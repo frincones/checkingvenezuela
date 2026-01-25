@@ -13,7 +13,9 @@ export function PackageCard({ packageData, featured = false }) {
   // Generar slug desde el nombre de forma más limpia
   const slug = packageData.name
     .toLowerCase()
-    .replace(/\s+-\s+/g, '-')  // Reemplazar " - " con solo "-"
+    .normalize('NFD')           // Normalizar caracteres Unicode
+    .replace(/[\u0300-\u036f]/g, '') // Eliminar diacríticos (acentos: á->a, é->e, etc.)
+    .replace(/\s+-\s+/g, '-')   // Reemplazar " - " con solo "-"
     .replace(/\s+/g, '-')       // Reemplazar espacios con guiones
     .replace(/\/+/g, '-')       // Reemplazar "/" con guiones
     .replace(/[^a-z0-9-]/g, '') // Eliminar caracteres especiales

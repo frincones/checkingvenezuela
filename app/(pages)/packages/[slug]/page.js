@@ -44,6 +44,8 @@ async function getPackageBySlug(slug) {
     const generateSlug = (name) => {
       return name
         .toLowerCase()
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
         .replace(/\s+-\s+/g, '-')
         .replace(/\s+/g, '-')
         .replace(/\/+/g, '-')
