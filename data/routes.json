@@ -19,6 +19,10 @@
     "title": "Hotels Search",
     "path": "/hotels/search"
   },
+  "packages": {
+    "title": "Packages",
+    "path": "/packages"
+  },
   "privacy-policy": {
     "title": "Privacy Policy",
     "path": "/privacy-policy"

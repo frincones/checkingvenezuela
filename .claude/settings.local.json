@@ -32,7 +32,12 @@
       "Bash(\"c:\\\\Users\\\\freddyrs\\\\Desktop\\\\Checkin Venezuela\\\\fullstack-nextjs-golobe-travel-agency\\\\app\\\\api\\\\crm\\\\leads\\\\[id]\\\\route.js\")",
       "Bash(npm uninstall:*)",
       "Bash(cmd /c \"for /f \"\"tokens=5\"\" %a in \\(''netstat -ano ^| findstr :3000''\\) do taskkill /PID %a /F\")",
-      "Bash(findstr:*)"
+      "Bash(findstr:*)",
+      "Bash(git pull:*)",
+      "Bash(PGPASSWORD=\"Checking*.2025*.\" psql:*)",
+      "Bash(where:*)",
+      "Bash(start https://supabase.com/dashboard/project/stbbckupkuxasfthlsys/sql/new)",
+      "Bash(start https://supabase.com/dashboard/project/stbbckupkuxasfthlsys/database/tables)"
     ]
   },
   "agents": {
