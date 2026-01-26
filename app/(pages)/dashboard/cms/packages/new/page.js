@@ -537,7 +537,7 @@ export default function NewPackagePage() {
               <div className="space-y-2">
                 {formData.details.includes?.length === 0 && (
                   <p className="text-sm text-gray-500 italic">
-                    No hay items agregados. Haz clic en "Agregar" para añadir.
+                    No hay items agregados. Haz clic en &quot;Agregar&quot; para añadir.
                   </p>
                 )}
                 {formData.details.includes?.map((item, index) => (
@@ -578,7 +578,7 @@ export default function NewPackagePage() {
               <div className="space-y-2">
                 {formData.details.not_includes?.length === 0 && (
                   <p className="text-sm text-gray-500 italic">
-                    No hay items agregados. Haz clic en "Agregar" para añadir.
+                    No hay items agregados. Haz clic en &quot;Agregar&quot; para añadir.
                   </p>
                 )}
                 {formData.details.not_includes?.map((item, index) => (
