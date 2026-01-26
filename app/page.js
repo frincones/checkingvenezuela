@@ -13,6 +13,7 @@ import { ServicesSection } from "@/components/pages/home/sections/ServicesSectio
 import { VenezuelaDestinations } from "@/components/pages/home/sections/VenezuelaDestinations";
 import { PopularFlightDestinations } from "@/components/pages/home/sections/PopularFlightDestinations";
 import { PopularHotelDestinations } from "@/components/pages/home/sections/PopularHotelDestinations";
+import { FeaturedPackages } from "@/components/pages/home/sections/FeaturedPackages";
 
 export default async function HomePage() {
   const session = await auth();
@@ -70,6 +71,9 @@ export default async function HomePage() {
       <main className="mx-auto mb-10 w-[90%] space-y-10 md:mb-20 md:space-y-20">
         {/* HU-003: Catálogo de Servicios */}
         <ServicesSection />
+
+        {/* Paquetes Turísticos Destacados */}
+        <FeaturedPackages />
 
         {/* HU-003: Destinos de Venezuela */}
         <VenezuelaDestinations />
