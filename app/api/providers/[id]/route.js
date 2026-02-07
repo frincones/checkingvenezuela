@@ -28,7 +28,7 @@ export async function GET(request, { params }) {
       return NextResponse.json({ error: "Error al obtener proveedor" }, { status: 500 });
     }
 
-    return NextResponse.json(data);
+    return NextResponse.json({ data });
   } catch (err) {
     console.error("Error in GET provider:", err);
     return NextResponse.json({ error: "Error interno del servidor" }, { status: 500 });
@@ -50,7 +50,7 @@ export async function PATCH(request, { params }) {
     const adminClient = createAdminClient();
 
     const allowedFields = [
-      "name", "slug", "type", "logo_url", "description",
+      "name", "code", "slug", "type", "provider_type", "logo_url", "description",
       "contact_name", "contact_email", "contact_phone", "website",
       "country", "city", "address", "tax_id", "commission_rate",
       "payment_terms", "currency", "api_enabled", "api_credentials",

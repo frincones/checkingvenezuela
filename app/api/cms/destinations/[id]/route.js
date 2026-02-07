@@ -28,7 +28,7 @@ export async function GET(request, { params }) {
       return NextResponse.json({ error: "Error al obtener destino" }, { status: 500 });
     }
 
-    return NextResponse.json(data);
+    return NextResponse.json({ data });
   } catch (err) {
     console.error("Error in GET destination:", err);
     return NextResponse.json({ error: "Error interno del servidor" }, { status: 500 });
@@ -54,7 +54,7 @@ export async function PATCH(request, { params }) {
       "short_description", "country", "city", "airport_code", "hotel_type",
       "image_url", "gallery", "tags", "highlights", "coordinates", "pricing",
       "has_online_search", "has_quote_request", "search_href", "display_order",
-      "is_featured", "is_active", "metadata"
+      "is_featured", "is_active", "metadata", "meta_title", "meta_description"
     ];
 
     const updateData = {};
