@@ -1,15 +1,17 @@
-import { createClient } from "@/lib/db/supabase/server";
+import { createClient, createAdminClient } from "@/lib/db/supabase/server";
 import { NextResponse } from "next/server";
 
 /**
  * API para subir imágenes al storage de Supabase
  * POST /api/cms/upload
+ *
+ * Usa createClient para verificar autenticación del usuario
+ * Usa createAdminClient para operaciones de storage (bypasa RLS después de verificar auth)
  */
 export async function POST(request) {
   try {
+    // Verificar autenticación del usuario
     const supabase = await createClient();
-
-    // Verificar autenticación
     const { data: { user }, error: authError } = await supabase.auth.getUser();
     if (authError || !user) {
       return NextResponse.json(
@@ -56,8 +58,11 @@ export async function POST(request) {
     const arrayBuffer = await file.arrayBuffer();
     const buffer = Buffer.from(arrayBuffer);
 
+    // Usar cliente admin para operaciones de storage (ya verificamos auth arriba)
+    const adminClient = createAdminClient();
+
     // Subir a Supabase Storage
-    const { data, error } = await supabase.storage
+    const { data, error } = await adminClient.storage
       .from("cms-images")
       .upload(fileName, buffer, {
         contentType: file.type,
@@ -74,7 +79,7 @@ export async function POST(request) {
     }
 
     // Obtener URL pública
-    const { data: urlData } = supabase.storage
+    const { data: urlData } = adminClient.storage
       .from("cms-images")
       .getPublicUrl(data.path);
 
@@ -98,9 +103,8 @@ export async function POST(request) {
  */
 export async function DELETE(request) {
   try {
+    // Verificar autenticación del usuario
     const supabase = await createClient();
-
-    // Verificar autenticación
     const { data: { user }, error: authError } = await supabase.auth.getUser();
     if (authError || !user) {
       return NextResponse.json(
@@ -119,7 +123,9 @@ export async function DELETE(request) {
       );
     }
 
-    const { error } = await supabase.storage
+    // Usar cliente admin para operaciones de storage
+    const adminClient = createAdminClient();
+    const { error } = await adminClient.storage
       .from("cms-images")
       .remove([path]);
 
