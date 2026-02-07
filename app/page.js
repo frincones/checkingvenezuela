@@ -72,11 +72,11 @@ export default async function HomePage() {
       </header>
 
       <main className="mx-auto mb-10 w-[90%] space-y-10 pt-10 md:mb-20 md:space-y-20 md:pt-16">
-        {/* HU-003: Catálogo de Servicios */}
-        <ServicesSection />
-
         {/* Paquetes Turísticos Destacados */}
         <FeaturedPackages />
+
+        {/* HU-003: Catálogo de Servicios */}
+        <ServicesSection />
 
         {/* HU-003: Destinos de Venezuela */}
         <VenezuelaDestinations />
