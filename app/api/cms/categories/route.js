@@ -66,7 +66,9 @@ export async function POST(request) {
       name: body.name,
       slug: body.slug,
       subtitle: body.subtitle || null,
+      description: body.description || null,
       icon: body.icon || null,
+      image_url: body.image_url || null,
       display_order: body.displayOrder ?? body.display_order ?? 0,
       is_active: body.isActive ?? body.is_active ?? true,
     };

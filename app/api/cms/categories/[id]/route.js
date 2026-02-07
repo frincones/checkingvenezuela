@@ -28,7 +28,7 @@ export async function GET(request, { params }) {
       return NextResponse.json({ error: "Error al obtener categoría" }, { status: 500 });
     }
 
-    return NextResponse.json(data);
+    return NextResponse.json({ data });
   } catch (err) {
     console.error("Error in GET category:", err);
     return NextResponse.json({ error: "Error interno del servidor" }, { status: 500 });
@@ -49,7 +49,7 @@ export async function PATCH(request, { params }) {
     const body = await request.json();
     const adminClient = createAdminClient();
 
-    const allowedFields = ["name", "slug", "subtitle", "icon", "display_order", "is_active"];
+    const allowedFields = ["name", "slug", "subtitle", "description", "icon", "image_url", "display_order", "is_active"];
     const updateData = {};
 
     for (const field of allowedFields) {
