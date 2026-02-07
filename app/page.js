@@ -1,5 +1,6 @@
 import { Nav } from "@/components/sections/Nav";
-import { SearchFlightsAndStaysFormShortcut } from "@/components/pages/home/sections/SearchFlightsAndStaysFormShortcut";
+// TEMPORALMENTE DESHABILITADO - Buscador de vuelos/hospedaje
+// import { SearchFlightsAndStaysFormShortcut } from "@/components/pages/home/sections/SearchFlightsAndStaysFormShortcut";
 import { FindFlightAndHotelcards } from "@/components/pages/home/sections/FindFlightAndHotelCards";
 import { Reviews } from "@/components/pages/home/sections/Reviews";
 import { Footer } from "@/components/sections/Footer";
@@ -21,7 +22,7 @@ export default async function HomePage() {
 
   return (
     <>
-      <header className="relative mb-20">
+      <header className="relative">
         <Nav
           type="home"
           className={"absolute left-0 top-0 z-10"}
@@ -61,14 +62,16 @@ export default async function HomePage() {
             )}
           </div>
         </section>
+        {/* TEMPORALMENTE DESHABILITADO - Buscador de vuelos/hospedaje
         <SearchFlightsAndStaysFormShortcut
           className={
             "relative left-1/2 top-full w-[90%] -translate-x-1/2 -translate-y-[20%] lg:-translate-y-[25%] xl:-translate-y-[30%]"
           }
         />
+        */}
       </header>
 
-      <main className="mx-auto mb-10 w-[90%] space-y-10 md:mb-20 md:space-y-20">
+      <main className="mx-auto mb-10 w-[90%] space-y-10 pt-10 md:mb-20 md:space-y-20 md:pt-16">
         {/* HU-003: Catálogo de Servicios */}
         <ServicesSection />
 
