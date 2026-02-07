@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { ImageUpload } from "@/components/cms/ImageUpload";
 
 const ICONS = [
   "Plane", "Building2", "Package", "Compass", "Car", "Shield",
@@ -19,6 +20,7 @@ export default function NewServicePage() {
     slug: "",
     description: "",
     icon: "Plane",
+    image_url: "",
     status: "active",
     hasOnlinePurchase: false,
     hasQuoteRequest: true,
@@ -131,6 +133,16 @@ export default function NewServicePage() {
               rows={3}
               className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
               placeholder="Descripción breve del servicio"
+            />
+          </div>
+
+          <div className="md:col-span-2">
+            <ImageUpload
+              value={formData.image_url}
+              onChange={(url) => setFormData((prev) => ({ ...prev, image_url: url }))}
+              folder="services"
+              label="Imagen del servicio"
+              placeholder="Sube una imagen para el servicio"
             />
           </div>
 
