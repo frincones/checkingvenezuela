@@ -28,7 +28,7 @@ export async function GET(request, { params }) {
       return NextResponse.json({ error: "Error al obtener servicio" }, { status: 500 });
     }
 
-    return NextResponse.json(data);
+    return NextResponse.json({ data });
   } catch (err) {
     console.error("Error in GET service:", err);
     return NextResponse.json({ error: "Error interno del servidor" }, { status: 500 });

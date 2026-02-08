@@ -34,7 +34,7 @@ export async function GET(request, { params }) {
       return NextResponse.json({ error: "Error al obtener producto" }, { status: 500 });
     }
 
-    return NextResponse.json(data);
+    return NextResponse.json({ data });
   } catch (err) {
     console.error("Error in GET inventory item:", err);
     return NextResponse.json({ error: "Error interno del servidor" }, { status: 500 });
