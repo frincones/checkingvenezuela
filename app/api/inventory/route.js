@@ -94,7 +94,8 @@ export async function POST(request) {
     const body = await request.json();
     const adminClient = createAdminClient();
 
-    if (!body.name || !body.productType) {
+    const productType = body.productType || body.product_type;
+    if (!body.name || !productType) {
       return NextResponse.json({ error: "Nombre y tipo de producto son requeridos" }, { status: 400 });
     }
 
@@ -105,7 +106,7 @@ export async function POST(request) {
       name: body.name,
       sku: body.sku || null,
       description: body.description || null,
-      product_type: body.productType || body.product_type,
+      product_type: productType,
       cost_price: body.costPrice ?? body.cost_price ?? null,
       sale_price: body.salePrice ?? body.sale_price ?? null,
       currency: body.currency || "USD",

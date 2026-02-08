@@ -45,7 +45,7 @@ export default function EditServicePage() {
         return;
       }
 
-      setFormData(data);
+      setFormData(data.data || data);
     } catch (err) {
       setError("Error al cargar servicio");
     } finally {
