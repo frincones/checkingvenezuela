@@ -32,17 +32,14 @@ export default async function HomePage() {
           className={`relative flex h-[600px] w-full items-center bg-home-header`}
         >
           <Image
-            src={
-              "https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?q=70&amp;w=870&amp;auto=format&amp;fit=crop&amp;ixlib=rb-4.0.3&amp;ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
-            }
-            alt="Venezuela landscape - Caribbean paradise"
+            src="/images/hero-venezuela.jpg"
+            alt="Venezuela - Paisaje caribeño"
             fill
-            sizes="(max-width: 640px) 50vw, 90vw"
-            className="-z-10 object-cover object-[center_40%]"
-            loading={"eager"}
+            sizes="100vw"
+            quality={90}
+            className="-z-10 object-cover object-center"
+            priority
           />
-          {/* Overlay para mejorar legibilidad del texto */}
-          <div className="absolute inset-0 -z-[5] bg-gradient-to-b from-black/40 via-black/20 to-black/50" />
           <div className="w-full px-4 text-center text-white">
             {/* Headline principal - HU-002 */}
             <h1 className="mx-auto max-w-4xl font-tradegothic text-[1.75rem] font-bold leading-tight tracking-wide drop-shadow-lg sm:text-[2.25rem] md:text-[3rem] lg:text-[3.5rem] xl:text-[4rem]">

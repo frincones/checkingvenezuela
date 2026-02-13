@@ -15,7 +15,7 @@ export const heroConfig = {
   // Variantes disponibles de headlines
   variants: {
     "caribbean-secret": {
-      headline: "Venezuela: The Last Best Kept Secret in the Caribbean.",
+      headline: "Venezuela The Last Best Kept Secret in the Caribbean.",
       subtitle: null, // TBD en HU-003
       cta: null, // TBD en HU-004
       language: "en",
