@@ -32,16 +32,14 @@ export default async function HomePage() {
           className={`relative flex h-[600px] w-full items-center bg-home-header`}
         >
           <Image
-            src="/images/hero-los-roques.jpg"
-            alt="Los Roques - Playa caribeña de Venezuela"
+            src="/images/hero-venezuela.jpg"
+            alt="Venezuela - Paisaje caribeño"
             fill
             sizes="100vw"
-            quality={100}
+            quality={90}
             className="-z-10 object-cover object-center"
             priority
           />
-          {/* Overlay sutil para legibilidad del texto */}
-          <div className="absolute inset-0 -z-[5] bg-gradient-to-b from-black/20 via-transparent to-black/30" />
           <div className="w-full px-4 text-center text-white">
             {/* Headline principal - HU-002 */}
             <h1 className="mx-auto max-w-4xl font-tradegothic text-[1.75rem] font-bold leading-tight tracking-wide drop-shadow-lg sm:text-[2.25rem] md:text-[3rem] lg:text-[3.5rem] xl:text-[4rem]">
