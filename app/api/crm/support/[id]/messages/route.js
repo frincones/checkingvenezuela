@@ -1,11 +1,44 @@
 /**
  * API de Ticket Messages - CHECK-IN VENEZUELA CRM
  *
+ * GET /api/crm/support/[id]/messages - Lista mensajes de un ticket
  * POST /api/crm/support/[id]/messages - Agrega mensaje a un ticket
  */
 
 import { createClient, createAdminClient } from "@/lib/db/supabase/server";
 import { NextResponse } from "next/server";
+
+/**
+ * GET - Lista mensajes de un ticket
+ */
+export async function GET(request, { params }) {
+  try {
+    const { id } = await params;
+    const supabase = await createClient();
+
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    if (authError || !user) {
+      return NextResponse.json({ error: "No autorizado" }, { status: 401 });
+    }
+
+    const adminClient = createAdminClient();
+    const { data: messages, error } = await adminClient
+      .from("ticket_messages")
+      .select("*")
+      .eq("ticket_id", id)
+      .order("created_at", { ascending: true });
+
+    if (error) {
+      console.error("Error fetching messages:", error);
+      return NextResponse.json({ error: "Error al obtener mensajes" }, { status: 500 });
+    }
+
+    return NextResponse.json({ data: messages || [] });
+  } catch (error) {
+    console.error("Error in GET /api/crm/support/[id]/messages:", error);
+    return NextResponse.json({ error: "Error interno del servidor" }, { status: 500 });
+  }
+}
 
 /**
  * POST - Agrega un mensaje a un ticket
@@ -26,8 +59,9 @@ export async function POST(request, { params }) {
       return NextResponse.json({ error: "No autorizado" }, { status: 401 });
     }
 
-    // Validar contenido
-    if (!body.content || body.content.trim() === "") {
+    // Aceptar tanto 'content' como 'message' del frontend
+    const content = body.content || body.message;
+    if (!content || content.trim() === "") {
       return NextResponse.json(
         { error: "El contenido del mensaje es requerido" },
         { status: 400 }
@@ -78,7 +112,7 @@ export async function POST(request, { params }) {
       ticket_id: id,
       author_type: authorType,
       author_id: authorId,
-      content: body.content,
+      content: content,
       attachments: body.attachments || [],
       is_internal: advisor ? body.is_internal || false : false, // Solo asesores pueden crear notas internas
     };

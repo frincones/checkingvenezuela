@@ -84,41 +84,42 @@ export default function EditPackagePage() {
   async function fetchPackage() {
     try {
       const response = await fetch(`/api/inventory/${params.id}`);
-      const data = await response.json();
+      const result = await response.json();
 
-      if (data.error) {
-        setError(data.error);
+      if (result.error) {
+        setError(result.error);
       } else {
+        const pkg = result.data || result;
         setFormData({
-          name: data.name || "",
-          sku: data.sku || "",
-          description: data.description || "",
-          provider_id: data.provider_id || "",
-          destination_id: data.destination_id || "",
-          sale_price: data.sale_price || "",
-          cost_price: data.cost_price || "",
-          currency: data.currency || "USD",
-          status: data.status || "available",
-          quantity_available: data.quantity_available || "",
-          valid_from: data.valid_from ? data.valid_from.split('T')[0] : "",
-          valid_until: data.valid_until ? data.valid_until.split('T')[0] : "",
-          is_featured: data.is_featured ?? false,
-          is_published: data.is_published ?? true,
-          display_order: data.display_order || 0,
-          pricing_details: data.pricing_details || {
+          name: pkg.name || "",
+          sku: pkg.sku || "",
+          description: pkg.description || "",
+          provider_id: pkg.provider_id || "",
+          destination_id: pkg.destination_id || "",
+          sale_price: pkg.sale_price || "",
+          cost_price: pkg.cost_price || "",
+          currency: pkg.currency || "USD",
+          status: pkg.status || "available",
+          quantity_available: pkg.quantity_available || "",
+          valid_from: pkg.valid_from ? pkg.valid_from.split('T')[0] : "",
+          valid_until: pkg.valid_until ? pkg.valid_until.split('T')[0] : "",
+          is_featured: pkg.is_featured ?? false,
+          is_published: pkg.is_published ?? true,
+          display_order: pkg.display_order || 0,
+          pricing_details: pkg.pricing_details || {
             display_text: "",
             price_type: "per_person",
             category: ""
           },
-          details: data.details || {
+          details: pkg.details || {
             duration: "",
             itinerary: [],
             includes: [],
             not_includes: [],
             schedule: { departure: "", return: "" }
           },
-          images: data.images || [],
-          blackout_dates: data.blackout_dates || []
+          images: pkg.images || [],
+          blackout_dates: pkg.blackout_dates || []
         });
       }
     } catch (err) {

@@ -102,7 +102,7 @@ export default function LeadDetailPage() {
           <Link href="/dashboard/leads" className="text-sm text-gray-500 hover:text-gray-700">
             ← Volver a leads
           </Link>
-          <h1 className="mt-2 text-2xl font-bold text-gray-900">{lead.customer_name}</h1>
+          <h1 className="mt-2 text-2xl font-bold text-gray-900">{lead.contact_name}</h1>
         </div>
         <div className="flex gap-2">
           <button
@@ -129,19 +129,19 @@ export default function LeadDetailPage() {
             <dl className="grid gap-4 sm:grid-cols-2">
               <div>
                 <dt className="text-sm font-medium text-gray-500">Email</dt>
-                <dd className="mt-1 text-sm text-gray-900">{lead.customer_email || "N/A"}</dd>
+                <dd className="mt-1 text-sm text-gray-900">{lead.contact_email || "N/A"}</dd>
               </div>
               <div>
                 <dt className="text-sm font-medium text-gray-500">Telefono</dt>
                 <dd className="mt-1 text-sm text-gray-900">
-                  {lead.customer_phone ? (
+                  {lead.contact_phone ? (
                     <a
-                      href={`https://wa.me/${lead.customer_phone.replace(/\D/g, "")}`}
+                      href={`https://wa.me/${lead.contact_phone.replace(/\D/g, "")}`}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="text-green-600 hover:underline"
                     >
-                      {lead.customer_phone} (WhatsApp)
+                      {lead.contact_phone} (WhatsApp)
                     </a>
                   ) : (
                     "N/A"
@@ -229,9 +229,9 @@ export default function LeadDetailPage() {
           <div className="rounded-lg bg-white p-6 shadow-md">
             <h2 className="mb-4 text-lg font-semibold text-gray-900">Acciones Rapidas</h2>
             <div className="space-y-2">
-              {lead.customer_phone && (
+              {lead.contact_phone && (
                 <a
-                  href={`https://wa.me/${lead.customer_phone.replace(/\D/g, "")}`}
+                  href={`https://wa.me/${lead.contact_phone.replace(/\D/g, "")}`}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="flex items-center gap-2 rounded-md bg-green-100 px-4 py-2 text-sm font-medium text-green-700 hover:bg-green-200"
@@ -242,9 +242,9 @@ export default function LeadDetailPage() {
                   Enviar WhatsApp
                 </a>
               )}
-              {lead.customer_email && (
+              {lead.contact_email && (
                 <a
-                  href={`mailto:${lead.customer_email}`}
+                  href={`mailto:${lead.contact_email}`}
                   className="flex items-center gap-2 rounded-md bg-blue-100 px-4 py-2 text-sm font-medium text-blue-700 hover:bg-blue-200"
                 >
                   <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
