@@ -168,10 +168,13 @@ export async function Reviews() {
   const { satisfiedReviews, averageRating, fiveStarReviews, satisfactionRate } =
     await getWebsiteReviewsStats();
 
-  // Merge DB reviews (priority) with featured reviews
-  const dbReviewIds = new Set(dbReviews.map((r) => r.id));
+  // Filter out DB reviews without a real name, then merge with featured reviews
+  const namedDbReviews = dbReviews.filter(
+    (r) => r.reviewer && r.reviewer !== "Usuario",
+  );
+  const dbReviewIds = new Set(namedDbReviews.map((r) => r.id));
   const allReviews = [
-    ...dbReviews,
+    ...namedDbReviews,
     ...FEATURED_REVIEWS.filter((r) => !dbReviewIds.has(r.id)),
   ];
 
@@ -216,7 +219,7 @@ export async function Reviews() {
                   </div>
                 </div>
                 <div className="mb-1 text-3xl font-bold text-gray-900">
-                  {Math.max(satisfiedReviews, 150)}+
+                  {Math.max(parseInt(satisfiedReviews) || 0, 150)}+
                 </div>
                 <div className="text-sm font-medium text-gray-600">
                   Satisfied Customers
@@ -250,7 +253,7 @@ export async function Reviews() {
                   </div>
                 </div>
                 <div className="mb-1 text-3xl font-bold text-gray-900">
-                  {Math.max(fiveStarReviews, 89)}+
+                  {Math.max(parseInt(fiveStarReviews) || 0, 89)}+
                 </div>
                 <div className="text-sm font-medium text-gray-600">
                   5-Star Reviews
