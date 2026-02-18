@@ -3,7 +3,6 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { ImageUpload } from "@/components/cms/ImageUpload";
 
 export default function NewCategoryPage() {
   const router = useRouter();
@@ -14,7 +13,6 @@ export default function NewCategoryPage() {
     slug: "",
     subtitle: "",
     description: "",
-    image_url: "",
     display_order: 0,
     is_active: true,
   });
@@ -23,7 +21,7 @@ export default function NewCategoryPage() {
     const { name, value, type, checked } = e.target;
     setFormData((prev) => ({
       ...prev,
-      [name]: type === "checkbox" ? checked : value,
+      [name]: type === "checkbox" ? checked : type === "number" ? Number(value) : value,
     }));
 
     // Auto-generate slug from name
@@ -148,16 +146,6 @@ export default function NewCategoryPage() {
               onChange={handleChange}
               rows={3}
               className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
-            />
-          </div>
-
-          <div className="md:col-span-2">
-            <ImageUpload
-              value={formData.image_url}
-              onChange={(url) => setFormData((prev) => ({ ...prev, image_url: url }))}
-              folder="categories"
-              label="Imagen de la categoría"
-              placeholder="Sube una imagen para la categoría"
             />
           </div>
 

@@ -15,6 +15,9 @@ import { PopularFlightDestinations } from "@/components/pages/home/sections/Popu
 import { PopularHotelDestinations } from "@/components/pages/home/sections/PopularHotelDestinations";
 import { FeaturedPackages } from "@/components/pages/home/sections/FeaturedPackages";
 
+// Forzar renderizado dinámico para siempre mostrar datos frescos del CMS
+export const dynamic = "force-dynamic";
+
 export default async function HomePage() {
   const session = await auth();
   const heroContent = getActiveHeroContent();
