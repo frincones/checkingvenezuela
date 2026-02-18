@@ -66,14 +66,6 @@ export function QuickLinks() {
     ],
     "Servicios": [
       {
-        name: "Vuelos",
-        href: "/flights",
-      },
-      {
-        name: "Hoteles",
-        href: "/hotels",
-      },
-      {
         name: "Paquetes Turísticos",
         href: "#",
       },
@@ -81,7 +73,7 @@ export function QuickLinks() {
     "Nosotros": [
       {
         name: "Nuestra Historia",
-        href: "#",
+        href: "/about",
       },
       {
         name: "Trabaja con Nosotros",
