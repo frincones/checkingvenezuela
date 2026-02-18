@@ -26,10 +26,10 @@ export async function Footer() {
       <SubscribeNewsletter isSubscribed={isSubscribed} />
       <QuickLinks />
       <div className="relative z-10 text-center text-sm font-medium text-white/70">
-        © {new Date().getFullYear()} VENEZUELA VOYAGES. Todos los derechos reservados.
+        © {new Date().getFullYear()} VENEZUELA VOYAGES. All rights reserved.
       </div>
       <div className="relative z-10 mt-2 text-center text-xs font-medium text-accent/80">
-        Venezuela | Explore Now | Atención 24/7
+        Venezuela | Explore Now | 24/7 Support
       </div>
     </footer>
   );

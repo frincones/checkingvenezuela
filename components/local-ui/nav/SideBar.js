@@ -11,7 +11,7 @@ import { Separator } from "@/components/ui/separator";
 import Link from "next/link";
 import LogoutBtn from "@/components/LogoutBtn";
 
-import { LogIn, LayoutDashboard, User, BookCopy, CreditCard, Settings, HeadphonesIcon, LogOut, Heart, Plane, Building2 } from "lucide-react";
+import { LogIn, LayoutDashboard, User, BookCopy, CreditCard, Settings, HeadphonesIcon, LogOut, Heart } from "lucide-react";
 
 import { useState } from "react";
 import { usePathname } from "next/navigation";
@@ -57,27 +57,6 @@ export function SideBar({ isLoggedIn, sideBarLinksUser }) {
       </SheetTrigger>
       <SheetContent>
         <ul className="mt-2 grid gap-2 py-2 font-semibold">
-          <li>
-            <SheetClose asChild>
-              <Button className={"h-auto gap-2 p-0"} variant="link" asChild>
-                <Link href={routes.flights.path}>
-                  <Plane width={20} />
-                  <span>{routes.flights.title}</span>
-                </Link>
-              </Button>
-            </SheetClose>
-          </li>
-          <li>
-            <SheetClose asChild>
-              <Button className={"h-auto gap-2 p-0"} variant="link" asChild>
-                <Link href={routes.hotels.path}>
-                  <Building2 width={20} />
-                  <span>{routes.hotels.title}</span>
-                </Link>
-              </Button>
-            </SheetClose>
-          </li>
-          <Separator />
           {!isLoggedIn ? (
             <>
               <li>
