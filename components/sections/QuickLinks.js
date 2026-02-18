@@ -46,7 +46,7 @@ function TikTokIcon({ className }) {
 
 export function QuickLinks() {
   const links = {
-    "Destinos": [
+    "Destinations": [
       {
         name: "Venezuela",
         href: "#",
@@ -56,27 +56,27 @@ export function QuickLinks() {
         href: "#",
       },
       {
-        name: "México",
+        name: "Mexico",
         href: "#",
       },
       {
-        name: "Estados Unidos",
-        href: "#",
-      },
-    ],
-    "Servicios": [
-      {
-        name: "Paquetes Turísticos",
+        name: "United States",
         href: "#",
       },
     ],
-    "Nosotros": [
+    "Services": [
       {
-        name: "Nuestra Historia",
+        name: "Travel Packages",
+        href: "#",
+      },
+    ],
+    "About Us": [
+      {
+        name: "Our Story",
         href: "/about",
       },
       {
-        name: "Trabaja con Nosotros",
+        name: "Work With Us",
         href: "#",
       },
     ],
@@ -107,7 +107,7 @@ export function QuickLinks() {
         {/* Horario */}
         <div className="mb-6 flex items-center gap-2 text-white/90">
           <Clock className="h-4 w-4 text-accent" />
-          <span className="text-sm font-medium">Atención 24/7</span>
+          <span className="text-sm font-medium">24/7 Support</span>
         </div>
 
         {/* Redes sociales */}
@@ -122,7 +122,7 @@ export function QuickLinks() {
                   href={social.href}
                   target="_blank"
                   rel="noopener noreferrer"
-                  aria-label={`Síguenos en ${social.name}`}
+                  aria-label={`Follow us on ${social.name}`}
                   className="flex h-9 w-9 items-center justify-center rounded-full border border-accent/50 text-accent transition-all duration-200 hover:bg-accent hover:text-primary"
                 >
                   {social.name === "TikTok" ? (
@@ -148,7 +148,7 @@ export function QuickLinks() {
                   return (
                     <div key={item.name}>
                       <Link
-                        aria-label={"Ir a " + item.name}
+                        aria-label={"Go to " + item.name}
                         href={item.href}
                         className="text-[0.875rem] hover:text-accent inline font-medium text-white/70 transition-colors"
                       >
@@ -164,7 +164,7 @@ export function QuickLinks() {
 
         {/* Contacto section */}
         <div className="text-[0.875rem] font-medium text-white/70">
-          <h3 className="mb-[16px] font-bold text-accent">Contacto</h3>
+          <h3 className="mb-[16px] font-bold text-accent">Contact</h3>
           <div className="flex flex-col gap-3">
             <a
               href="https://wa.me/584264034052"
@@ -175,7 +175,7 @@ export function QuickLinks() {
               WhatsApp
             </a>
             <span className="text-[0.875rem] font-medium text-white/40">
-              Email: Próximamente
+              Email: Coming Soon
             </span>
           </div>
         </div>
