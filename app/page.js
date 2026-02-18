@@ -1,7 +1,6 @@
 import { Nav } from "@/components/sections/Nav";
 // TEMPORALMENTE DESHABILITADO - Buscador de vuelos/hospedaje
 // import { SearchFlightsAndStaysFormShortcut } from "@/components/pages/home/sections/SearchFlightsAndStaysFormShortcut";
-import { FindFlightAndHotelcards } from "@/components/pages/home/sections/FindFlightAndHotelCards";
 import { Reviews } from "@/components/pages/home/sections/Reviews";
 import { Footer } from "@/components/sections/Footer";
 import Image from "next/image";
@@ -85,7 +84,6 @@ export default async function HomePage() {
         <PopularHotelDestinations />
 
         {/* Secciones existentes */}
-        <FindFlightAndHotelcards />
         <Reviews />
       </main>
       <Footer />
