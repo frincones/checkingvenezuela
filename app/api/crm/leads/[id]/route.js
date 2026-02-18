@@ -73,7 +73,7 @@ export async function GET(request, { params }) {
       );
     }
 
-    return NextResponse.json(lead);
+    return NextResponse.json({ data: lead });
   } catch (error) {
     console.error("Error in GET /api/crm/leads/[id]:", error);
     return NextResponse.json(
@@ -117,6 +117,7 @@ export async function PATCH(request, { params }) {
       "interest_details",
       "next_follow_up_at",
       "last_contacted_at",
+      "notes",
     ];
 
     // Filtrar solo campos permitidos
@@ -180,7 +181,7 @@ export async function PATCH(request, { params }) {
       });
     }
 
-    return NextResponse.json(lead);
+    return NextResponse.json({ data: lead });
   } catch (error) {
     console.error("Error in PATCH /api/crm/leads/[id]:", error);
     return NextResponse.json(

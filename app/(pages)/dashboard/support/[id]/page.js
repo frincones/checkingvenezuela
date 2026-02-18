@@ -200,17 +200,17 @@ export default function TicketDetailPage() {
                 messages.map((msg) => (
                   <div
                     key={msg.id}
-                    className={`flex ${msg.sender_type === "agent" ? "justify-end" : "justify-start"}`}
+                    className={`flex ${msg.author_type === "advisor" ? "justify-end" : "justify-start"}`}
                   >
                     <div
                       className={`max-w-[80%] rounded-lg p-3 ${
-                        msg.sender_type === "agent"
+                        msg.author_type === "advisor"
                           ? "bg-primary text-white"
                           : "bg-gray-100 text-gray-900"
                       }`}
                     >
-                      <p className="text-sm whitespace-pre-wrap">{msg.message}</p>
-                      <p className={`text-xs mt-1 ${msg.sender_type === "agent" ? "text-white/70" : "text-gray-500"}`}>
+                      <p className="text-sm whitespace-pre-wrap">{msg.content || msg.message}</p>
+                      <p className={`text-xs mt-1 ${msg.author_type === "advisor" ? "text-white/70" : "text-gray-500"}`}>
                         {new Date(msg.created_at).toLocaleString("es-VE")}
                       </p>
                     </div>

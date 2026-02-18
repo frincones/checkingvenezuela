@@ -86,7 +86,7 @@ export async function GET(request, { params }) {
       ticket.messages = ticket.messages.filter((m) => !m.is_internal);
     }
 
-    return NextResponse.json(ticket);
+    return NextResponse.json({ data: ticket });
   } catch (error) {
     console.error("Error in GET /api/crm/support/[id]:", error);
     return NextResponse.json(
@@ -210,7 +210,7 @@ export async function PATCH(request, { params }) {
       });
     }
 
-    return NextResponse.json(ticket);
+    return NextResponse.json({ data: ticket });
   } catch (error) {
     console.error("Error in PATCH /api/crm/support/[id]:", error);
     return NextResponse.json(
