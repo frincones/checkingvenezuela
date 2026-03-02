@@ -1,11 +1,13 @@
 import { SectionTitle } from "@/components/SectionTitle";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { DualCTA } from "@/components/ui/DualCTA";
 import { venezuelaDestinations } from "@/data/venezuelaDestinations";
 import { getCategoriesWithDestinationsFromDB } from "@/lib/cms";
-import { Umbrella, Mountain, Church, Zap, Compass } from "lucide-react";
+import { Umbrella, Mountain, Church, Zap, Compass, Package as PackageIcon } from "lucide-react";
 import Image from "next/image";
+import Link from "next/link";
 
 // Mapa de iconos por categoría
 const categoryIcons = {
@@ -135,6 +137,21 @@ export async function VenezuelaDestinations() {
                         quoteMessage={`Hola, estoy interesado en viajar a ${destination.name}, Venezuela. ¿Podrían darme más información?`}
                         quoteLabel="Cotizar"
                       />
+
+                      {/* Ver Paquetes - solo si el destino viene de BD y tiene paquetes */}
+                      {destination.slug && destination.packageCount > 0 && (
+                        <Button
+                          asChild
+                          variant="outline"
+                          size="sm"
+                          className="mt-3 w-full border-primary/30 text-primary hover:bg-primary/5 hover:text-primary"
+                        >
+                          <Link href={`/packages/destino/${destination.slug}`}>
+                            <PackageIcon className="mr-2 h-4 w-4" />
+                            Ver Paquetes ({destination.packageCount})
+                          </Link>
+                        </Button>
+                      )}
                     </CardContent>
                   </Card>
                 ))}
