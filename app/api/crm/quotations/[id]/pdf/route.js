@@ -7,6 +7,8 @@
 import { createClient, createAdminClient } from "@/lib/db/supabase/server";
 import { NextResponse } from "next/server";
 import { PDFDocument, rgb, StandardFonts } from "pdf-lib";
+import { readFileSync } from "fs";
+import { join } from "path";
 
 /**
  * Formatea moneda
@@ -41,60 +43,60 @@ async function generateQuotationPDF(quotation) {
 
   let y = height - 50;
 
+  // Embed logo
+  const logoPath = join(process.cwd(), "public/images/venezuela-voyages-logo.png");
+  const logoBytes = readFileSync(logoPath);
+  const logoImage = await pdfDoc.embedPng(logoBytes);
+
   // Header background
+  const headerHeight = 130;
   page.drawRectangle({
     x: 0,
-    y: height - 120,
+    y: height - headerHeight,
     width: width,
-    height: 120,
+    height: headerHeight,
     color: primaryColor,
   });
 
-  // Company name - Venezuela Voyages
-  page.drawText("VENEZUELA VOYAGES", {
-    x: 50,
-    y: height - 60,
-    size: 24,
-    font: helveticaBold,
-    color: whiteColor,
+  // Logo - scaled to fit header
+  const logoDisplayHeight = 110;
+  const logoScale = logoDisplayHeight / logoImage.height;
+  const logoDisplayWidth = logoImage.width * logoScale;
+  page.drawImage(logoImage, {
+    x: 30,
+    y: height - headerHeight + (headerHeight - logoDisplayHeight) / 2,
+    width: logoDisplayWidth,
+    height: logoDisplayHeight,
   });
 
-  page.drawText("Explore Now - Tu aventura comienza aqui", {
-    x: 50,
-    y: height - 85,
-    size: 12,
-    font: helvetica,
-    color: accentColor,
-  });
-
-  // Quotation number box
+  // Quotation number box - to the right of the logo
   page.drawRectangle({
     x: width - 200,
-    y: height - 100,
-    width: 150,
-    height: 60,
+    y: height - headerHeight + 30,
+    width: 160,
+    height: 70,
     color: whiteColor,
     borderColor: whiteColor,
     borderWidth: 1,
   });
 
   page.drawText("COTIZACION", {
-    x: width - 190,
-    y: height - 55,
+    x: width - 188,
+    y: height - headerHeight + 78,
     size: 10,
     font: helvetica,
     color: secondaryColor,
   });
 
   page.drawText(quotation.quotation_number || "N/A", {
-    x: width - 190,
-    y: height - 75,
+    x: width - 188,
+    y: height - headerHeight + 55,
     size: 14,
     font: helveticaBold,
     color: secondaryColor,
   });
 
-  y = height - 160;
+  y = height - headerHeight - 30;
 
   // Customer Info
   const customerName =
@@ -150,7 +152,7 @@ async function generateQuotationPDF(quotation) {
   }
 
   // Dates on the right
-  const detailsY = height - 160;
+  const detailsY = height - headerHeight - 30;
   page.drawText("DETALLES:", {
     x: width - 200,
     y: detailsY,
@@ -194,7 +196,7 @@ async function generateQuotationPDF(quotation) {
   });
 
   // Items table
-  y = height - 280;
+  y = height - headerHeight - 150;
 
   // Table header - usando el color secundario (naranja)
   page.drawRectangle({
