@@ -22,83 +22,95 @@ function formatCurrency(amount, currency = "USD") {
 }
 
 /**
+ * Helper: draws a thin horizontal line
+ */
+function drawLine(page, x1, x2, y, color, thickness = 0.5) {
+  page.drawLine({
+    start: { x: x1, y },
+    end: { x: x2, y },
+    thickness,
+    color,
+  });
+}
+
+/**
  * Genera el PDF de una cotización usando pdf-lib
+ * Diseño: moderno, minimalista, limpio
  */
 async function generateQuotationPDF(quotation) {
   const pdfDoc = await PDFDocument.create();
   const page = pdfDoc.addPage([612, 792]); // Letter size
   const { width, height } = page.getSize();
 
-  // Load fonts
   const helvetica = await pdfDoc.embedFont(StandardFonts.Helvetica);
   const helveticaBold = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
 
-  // Colors - Venezuela Voyages branding
-  const primaryColor = rgb(10 / 255, 26 / 255, 68 / 255); // #0A1A44 Azul Profundo
-  const secondaryColor = rgb(242 / 255, 169 / 255, 59 / 255); // #F2A93B Naranja Atardecer
-  const accentColor = rgb(255 / 255, 210 / 255, 117 / 255); // #FFD275 Dorado Arena
-  const darkBlue = rgb(27 / 255, 73 / 255, 139 / 255); // #1B498B
-  const grayColor = rgb(102 / 255, 102 / 255, 102 / 255);
-  const whiteColor = rgb(1, 1, 1);
+  // Helper: draw text right-aligned to a given X edge
+  const drawTextRight = (text, rightX, yPos, size, font, color) => {
+    const tw = font.widthOfTextAtSize(text, size);
+    page.drawText(text, { x: rightX - tw, y: yPos, size, font, color });
+  };
 
-  let y = height - 50;
+  // Brand colors
+  const navy = rgb(10 / 255, 26 / 255, 68 / 255);
+  const orange = rgb(242 / 255, 169 / 255, 59 / 255);
+  const gold = rgb(255 / 255, 210 / 255, 117 / 255);
+  const darkText = rgb(30 / 255, 30 / 255, 30 / 255);
+  const grayText = rgb(120 / 255, 120 / 255, 120 / 255);
+  const lightGray = rgb(245 / 255, 245 / 255, 245 / 255);
+  const borderGray = rgb(220 / 255, 220 / 255, 220 / 255);
+  const white = rgb(1, 1, 1);
+  const red = rgb(220 / 255, 50 / 255, 50 / 255);
 
-  // Embed logo
+  const marginL = 50;
+  const marginR = width - 50;
+  const contentWidth = marginR - marginL;
+
+  // ── LOGO ──
   const logoPath = join(process.cwd(), "public/images/venezuela-voyages-logo.png");
   const logoBytes = readFileSync(logoPath);
   const logoImage = await pdfDoc.embedPng(logoBytes);
 
-  // Header background
-  const headerHeight = 130;
-  page.drawRectangle({
-    x: 0,
-    y: height - headerHeight,
-    width: width,
-    height: headerHeight,
-    color: primaryColor,
-  });
+  const logoH = 90;
+  const logoScale = logoH / logoImage.height;
+  const logoW = logoImage.width * logoScale;
 
-  // Logo - scaled to fit header
-  const logoDisplayHeight = 110;
-  const logoScale = logoDisplayHeight / logoImage.height;
-  const logoDisplayWidth = logoImage.width * logoScale;
+  let y = height - 30;
   page.drawImage(logoImage, {
-    x: 30,
-    y: height - headerHeight + (headerHeight - logoDisplayHeight) / 2,
-    width: logoDisplayWidth,
-    height: logoDisplayHeight,
+    x: marginL,
+    y: y - logoH,
+    width: logoW,
+    height: logoH,
   });
 
-  // Quotation number box - to the right of the logo
-  page.drawRectangle({
-    x: width - 200,
-    y: height - headerHeight + 30,
-    width: 160,
-    height: 70,
-    color: whiteColor,
-    borderColor: whiteColor,
-    borderWidth: 1,
-  });
+  // ── QUOTATION LABEL (right-aligned to marginR) ──
+  drawTextRight("COTIZACION", marginR, y - 25, 9, helvetica, grayText);
 
-  page.drawText("COTIZACION", {
-    x: width - 188,
-    y: height - headerHeight + 78,
-    size: 10,
-    font: helvetica,
-    color: secondaryColor,
-  });
+  const quotNum = quotation.quotation_number || "N/A";
+  // Dynamic font size: shrink if number is long
+  const quotNumSize = quotNum.length > 16 ? 13 : 16;
+  drawTextRight(quotNum, marginR, y - 48, quotNumSize, helveticaBold, navy);
 
-  page.drawText(quotation.quotation_number || "N/A", {
-    x: width - 188,
-    y: height - headerHeight + 55,
-    size: 14,
+  // Status badge
+  const status = (quotation.status || "borrador").toUpperCase();
+  drawTextRight(status, marginR, y - 66, 8, helveticaBold, orange);
+
+  // ── ACCENT LINE under header ──
+  y = y - logoH - 15;
+  drawLine(page, marginL, marginR, y, orange, 2);
+
+  // ── INFO SECTION: two columns at fixed Y positions ──
+  const infoTopY = y - 25;
+
+  // Left column - Customer
+  page.drawText("PARA", {
+    x: marginL,
+    y: infoTopY,
+    size: 8,
     font: helveticaBold,
-    color: secondaryColor,
+    color: grayText,
   });
 
-  y = height - headerHeight - 30;
-
-  // Customer Info
   const customerName =
     quotation.lead?.contact_name ||
     quotation.metadata?.customer_name ||
@@ -112,343 +124,249 @@ async function generateQuotationPDF(quotation) {
     quotation.metadata?.customer_phone ||
     "";
 
-  page.drawText("COTIZADO PARA:", {
-    x: 50,
-    y: y,
-    size: 12,
-    font: helveticaBold,
-    color: secondaryColor,
-  });
-
-  y -= 20;
-  page.drawText(customerName, {
-    x: 50,
-    y: y,
+  page.drawText(customerName.substring(0, 35), {
+    x: marginL,
+    y: infoTopY - 18,
     size: 11,
-    font: helvetica,
-    color: grayColor,
+    font: helveticaBold,
+    color: darkText,
   });
 
   if (customerEmail) {
-    y -= 15;
-    page.drawText(customerEmail, {
-      x: 50,
-      y: y,
-      size: 11,
+    page.drawText(customerEmail.substring(0, 40), {
+      x: marginL,
+      y: infoTopY - 34,
+      size: 9,
       font: helvetica,
-      color: grayColor,
+      color: grayText,
     });
   }
 
   if (customerPhone) {
-    y -= 15;
-    page.drawText(customerPhone, {
-      x: 50,
-      y: y,
-      size: 11,
+    page.drawText(customerPhone.substring(0, 25), {
+      x: marginL,
+      y: infoTopY - 48,
+      size: 9,
       font: helvetica,
-      color: grayColor,
+      color: grayText,
     });
   }
 
-  // Dates on the right
-  const detailsY = height - headerHeight - 30;
-  page.drawText("DETALLES:", {
-    x: width - 200,
-    y: detailsY,
-    size: 12,
+  // Right column - Details (fixed positions, right-aligned values)
+  const detailLabelX = width - 210;
+  const detailValueRight = marginR;
+
+  page.drawText("DETALLES", {
+    x: detailLabelX,
+    y: infoTopY,
+    size: 8,
     font: helveticaBold,
-    color: secondaryColor,
+    color: grayText,
   });
 
-  page.drawText(
-    `Fecha: ${new Date(quotation.created_at).toLocaleDateString("es-VE")}`,
+  const detailRows = [
+    { label: "Fecha", value: new Date(quotation.created_at).toLocaleDateString("es-VE") },
     {
-      x: width - 200,
-      y: detailsY - 20,
-      size: 10,
-      font: helvetica,
-      color: grayColor,
-    }
-  );
-
-  page.drawText(
-    `Valida hasta: ${
-      quotation.valid_until
+      label: "Valida hasta",
+      value: quotation.valid_until
         ? new Date(quotation.valid_until).toLocaleDateString("es-VE")
-        : "N/A"
-    }`,
-    {
-      x: width - 200,
-      y: detailsY - 35,
-      size: 10,
+        : "N/A",
+    },
+    { label: "Moneda", value: quotation.currency || "USD" },
+  ];
+
+  detailRows.forEach((row, i) => {
+    const rowY = infoTopY - 18 - i * 16;
+    page.drawText(row.label, {
+      x: detailLabelX,
+      y: rowY,
+      size: 9,
       font: helvetica,
-      color: grayColor,
-    }
-  );
-
-  page.drawText(`Moneda: ${quotation.currency || "USD"}`, {
-    x: width - 200,
-    y: detailsY - 50,
-    size: 10,
-    font: helvetica,
-    color: grayColor,
+      color: grayText,
+    });
+    drawTextRight(row.value, detailValueRight, rowY, 9, helveticaBold, darkText);
   });
 
-  // Items table
-  y = height - headerHeight - 150;
+  // ── ITEMS TABLE ──
+  y = infoTopY - 80;
+  drawLine(page, marginL, marginR, y + 5, borderGray, 0.5);
 
-  // Table header - usando el color secundario (naranja)
+  // Table header
   page.drawRectangle({
-    x: 50,
-    y: y - 5,
-    width: 512,
-    height: 25,
-    color: secondaryColor,
+    x: marginL,
+    y: y - 8,
+    width: contentWidth,
+    height: 22,
+    color: navy,
   });
 
-  page.drawText("DESCRIPCION", {
-    x: 60,
-    y: y + 3,
-    size: 10,
+  // Column right edges for right-aligned numbers
+  const colDescX = marginL + 10;
+  const colQtyRight = marginL + 290;
+  const colUnitRight = marginL + 390;
+  const colTotalRight = marginR - 8;
+
+  page.drawText("Descripcion", {
+    x: colDescX,
+    y: y - 2,
+    size: 8,
     font: helveticaBold,
-    color: whiteColor,
+    color: white,
   });
+  drawTextRight("Cant.", colQtyRight, y - 2, 8, helveticaBold, white);
+  drawTextRight("P. Unit.", colUnitRight, y - 2, 8, helveticaBold, white);
+  drawTextRight("Total", colTotalRight, y - 2, 8, helveticaBold, white);
 
-  page.drawText("CANT.", {
-    x: 320,
-    y: y + 3,
-    size: 10,
-    font: helveticaBold,
-    color: whiteColor,
-  });
+  y -= 22;
 
-  page.drawText("P. UNIT.", {
-    x: 380,
-    y: y + 3,
-    size: 10,
-    font: helveticaBold,
-    color: whiteColor,
-  });
-
-  page.drawText("TOTAL", {
-    x: 480,
-    y: y + 3,
-    size: 10,
-    font: helveticaBold,
-    color: whiteColor,
-  });
-
-  y -= 30;
-
-  // Items
+  // Table rows
   const items = quotation.items || [];
   items.forEach((item, index) => {
-    // Alternating background
     if (index % 2 === 0) {
       page.drawRectangle({
-        x: 50,
-        y: y - 5,
-        width: 512,
-        height: 25,
-        color: rgb(249 / 255, 249 / 255, 249 / 255),
+        x: marginL,
+        y: y - 8,
+        width: contentWidth,
+        height: 22,
+        color: lightGray,
       });
     }
 
-    // Truncate description if too long
-    const description = (item.description || "").substring(0, 40);
+    const description = (item.description || "").substring(0, 38);
     page.drawText(description, {
-      x: 60,
-      y: y + 3,
-      size: 10,
+      x: colDescX,
+      y: y - 1,
+      size: 9,
       font: helvetica,
-      color: secondaryColor,
+      color: darkText,
     });
 
-    page.drawText(String(item.quantity || 1), {
-      x: 330,
-      y: y + 3,
-      size: 10,
-      font: helvetica,
-      color: secondaryColor,
-    });
+    drawTextRight(
+      String(item.quantity || 1),
+      colQtyRight, y - 1, 9, helvetica, darkText
+    );
+    drawTextRight(
+      formatCurrency(item.unit_price || 0, quotation.currency),
+      colUnitRight, y - 1, 9, helvetica, darkText
+    );
+    drawTextRight(
+      formatCurrency(item.total || 0, quotation.currency),
+      colTotalRight, y - 1, 9, helveticaBold, darkText
+    );
 
-    page.drawText(formatCurrency(item.unit_price || 0, quotation.currency), {
-      x: 380,
-      y: y + 3,
-      size: 10,
-      font: helvetica,
-      color: secondaryColor,
-    });
-
-    page.drawText(formatCurrency(item.total || 0, quotation.currency), {
-      x: 480,
-      y: y + 3,
-      size: 10,
-      font: helvetica,
-      color: secondaryColor,
-    });
-
-    y -= 25;
+    y -= 22;
   });
 
-  // Totals section
+  // Bottom line of table
+  drawLine(page, marginL, marginR, y, borderGray, 0.5);
+
+  // ── TOTALS ──
+  // Layout: thin separator, then label on left half, value on right half
   y -= 20;
-  const totalsX = 380;
+  drawLine(page, width / 2, marginR, y + 8, borderGray, 0.5);
+  y -= 5;
 
-  page.drawText("Subtotal:", {
-    x: totalsX,
-    y: y,
-    size: 10,
-    font: helvetica,
-    color: grayColor,
-  });
+  const drawTotalRow = (label, value, color = grayText) => {
+    // Label: right-aligned to center divider with padding
+    drawTextRight(label, width / 2 + 55, y, 9, helvetica, color);
+    // Value: right-aligned to right margin
+    drawTextRight(value, marginR, y, 9, helvetica, color);
+    y -= 18;
+  };
 
-  page.drawText(formatCurrency(quotation.subtotal, quotation.currency), {
-    x: 480,
-    y: y,
-    size: 10,
-    font: helvetica,
-    color: grayColor,
-  });
+  drawTotalRow("Subtotal", formatCurrency(quotation.subtotal, quotation.currency));
 
   if (quotation.taxes > 0) {
-    y -= 18;
-    page.drawText("Impuestos:", {
-      x: totalsX,
-      y: y,
-      size: 10,
-      font: helvetica,
-      color: grayColor,
-    });
-
-    page.drawText(formatCurrency(quotation.taxes, quotation.currency), {
-      x: 480,
-      y: y,
-      size: 10,
-      font: helvetica,
-      color: grayColor,
-    });
+    drawTotalRow("Impuestos", formatCurrency(quotation.taxes, quotation.currency));
   }
-
   if (quotation.fees > 0) {
-    y -= 18;
-    page.drawText("Cargos:", {
-      x: totalsX,
-      y: y,
-      size: 10,
-      font: helvetica,
-      color: grayColor,
-    });
-
-    page.drawText(formatCurrency(quotation.fees, quotation.currency), {
-      x: 480,
-      y: y,
-      size: 10,
-      font: helvetica,
-      color: grayColor,
-    });
+    drawTotalRow("Cargos", formatCurrency(quotation.fees, quotation.currency));
   }
-
   if (quotation.discount_amount > 0) {
-    y -= 18;
-    page.drawText("Descuento:", {
-      x: totalsX,
-      y: y,
-      size: 10,
-      font: helvetica,
-      color: rgb(229 / 255, 57 / 255, 53 / 255),
-    });
-
-    page.drawText(
+    drawTotalRow(
+      "Descuento",
       `-${formatCurrency(quotation.discount_amount, quotation.currency)}`,
-      {
-        x: 480,
-        y: y,
-        size: 10,
-        font: helvetica,
-        color: rgb(229 / 255, 57 / 255, 53 / 255),
-      }
+      red
     );
   }
 
-  // Total box - usando el color secundario (naranja)
-  y -= 25;
+  // Total highlight bar
+  y -= 4;
+  const totalBarX = width / 2 - 5;
   page.drawRectangle({
-    x: totalsX - 10,
-    y: y - 8,
-    width: 180,
-    height: 30,
-    color: secondaryColor,
+    x: totalBarX,
+    y: y - 6,
+    width: marginR - totalBarX,
+    height: 28,
+    color: navy,
   });
 
-  page.drawText("TOTAL:", {
-    x: totalsX,
-    y: y,
-    size: 12,
+  page.drawText("TOTAL", {
+    x: totalBarX + 15,
+    y: y + 4,
+    size: 11,
     font: helveticaBold,
-    color: whiteColor,
+    color: white,
   });
 
-  page.drawText(formatCurrency(quotation.total, quotation.currency), {
-    x: 480,
-    y: y,
-    size: 12,
-    font: helveticaBold,
-    color: whiteColor,
-  });
+  drawTextRight(
+    formatCurrency(quotation.total, quotation.currency),
+    marginR - 8, y + 4, 11, helveticaBold, gold
+  );
 
-  // Notes section
+  // ── NOTES ──
   if (quotation.customer_notes) {
-    y -= 60;
-    page.drawText("NOTAS:", {
-      x: 50,
+    y -= 45;
+    page.drawText("NOTAS", {
+      x: marginL,
       y: y,
-      size: 12,
+      size: 8,
       font: helveticaBold,
-      color: secondaryColor,
+      color: grayText,
     });
 
-    y -= 18;
-    // Split notes into lines
-    const noteLines = quotation.customer_notes.substring(0, 300).split("\n");
+    y -= 14;
+    const noteLines = quotation.customer_notes.substring(0, 400).split("\n");
     noteLines.forEach((line) => {
-      if (y > 100) {
-        page.drawText(line.substring(0, 80), {
-          x: 50,
+      if (y > 90) {
+        page.drawText(line.substring(0, 90), {
+          x: marginL,
           y: y,
-          size: 10,
+          size: 9,
           font: helvetica,
-          color: grayColor,
+          color: darkText,
         });
-        y -= 15;
+        y -= 14;
       }
     });
   }
 
-  // Footer - Venezuela Voyages branding
-  page.drawRectangle({
-    x: 0,
-    y: 0,
-    width: width,
-    height: 70,
-    color: primaryColor,
-  });
+  // ── FOOTER ──
+  const footerY = 45;
+  drawLine(page, marginL, marginR, footerY + 15, orange, 1.5);
 
-  page.drawText("VENEZUELA VOYAGES - Explore Now", {
-    x: 200,
-    y: 45,
-    size: 11,
+  page.drawText("Venezuela Voyages", {
+    x: marginL,
+    y: footerY,
+    size: 9,
     font: helveticaBold,
-    color: whiteColor,
+    color: navy,
   });
 
-  page.drawText("www.venezuelavoyages.com | info@venezuelavoyages.com", {
-    x: 145,
-    y: 25,
-    size: 10,
+  page.drawText("Explore Now", {
+    x: marginL + 105,
+    y: footerY,
+    size: 9,
     font: helvetica,
-    color: accentColor,
+    color: orange,
+  });
+
+  page.drawText("www.venezuelavoyages.com  |  info@venezuelavoyages.com", {
+    x: marginL,
+    y: footerY - 14,
+    size: 8,
+    font: helvetica,
+    color: grayText,
   });
 
   const pdfBytes = await pdfDoc.save();

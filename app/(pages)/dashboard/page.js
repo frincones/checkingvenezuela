@@ -1,10 +1,10 @@
-import { createClient } from "@/lib/db/supabase/server";
+import { createAdminClient } from "@/lib/db/supabase/server";
 import Link from "next/link";
 
 async function getStats() {
-  const supabase = await createClient();
+  const supabase = createAdminClient();
 
-  // Get leads count by status
+  // Get leads count by status (admin client bypasses RLS)
   const { data: leads, error: leadsError } = await supabase
     .from("leads")
     .select("status");
