@@ -260,14 +260,17 @@ async function generateQuotationPDF(quotation) {
   // Bottom line of table
   drawLine(page, marginL, marginR, y, borderGray, 0.5);
 
-  // ── TOTALS (label left-aligned, value right-aligned with gap) ──
-  y -= 25;
-  const totalsLabelX = marginL + 260;
-  const totalsValueRight = colTotalRight;
+  // ── TOTALS ──
+  // Layout: thin separator, then label on left half, value on right half
+  y -= 20;
+  drawLine(page, width / 2, marginR, y + 8, borderGray, 0.5);
+  y -= 5;
 
   const drawTotalRow = (label, value, color = grayText) => {
-    drawTextRight(label, totalsLabelX + 70, y, 9, helvetica, color);
-    drawTextRight(value, totalsValueRight, y, 9, helvetica, color);
+    // Label: right-aligned to center divider with padding
+    drawTextRight(label, width / 2 + 55, y, 9, helvetica, color);
+    // Value: right-aligned to right margin
+    drawTextRight(value, marginR, y, 9, helvetica, color);
     y -= 18;
   };
 
@@ -287,20 +290,20 @@ async function generateQuotationPDF(quotation) {
     );
   }
 
-  // Total highlight bar (full width for breathing room)
-  y -= 2;
-  const totalBarX = totalsLabelX - 10;
+  // Total highlight bar
+  y -= 4;
+  const totalBarX = width / 2 - 5;
   page.drawRectangle({
     x: totalBarX,
     y: y - 6,
     width: marginR - totalBarX,
-    height: 26,
+    height: 28,
     color: navy,
   });
 
   page.drawText("TOTAL", {
     x: totalBarX + 15,
-    y: y + 3,
+    y: y + 4,
     size: 11,
     font: helveticaBold,
     color: white,
@@ -308,7 +311,7 @@ async function generateQuotationPDF(quotation) {
 
   drawTextRight(
     formatCurrency(quotation.total, quotation.currency),
-    totalsValueRight, y + 3, 11, helveticaBold, gold
+    marginR - 8, y + 4, 11, helveticaBold, gold
   );
 
   // ── NOTES ──
