@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
-import { createClient } from "@/lib/db/supabase/server";
-import { createAdminClient } from "@/lib/db/supabase/server";
+import { revalidatePath } from "next/cache";
+import { createClient, createAdminClient } from "@/lib/db/supabase/server";
 
 // GET - Listar categorías
 export async function GET(request) {
@@ -68,8 +68,7 @@ export async function POST(request) {
       subtitle: body.subtitle || null,
       description: body.description || null,
       icon: body.icon || null,
-      image_url: body.image_url || null,
-      display_order: body.displayOrder ?? body.display_order ?? 0,
+      display_order: parseInt(body.displayOrder ?? body.display_order ?? 0, 10),
       is_active: body.isActive ?? body.is_active ?? true,
     };
 
@@ -87,7 +86,10 @@ export async function POST(request) {
       return NextResponse.json({ error: "Error al crear categoría" }, { status: 500 });
     }
 
-    return NextResponse.json(data, { status: 201 });
+    // Revalidar homepage para que muestre la nueva categoría
+    revalidatePath("/");
+
+    return NextResponse.json({ data }, { status: 201 });
   } catch (err) {
     console.error("Error in POST category:", err);
     return NextResponse.json({ error: "Error interno del servidor" }, { status: 500 });

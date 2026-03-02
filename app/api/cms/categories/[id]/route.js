@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
-import { createClient } from "@/lib/db/supabase/server";
-import { createAdminClient } from "@/lib/db/supabase/server";
+import { revalidatePath } from "next/cache";
+import { createClient, createAdminClient } from "@/lib/db/supabase/server";
 
 // GET - Obtener una categoría por ID
 export async function GET(request, { params }) {
@@ -49,7 +49,7 @@ export async function PATCH(request, { params }) {
     const body = await request.json();
     const adminClient = createAdminClient();
 
-    const allowedFields = ["name", "slug", "subtitle", "description", "icon", "image_url", "display_order", "is_active"];
+    const allowedFields = ["name", "slug", "subtitle", "description", "icon", "display_order", "is_active"];
     const updateData = {};
 
     for (const field of allowedFields) {
@@ -59,6 +59,11 @@ export async function PATCH(request, { params }) {
       } else if (body[camelField] !== undefined) {
         updateData[field] = body[camelField];
       }
+    }
+
+    // Asegurar que display_order sea un entero
+    if (updateData.display_order !== undefined) {
+      updateData.display_order = parseInt(updateData.display_order, 10);
     }
 
     if (Object.keys(updateData).length === 0) {
@@ -80,7 +85,10 @@ export async function PATCH(request, { params }) {
       return NextResponse.json({ error: "Error al actualizar categoría" }, { status: 500 });
     }
 
-    return NextResponse.json(data);
+    // Revalidar homepage para reflejar cambios
+    revalidatePath("/");
+
+    return NextResponse.json({ data });
   } catch (err) {
     console.error("Error in PATCH category:", err);
     return NextResponse.json({ error: "Error interno del servidor" }, { status: 500 });
@@ -121,6 +129,9 @@ export async function DELETE(request, { params }) {
       console.error("Error deleting category:", error);
       return NextResponse.json({ error: "Error al eliminar categoría" }, { status: 500 });
     }
+
+    // Revalidar homepage para reflejar la eliminación
+    revalidatePath("/");
 
     return NextResponse.json({ success: true });
   } catch (err) {
