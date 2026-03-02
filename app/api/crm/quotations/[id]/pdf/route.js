@@ -22,83 +22,104 @@ function formatCurrency(amount, currency = "USD") {
 }
 
 /**
+ * Helper: draws a thin horizontal line
+ */
+function drawLine(page, x1, x2, y, color, thickness = 0.5) {
+  page.drawLine({
+    start: { x: x1, y },
+    end: { x: x2, y },
+    thickness,
+    color,
+  });
+}
+
+/**
  * Genera el PDF de una cotización usando pdf-lib
+ * Diseño: moderno, minimalista, limpio
  */
 async function generateQuotationPDF(quotation) {
   const pdfDoc = await PDFDocument.create();
   const page = pdfDoc.addPage([612, 792]); // Letter size
   const { width, height } = page.getSize();
 
-  // Load fonts
   const helvetica = await pdfDoc.embedFont(StandardFonts.Helvetica);
   const helveticaBold = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
 
-  // Colors - Venezuela Voyages branding
-  const primaryColor = rgb(10 / 255, 26 / 255, 68 / 255); // #0A1A44 Azul Profundo
-  const secondaryColor = rgb(242 / 255, 169 / 255, 59 / 255); // #F2A93B Naranja Atardecer
-  const accentColor = rgb(255 / 255, 210 / 255, 117 / 255); // #FFD275 Dorado Arena
-  const darkBlue = rgb(27 / 255, 73 / 255, 139 / 255); // #1B498B
-  const grayColor = rgb(102 / 255, 102 / 255, 102 / 255);
-  const whiteColor = rgb(1, 1, 1);
+  // Brand colors
+  const navy = rgb(10 / 255, 26 / 255, 68 / 255);
+  const orange = rgb(242 / 255, 169 / 255, 59 / 255);
+  const gold = rgb(255 / 255, 210 / 255, 117 / 255);
+  const darkText = rgb(30 / 255, 30 / 255, 30 / 255);
+  const grayText = rgb(120 / 255, 120 / 255, 120 / 255);
+  const lightGray = rgb(245 / 255, 245 / 255, 245 / 255);
+  const borderGray = rgb(220 / 255, 220 / 255, 220 / 255);
+  const white = rgb(1, 1, 1);
+  const red = rgb(220 / 255, 50 / 255, 50 / 255);
 
-  let y = height - 50;
+  const marginL = 50;
+  const marginR = width - 50;
+  const contentWidth = marginR - marginL;
 
-  // Embed logo
+  // ── LOGO ──
   const logoPath = join(process.cwd(), "public/images/venezuela-voyages-logo.png");
   const logoBytes = readFileSync(logoPath);
   const logoImage = await pdfDoc.embedPng(logoBytes);
 
-  // Header background
-  const headerHeight = 130;
-  page.drawRectangle({
-    x: 0,
-    y: height - headerHeight,
-    width: width,
-    height: headerHeight,
-    color: primaryColor,
-  });
+  const logoH = 90;
+  const logoScale = logoH / logoImage.height;
+  const logoW = logoImage.width * logoScale;
 
-  // Logo - scaled to fit header
-  const logoDisplayHeight = 110;
-  const logoScale = logoDisplayHeight / logoImage.height;
-  const logoDisplayWidth = logoImage.width * logoScale;
+  let y = height - 30;
   page.drawImage(logoImage, {
-    x: 30,
-    y: height - headerHeight + (headerHeight - logoDisplayHeight) / 2,
-    width: logoDisplayWidth,
-    height: logoDisplayHeight,
+    x: marginL,
+    y: y - logoH,
+    width: logoW,
+    height: logoH,
   });
 
-  // Quotation number box - to the right of the logo
-  page.drawRectangle({
-    x: width - 200,
-    y: height - headerHeight + 30,
-    width: 160,
-    height: 70,
-    color: whiteColor,
-    borderColor: whiteColor,
-    borderWidth: 1,
-  });
-
+  // ── QUOTATION LABEL (right side, aligned with logo) ──
   page.drawText("COTIZACION", {
-    x: width - 188,
-    y: height - headerHeight + 78,
-    size: 10,
+    x: marginR - 120,
+    y: y - 25,
+    size: 9,
     font: helvetica,
-    color: secondaryColor,
+    color: grayText,
   });
 
   page.drawText(quotation.quotation_number || "N/A", {
-    x: width - 188,
-    y: height - headerHeight + 55,
-    size: 14,
+    x: marginR - 120,
+    y: y - 45,
+    size: 18,
     font: helveticaBold,
-    color: secondaryColor,
+    color: navy,
   });
 
-  y = height - headerHeight - 30;
+  // Status badge
+  const status = (quotation.status || "borrador").toUpperCase();
+  page.drawText(status, {
+    x: marginR - 120,
+    y: y - 65,
+    size: 8,
+    font: helveticaBold,
+    color: orange,
+  });
 
-  // Customer Info
+  // ── ACCENT LINE under header ──
+  y = y - logoH - 15;
+  drawLine(page, marginL, marginR, y, orange, 2);
+
+  // ── INFO SECTION: Customer (left) + Details (right) ──
+  y -= 30;
+
+  // Left column - Customer
+  page.drawText("PARA", {
+    x: marginL,
+    y: y,
+    size: 8,
+    font: helveticaBold,
+    color: grayText,
+  });
+
   const customerName =
     quotation.lead?.contact_name ||
     quotation.metadata?.customer_name ||
@@ -112,343 +133,295 @@ async function generateQuotationPDF(quotation) {
     quotation.metadata?.customer_phone ||
     "";
 
-  page.drawText("COTIZADO PARA:", {
-    x: 50,
-    y: y,
-    size: 12,
-    font: helveticaBold,
-    color: secondaryColor,
-  });
-
-  y -= 20;
+  y -= 16;
   page.drawText(customerName, {
-    x: 50,
+    x: marginL,
     y: y,
     size: 11,
-    font: helvetica,
-    color: grayColor,
+    font: helveticaBold,
+    color: darkText,
   });
 
   if (customerEmail) {
     y -= 15;
     page.drawText(customerEmail, {
-      x: 50,
+      x: marginL,
       y: y,
-      size: 11,
+      size: 9,
       font: helvetica,
-      color: grayColor,
+      color: grayText,
     });
   }
 
   if (customerPhone) {
-    y -= 15;
+    y -= 14;
     page.drawText(customerPhone, {
-      x: 50,
+      x: marginL,
       y: y,
-      size: 11,
+      size: 9,
       font: helvetica,
-      color: grayColor,
+      color: grayText,
     });
   }
 
-  // Dates on the right
-  const detailsY = height - headerHeight - 30;
-  page.drawText("DETALLES:", {
-    x: width - 200,
-    y: detailsY,
-    size: 12,
+  // Right column - Details
+  const detailX = marginR - 160;
+  const detailStartY = y + (customerEmail ? 30 : 16) + (customerPhone ? 14 : 0);
+
+  page.drawText("DETALLES", {
+    x: detailX,
+    y: detailStartY + 16,
+    size: 8,
     font: helveticaBold,
-    color: secondaryColor,
+    color: grayText,
   });
 
-  page.drawText(
-    `Fecha: ${new Date(quotation.created_at).toLocaleDateString("es-VE")}`,
-    {
-      x: width - 200,
-      y: detailsY - 20,
-      size: 10,
-      font: helvetica,
-      color: grayColor,
-    }
-  );
+  const detailLabels = ["Fecha", "Valida hasta", "Moneda"];
+  const detailValues = [
+    new Date(quotation.created_at).toLocaleDateString("es-VE"),
+    quotation.valid_until
+      ? new Date(quotation.valid_until).toLocaleDateString("es-VE")
+      : "N/A",
+    quotation.currency || "USD",
+  ];
 
-  page.drawText(
-    `Valida hasta: ${
-      quotation.valid_until
-        ? new Date(quotation.valid_until).toLocaleDateString("es-VE")
-        : "N/A"
-    }`,
-    {
-      x: width - 200,
-      y: detailsY - 35,
-      size: 10,
+  detailLabels.forEach((label, i) => {
+    const dy = detailStartY - i * 16;
+    page.drawText(label, {
+      x: detailX,
+      y: dy,
+      size: 9,
       font: helvetica,
-      color: grayColor,
-    }
-  );
-
-  page.drawText(`Moneda: ${quotation.currency || "USD"}`, {
-    x: width - 200,
-    y: detailsY - 50,
-    size: 10,
-    font: helvetica,
-    color: grayColor,
+      color: grayText,
+    });
+    page.drawText(detailValues[i], {
+      x: detailX + 80,
+      y: dy,
+      size: 9,
+      font: helveticaBold,
+      color: darkText,
+    });
   });
 
-  // Items table
-  y = height - headerHeight - 150;
+  // ── ITEMS TABLE ──
+  y -= 40;
+  drawLine(page, marginL, marginR, y + 5, borderGray, 0.5);
 
-  // Table header - usando el color secundario (naranja)
+  // Table header background
   page.drawRectangle({
-    x: 50,
-    y: y - 5,
-    width: 512,
-    height: 25,
-    color: secondaryColor,
+    x: marginL,
+    y: y - 8,
+    width: contentWidth,
+    height: 22,
+    color: navy,
   });
 
-  page.drawText("DESCRIPCION", {
-    x: 60,
-    y: y + 3,
-    size: 10,
+  const colDesc = marginL + 10;
+  const colQty = 330;
+  const colUnit = 400;
+  const colTotal = 500;
+
+  page.drawText("Descripcion", {
+    x: colDesc,
+    y: y - 2,
+    size: 8,
     font: helveticaBold,
-    color: whiteColor,
+    color: white,
   });
-
-  page.drawText("CANT.", {
-    x: 320,
-    y: y + 3,
-    size: 10,
+  page.drawText("Cant.", {
+    x: colQty,
+    y: y - 2,
+    size: 8,
     font: helveticaBold,
-    color: whiteColor,
+    color: white,
   });
-
-  page.drawText("P. UNIT.", {
-    x: 380,
-    y: y + 3,
-    size: 10,
+  page.drawText("P. Unit.", {
+    x: colUnit,
+    y: y - 2,
+    size: 8,
     font: helveticaBold,
-    color: whiteColor,
+    color: white,
   });
-
-  page.drawText("TOTAL", {
-    x: 480,
-    y: y + 3,
-    size: 10,
+  page.drawText("Total", {
+    x: colTotal,
+    y: y - 2,
+    size: 8,
     font: helveticaBold,
-    color: whiteColor,
+    color: white,
   });
 
-  y -= 30;
+  y -= 22;
 
-  // Items
+  // Table rows
   const items = quotation.items || [];
   items.forEach((item, index) => {
-    // Alternating background
     if (index % 2 === 0) {
       page.drawRectangle({
-        x: 50,
-        y: y - 5,
-        width: 512,
-        height: 25,
-        color: rgb(249 / 255, 249 / 255, 249 / 255),
+        x: marginL,
+        y: y - 8,
+        width: contentWidth,
+        height: 22,
+        color: lightGray,
       });
     }
 
-    // Truncate description if too long
-    const description = (item.description || "").substring(0, 40);
+    const description = (item.description || "").substring(0, 45);
     page.drawText(description, {
-      x: 60,
-      y: y + 3,
-      size: 10,
+      x: colDesc,
+      y: y - 1,
+      size: 9,
       font: helvetica,
-      color: secondaryColor,
+      color: darkText,
     });
 
     page.drawText(String(item.quantity || 1), {
-      x: 330,
-      y: y + 3,
-      size: 10,
+      x: colQty,
+      y: y - 1,
+      size: 9,
       font: helvetica,
-      color: secondaryColor,
+      color: darkText,
     });
 
     page.drawText(formatCurrency(item.unit_price || 0, quotation.currency), {
-      x: 380,
-      y: y + 3,
-      size: 10,
+      x: colUnit,
+      y: y - 1,
+      size: 9,
       font: helvetica,
-      color: secondaryColor,
+      color: darkText,
     });
 
     page.drawText(formatCurrency(item.total || 0, quotation.currency), {
-      x: 480,
-      y: y + 3,
-      size: 10,
-      font: helvetica,
-      color: secondaryColor,
+      x: colTotal,
+      y: y - 1,
+      size: 9,
+      font: helveticaBold,
+      color: darkText,
     });
 
-    y -= 25;
+    y -= 22;
   });
 
-  // Totals section
-  y -= 20;
-  const totalsX = 380;
+  // Bottom line of table
+  drawLine(page, marginL, marginR, y, borderGray, 0.5);
 
-  page.drawText("Subtotal:", {
-    x: totalsX,
-    y: y,
-    size: 10,
-    font: helvetica,
-    color: grayColor,
-  });
+  // ── TOTALS ──
+  y -= 25;
+  const totalsLabelX = colUnit - 20;
+  const totalsValueX = colTotal;
 
-  page.drawText(formatCurrency(quotation.subtotal, quotation.currency), {
-    x: 480,
-    y: y,
-    size: 10,
-    font: helvetica,
-    color: grayColor,
-  });
+  const drawTotalRow = (label, value, color = grayText, bold = false) => {
+    page.drawText(label, {
+      x: totalsLabelX,
+      y: y,
+      size: 9,
+      font: helvetica,
+      color: color,
+    });
+    page.drawText(value, {
+      x: totalsValueX,
+      y: y,
+      size: bold ? 10 : 9,
+      font: bold ? helveticaBold : helvetica,
+      color: color,
+    });
+    y -= 18;
+  };
+
+  drawTotalRow("Subtotal", formatCurrency(quotation.subtotal, quotation.currency));
 
   if (quotation.taxes > 0) {
-    y -= 18;
-    page.drawText("Impuestos:", {
-      x: totalsX,
-      y: y,
-      size: 10,
-      font: helvetica,
-      color: grayColor,
-    });
-
-    page.drawText(formatCurrency(quotation.taxes, quotation.currency), {
-      x: 480,
-      y: y,
-      size: 10,
-      font: helvetica,
-      color: grayColor,
-    });
+    drawTotalRow("Impuestos", formatCurrency(quotation.taxes, quotation.currency));
   }
-
   if (quotation.fees > 0) {
-    y -= 18;
-    page.drawText("Cargos:", {
-      x: totalsX,
-      y: y,
-      size: 10,
-      font: helvetica,
-      color: grayColor,
-    });
-
-    page.drawText(formatCurrency(quotation.fees, quotation.currency), {
-      x: 480,
-      y: y,
-      size: 10,
-      font: helvetica,
-      color: grayColor,
-    });
+    drawTotalRow("Cargos", formatCurrency(quotation.fees, quotation.currency));
   }
-
   if (quotation.discount_amount > 0) {
-    y -= 18;
-    page.drawText("Descuento:", {
-      x: totalsX,
-      y: y,
-      size: 10,
-      font: helvetica,
-      color: rgb(229 / 255, 57 / 255, 53 / 255),
-    });
-
-    page.drawText(
+    drawTotalRow(
+      "Descuento",
       `-${formatCurrency(quotation.discount_amount, quotation.currency)}`,
-      {
-        x: 480,
-        y: y,
-        size: 10,
-        font: helvetica,
-        color: rgb(229 / 255, 57 / 255, 53 / 255),
-      }
+      red
     );
   }
 
-  // Total box - usando el color secundario (naranja)
-  y -= 25;
+  // Total highlight
+  y -= 2;
   page.drawRectangle({
-    x: totalsX - 10,
-    y: y - 8,
-    width: 180,
-    height: 30,
-    color: secondaryColor,
+    x: totalsLabelX - 10,
+    y: y - 6,
+    width: marginR - totalsLabelX + 10,
+    height: 26,
+    color: navy,
   });
 
-  page.drawText("TOTAL:", {
-    x: totalsX,
-    y: y,
-    size: 12,
+  page.drawText("TOTAL", {
+    x: totalsLabelX,
+    y: y + 3,
+    size: 11,
     font: helveticaBold,
-    color: whiteColor,
+    color: white,
   });
 
   page.drawText(formatCurrency(quotation.total, quotation.currency), {
-    x: 480,
-    y: y,
-    size: 12,
+    x: totalsValueX,
+    y: y + 3,
+    size: 11,
     font: helveticaBold,
-    color: whiteColor,
+    color: gold,
   });
 
-  // Notes section
+  // ── NOTES ──
   if (quotation.customer_notes) {
-    y -= 60;
-    page.drawText("NOTAS:", {
-      x: 50,
+    y -= 45;
+    page.drawText("NOTAS", {
+      x: marginL,
       y: y,
-      size: 12,
+      size: 8,
       font: helveticaBold,
-      color: secondaryColor,
+      color: grayText,
     });
 
-    y -= 18;
-    // Split notes into lines
-    const noteLines = quotation.customer_notes.substring(0, 300).split("\n");
+    y -= 14;
+    const noteLines = quotation.customer_notes.substring(0, 400).split("\n");
     noteLines.forEach((line) => {
-      if (y > 100) {
-        page.drawText(line.substring(0, 80), {
-          x: 50,
+      if (y > 90) {
+        page.drawText(line.substring(0, 90), {
+          x: marginL,
           y: y,
-          size: 10,
+          size: 9,
           font: helvetica,
-          color: grayColor,
+          color: darkText,
         });
-        y -= 15;
+        y -= 14;
       }
     });
   }
 
-  // Footer - Venezuela Voyages branding
-  page.drawRectangle({
-    x: 0,
-    y: 0,
-    width: width,
-    height: 70,
-    color: primaryColor,
-  });
+  // ── FOOTER ──
+  const footerY = 45;
+  drawLine(page, marginL, marginR, footerY + 15, orange, 1.5);
 
-  page.drawText("VENEZUELA VOYAGES - Explore Now", {
-    x: 200,
-    y: 45,
-    size: 11,
+  page.drawText("Venezuela Voyages", {
+    x: marginL,
+    y: footerY,
+    size: 9,
     font: helveticaBold,
-    color: whiteColor,
+    color: navy,
   });
 
-  page.drawText("www.venezuelavoyages.com | info@venezuelavoyages.com", {
-    x: 145,
-    y: 25,
-    size: 10,
+  page.drawText("Explore Now", {
+    x: marginL + 105,
+    y: footerY,
+    size: 9,
     font: helvetica,
-    color: accentColor,
+    color: orange,
+  });
+
+  page.drawText("www.venezuelavoyages.com  |  info@venezuelavoyages.com", {
+    x: marginL,
+    y: footerY - 14,
+    size: 8,
+    font: helvetica,
+    color: grayText,
   });
 
   const pdfBytes = await pdfDoc.save();
