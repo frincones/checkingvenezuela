@@ -45,6 +45,12 @@ async function generateQuotationPDF(quotation) {
   const helvetica = await pdfDoc.embedFont(StandardFonts.Helvetica);
   const helveticaBold = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
 
+  // Helper: draw text right-aligned to a given X edge
+  const drawTextRight = (text, rightX, yPos, size, font, color) => {
+    const tw = font.widthOfTextAtSize(text, size);
+    page.drawText(text, { x: rightX - tw, y: yPos, size, font, color });
+  };
+
   // Brand colors
   const navy = rgb(10 / 255, 26 / 255, 68 / 255);
   const orange = rgb(242 / 255, 169 / 255, 59 / 255);
@@ -77,44 +83,29 @@ async function generateQuotationPDF(quotation) {
     height: logoH,
   });
 
-  // ── QUOTATION LABEL (right side, aligned with logo) ──
-  page.drawText("COTIZACION", {
-    x: marginR - 120,
-    y: y - 25,
-    size: 9,
-    font: helvetica,
-    color: grayText,
-  });
+  // ── QUOTATION LABEL (right-aligned to marginR) ──
+  drawTextRight("COTIZACION", marginR, y - 25, 9, helvetica, grayText);
 
-  page.drawText(quotation.quotation_number || "N/A", {
-    x: marginR - 120,
-    y: y - 45,
-    size: 18,
-    font: helveticaBold,
-    color: navy,
-  });
+  const quotNum = quotation.quotation_number || "N/A";
+  // Dynamic font size: shrink if number is long
+  const quotNumSize = quotNum.length > 16 ? 13 : 16;
+  drawTextRight(quotNum, marginR, y - 48, quotNumSize, helveticaBold, navy);
 
   // Status badge
   const status = (quotation.status || "borrador").toUpperCase();
-  page.drawText(status, {
-    x: marginR - 120,
-    y: y - 65,
-    size: 8,
-    font: helveticaBold,
-    color: orange,
-  });
+  drawTextRight(status, marginR, y - 66, 8, helveticaBold, orange);
 
   // ── ACCENT LINE under header ──
   y = y - logoH - 15;
   drawLine(page, marginL, marginR, y, orange, 2);
 
-  // ── INFO SECTION: Customer (left) + Details (right) ──
-  y -= 30;
+  // ── INFO SECTION: two columns at fixed Y positions ──
+  const infoTopY = y - 25;
 
   // Left column - Customer
   page.drawText("PARA", {
     x: marginL,
-    y: y,
+    y: infoTopY,
     size: 8,
     font: helveticaBold,
     color: grayText,
@@ -133,20 +124,18 @@ async function generateQuotationPDF(quotation) {
     quotation.metadata?.customer_phone ||
     "";
 
-  y -= 16;
-  page.drawText(customerName, {
+  page.drawText(customerName.substring(0, 35), {
     x: marginL,
-    y: y,
+    y: infoTopY - 18,
     size: 11,
     font: helveticaBold,
     color: darkText,
   });
 
   if (customerEmail) {
-    y -= 15;
-    page.drawText(customerEmail, {
+    page.drawText(customerEmail.substring(0, 40), {
       x: marginL,
-      y: y,
+      y: infoTopY - 34,
       size: 9,
       font: helvetica,
       color: grayText,
@@ -154,60 +143,55 @@ async function generateQuotationPDF(quotation) {
   }
 
   if (customerPhone) {
-    y -= 14;
-    page.drawText(customerPhone, {
+    page.drawText(customerPhone.substring(0, 25), {
       x: marginL,
-      y: y,
+      y: infoTopY - 48,
       size: 9,
       font: helvetica,
       color: grayText,
     });
   }
 
-  // Right column - Details
-  const detailX = marginR - 160;
-  const detailStartY = y + (customerEmail ? 30 : 16) + (customerPhone ? 14 : 0);
+  // Right column - Details (fixed positions, right-aligned values)
+  const detailLabelX = width - 210;
+  const detailValueRight = marginR;
 
   page.drawText("DETALLES", {
-    x: detailX,
-    y: detailStartY + 16,
+    x: detailLabelX,
+    y: infoTopY,
     size: 8,
     font: helveticaBold,
     color: grayText,
   });
 
-  const detailLabels = ["Fecha", "Valida hasta", "Moneda"];
-  const detailValues = [
-    new Date(quotation.created_at).toLocaleDateString("es-VE"),
-    quotation.valid_until
-      ? new Date(quotation.valid_until).toLocaleDateString("es-VE")
-      : "N/A",
-    quotation.currency || "USD",
+  const detailRows = [
+    { label: "Fecha", value: new Date(quotation.created_at).toLocaleDateString("es-VE") },
+    {
+      label: "Valida hasta",
+      value: quotation.valid_until
+        ? new Date(quotation.valid_until).toLocaleDateString("es-VE")
+        : "N/A",
+    },
+    { label: "Moneda", value: quotation.currency || "USD" },
   ];
 
-  detailLabels.forEach((label, i) => {
-    const dy = detailStartY - i * 16;
-    page.drawText(label, {
-      x: detailX,
-      y: dy,
+  detailRows.forEach((row, i) => {
+    const rowY = infoTopY - 18 - i * 16;
+    page.drawText(row.label, {
+      x: detailLabelX,
+      y: rowY,
       size: 9,
       font: helvetica,
       color: grayText,
     });
-    page.drawText(detailValues[i], {
-      x: detailX + 80,
-      y: dy,
-      size: 9,
-      font: helveticaBold,
-      color: darkText,
-    });
+    drawTextRight(row.value, detailValueRight, rowY, 9, helveticaBold, darkText);
   });
 
   // ── ITEMS TABLE ──
-  y -= 40;
+  y = infoTopY - 80;
   drawLine(page, marginL, marginR, y + 5, borderGray, 0.5);
 
-  // Table header background
+  // Table header
   page.drawRectangle({
     x: marginL,
     y: y - 8,
@@ -216,39 +200,22 @@ async function generateQuotationPDF(quotation) {
     color: navy,
   });
 
-  const colDesc = marginL + 10;
-  const colQty = 330;
-  const colUnit = 400;
-  const colTotal = 500;
+  // Column right edges for right-aligned numbers
+  const colDescX = marginL + 10;
+  const colQtyRight = marginL + 290;
+  const colUnitRight = marginL + 390;
+  const colTotalRight = marginR - 8;
 
   page.drawText("Descripcion", {
-    x: colDesc,
+    x: colDescX,
     y: y - 2,
     size: 8,
     font: helveticaBold,
     color: white,
   });
-  page.drawText("Cant.", {
-    x: colQty,
-    y: y - 2,
-    size: 8,
-    font: helveticaBold,
-    color: white,
-  });
-  page.drawText("P. Unit.", {
-    x: colUnit,
-    y: y - 2,
-    size: 8,
-    font: helveticaBold,
-    color: white,
-  });
-  page.drawText("Total", {
-    x: colTotal,
-    y: y - 2,
-    size: 8,
-    font: helveticaBold,
-    color: white,
-  });
+  drawTextRight("Cant.", colQtyRight, y - 2, 8, helveticaBold, white);
+  drawTextRight("P. Unit.", colUnitRight, y - 2, 8, helveticaBold, white);
+  drawTextRight("Total", colTotalRight, y - 2, 8, helveticaBold, white);
 
   y -= 22;
 
@@ -265,38 +232,27 @@ async function generateQuotationPDF(quotation) {
       });
     }
 
-    const description = (item.description || "").substring(0, 45);
+    const description = (item.description || "").substring(0, 38);
     page.drawText(description, {
-      x: colDesc,
+      x: colDescX,
       y: y - 1,
       size: 9,
       font: helvetica,
       color: darkText,
     });
 
-    page.drawText(String(item.quantity || 1), {
-      x: colQty,
-      y: y - 1,
-      size: 9,
-      font: helvetica,
-      color: darkText,
-    });
-
-    page.drawText(formatCurrency(item.unit_price || 0, quotation.currency), {
-      x: colUnit,
-      y: y - 1,
-      size: 9,
-      font: helvetica,
-      color: darkText,
-    });
-
-    page.drawText(formatCurrency(item.total || 0, quotation.currency), {
-      x: colTotal,
-      y: y - 1,
-      size: 9,
-      font: helveticaBold,
-      color: darkText,
-    });
+    drawTextRight(
+      String(item.quantity || 1),
+      colQtyRight, y - 1, 9, helvetica, darkText
+    );
+    drawTextRight(
+      formatCurrency(item.unit_price || 0, quotation.currency),
+      colUnitRight, y - 1, 9, helvetica, darkText
+    );
+    drawTextRight(
+      formatCurrency(item.total || 0, quotation.currency),
+      colTotalRight, y - 1, 9, helveticaBold, darkText
+    );
 
     y -= 22;
   });
@@ -304,12 +260,11 @@ async function generateQuotationPDF(quotation) {
   // Bottom line of table
   drawLine(page, marginL, marginR, y, borderGray, 0.5);
 
-  // ── TOTALS ──
+  // ── TOTALS (right-aligned) ──
   y -= 25;
-  const totalsLabelX = colUnit - 20;
-  const totalsValueX = colTotal;
+  const totalsLabelX = marginL + 340;
 
-  const drawTotalRow = (label, value, color = grayText, bold = false) => {
+  const drawTotalRow = (label, value, color = grayText) => {
     page.drawText(label, {
       x: totalsLabelX,
       y: y,
@@ -317,13 +272,7 @@ async function generateQuotationPDF(quotation) {
       font: helvetica,
       color: color,
     });
-    page.drawText(value, {
-      x: totalsValueX,
-      y: y,
-      size: bold ? 10 : 9,
-      font: bold ? helveticaBold : helvetica,
-      color: color,
-    });
+    drawTextRight(value, colTotalRight, y, 9, helvetica, color);
     y -= 18;
   };
 
@@ -343,12 +292,13 @@ async function generateQuotationPDF(quotation) {
     );
   }
 
-  // Total highlight
+  // Total highlight bar
   y -= 2;
+  const totalBarX = totalsLabelX - 10;
   page.drawRectangle({
-    x: totalsLabelX - 10,
+    x: totalBarX,
     y: y - 6,
-    width: marginR - totalsLabelX + 10,
+    width: marginR - totalBarX,
     height: 26,
     color: navy,
   });
@@ -361,13 +311,10 @@ async function generateQuotationPDF(quotation) {
     color: white,
   });
 
-  page.drawText(formatCurrency(quotation.total, quotation.currency), {
-    x: totalsValueX,
-    y: y + 3,
-    size: 11,
-    font: helveticaBold,
-    color: gold,
-  });
+  drawTextRight(
+    formatCurrency(quotation.total, quotation.currency),
+    colTotalRight, y + 3, 11, helveticaBold, gold
+  );
 
   // ── NOTES ──
   if (quotation.customer_notes) {
