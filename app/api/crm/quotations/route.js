@@ -187,7 +187,8 @@ export async function POST(request) {
     const taxes = body.taxes || 0;
     const fees = body.fees || 0;
     const discount_amount = body.discount_amount || 0;
-    const total = subtotal + taxes + fees - discount_amount;
+    const servicesTotal = (body.additional_services || []).reduce((s, svc) => s + (parseFloat(svc.price) || 0), 0);
+    const total = subtotal + taxes + fees - discount_amount + servicesTotal;
 
     // Preparar datos de la cotización
     const quotationData = {
@@ -213,6 +214,12 @@ export async function POST(request) {
         customer_phone: body.customer_phone || null,
         quotation_type: body.quotation_type || "general",
         created_by_user_id: user.id,
+        start_date: body.start_date || null,
+        end_date: body.end_date || null,
+        passengers: body.passengers || null,
+        additional_services: body.additional_services || [],
+        observations: body.observations || null,
+        special_conditions: body.special_conditions || null,
       },
     };
 

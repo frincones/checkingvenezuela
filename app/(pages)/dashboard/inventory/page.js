@@ -207,7 +207,7 @@ export default function InventoryPage() {
                     </span>
                   </td>
                   <td className="px-6 py-4 text-sm text-gray-500">
-                    {providers.find((p) => p.id === item.provider_id)?.name || "-"}
+                    {item.provider?.name || providers.find((p) => p.id === item.provider_id)?.name || "-"}
                   </td>
                   <td className="px-6 py-4 text-sm text-gray-500">
                     {formatCurrency(item.cost_price)}
@@ -219,7 +219,7 @@ export default function InventoryPage() {
                     {calculateMargin(item.cost_price, item.sale_price)}
                   </td>
                   <td className="px-6 py-4 text-sm text-gray-500">
-                    {item.stock_quantity !== null ? item.stock_quantity : "∞"}
+                    {(item.quantity_available ?? item.stock_quantity) !== null ? (item.quantity_available ?? item.stock_quantity) : "∞"}
                   </td>
                   <td className="px-6 py-4">
                     <button

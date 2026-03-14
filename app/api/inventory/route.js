@@ -128,7 +128,7 @@ export async function POST(request) {
       currency: body.currency || "USD",
       pricing_details: body.pricingDetails || body.pricing_details || null,
       status: body.status || "available",
-      quantity_available: body.quantityAvailable ?? body.quantity_available ?? null,
+      quantity_available: body.quantityAvailable ?? body.quantity_available ?? body.stock_quantity ?? null,
       valid_from: body.validFrom || body.valid_from || null,
       valid_until: body.validUntil || body.valid_until || null,
       blackout_dates: body.blackoutDates || body.blackout_dates || [],

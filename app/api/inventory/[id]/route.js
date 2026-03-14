@@ -72,6 +72,10 @@ export async function PATCH(request, { params }) {
         updateData[field] = body[camelField];
       }
     }
+    // Map stock_quantity alias to quantity_available
+    if (body.stock_quantity !== undefined && updateData.quantity_available === undefined) {
+      updateData.quantity_available = body.stock_quantity;
+    }
 
     if (Object.keys(updateData).length <= 1) {
       return NextResponse.json({ error: "No hay datos para actualizar" }, { status: 400 });
