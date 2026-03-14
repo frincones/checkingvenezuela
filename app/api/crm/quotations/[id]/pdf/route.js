@@ -250,7 +250,7 @@ function drawFooter(page, fonts) {
 
 // ── HERO (Pencil: gradient 0→transparent, 0.6→#000000BB, 1.0→#000000EE) ──
 
-async function drawHero(doc, page, item, fonts) {
+async function drawHero(doc, page, item, fonts, logoImage) {
   const url = item.product_images?.[0] || item.destination_data?.image_url;
   if (!url) return PAGE_H - 50;
 
@@ -275,9 +275,11 @@ async function drawHero(doc, page, item, fonts) {
     color: C.shadow, opacity: 0.55,
   });
 
-  // Brand text top-left
-  safe(page, "VENEZUELA", { x: PAD, y: PAGE_H - 26, size: 7, font: fonts.bold, color: C.accent });
-  safe(page, "VOYAGES", { x: PAD, y: PAGE_H - 36, size: 7, font: fonts.bold, color: C.accent });
+  // Logo top-left
+  const logoH = 50;
+  const logoScale = logoH / logoImage.height;
+  const logoW = logoImage.width * logoScale;
+  page.drawImage(logoImage, { x: PAD, y: PAGE_H - logoH - 16, width: logoW, height: logoH });
 
   // Large destination name at bottom
   const name = item.destination_data?.name || item.description || "";
@@ -381,8 +383,7 @@ async function drawGallery(doc, page, y, item, fonts) {
   const cellH = 115;
   ({ page, y } = ensureSpace(doc, page, y, cellH + 40, fonts));
 
-  safe(page, "Galeria", { x: PAD, y, size: 18, font: fonts.bold, color: C.textPrimary });
-  y -= 24;
+  y -= 4;
 
   const results = await Promise.allSettled(urls.map(u => fetchImg(u)));
   const loaded = [];
@@ -768,13 +769,12 @@ async function generatePDF(q) {
       let page = doc.addPage([PAGE_W, PAGE_H]);
       drawFooter(page, fonts);
 
-      let y = await drawHero(doc, page, item, fonts);
+      let y = await drawHero(doc, page, item, fonts, logo);
       y = drawQuoteBar(page, y, q, fonts);
       ({ page, y } = drawDestination(doc, page, y, item, fonts));
       ({ page, y } = await drawGallery(doc, page, y, item, fonts));
       ({ page, y } = drawItinerary(doc, page, y, item, fonts));
       ({ page, y } = drawInclExcl(doc, page, y, item, fonts));
-      ({ page, y } = drawProvider(doc, page, y, item, fonts));
       ({ page, y } = drawRecs(doc, page, y, item, fonts));
 
       if (y < 220) {
