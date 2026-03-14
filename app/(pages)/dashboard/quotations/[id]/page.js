@@ -22,6 +22,10 @@ export default function QuotationDetailPage() {
   const [saving, setSaving] = useState(false);
   const [generatingPdf, setGeneratingPdf] = useState(false);
   const [pdfError, setPdfError] = useState(null);
+  const [sendingEmail, setSendingEmail] = useState(false);
+  const [emailModal, setEmailModal] = useState(false);
+  const [emailForm, setEmailForm] = useState({ to: "", subject: "", message: "" });
+  const [emailResult, setEmailResult] = useState(null);
 
   useEffect(() => {
     fetchQuotation();
@@ -96,6 +100,42 @@ export default function QuotationDetailPage() {
         `Quedamos atentos a cualquier consulta.`
       );
       window.open(`https://wa.me/${customerPhone.replace(/\D/g, "")}?text=${message}`, "_blank");
+    }
+  }
+
+  function openEmailModal() {
+    const toEmail =
+      quotation.lead?.contact_email ||
+      quotation.metadata?.customer_email ||
+      "";
+    setEmailForm({
+      to: toEmail,
+      subject: `Cotización ${quotation.quotation_number} — Venezuela Voyages`,
+      message: "",
+    });
+    setEmailResult(null);
+    setEmailModal(true);
+  }
+
+  async function sendEmail() {
+    if (!emailForm.to) return;
+    setSendingEmail(true);
+    setEmailResult(null);
+    try {
+      const response = await fetch(`/api/crm/quotations/${params.id}/send`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(emailForm),
+      });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error);
+      setEmailResult({ success: true, message: data.message });
+      await fetchQuotation();
+      setTimeout(() => setEmailModal(false), 2000);
+    } catch (err) {
+      setEmailResult({ success: false, message: err.message });
+    } finally {
+      setSendingEmail(false);
     }
   }
 
@@ -406,17 +446,15 @@ export default function QuotationDetailPage() {
                   WhatsApp
                 </a>
               )}
-              {(quotation.lead?.contact_email || quotation.metadata?.customer_email) && (
-                <a
-                  href={`mailto:${quotation.lead?.contact_email || quotation.metadata?.customer_email}?subject=Cotizacion ${quotation.quotation_number}`}
-                  className="flex w-full items-center gap-2 rounded-md bg-blue-100 px-4 py-2 text-sm font-medium text-blue-700 hover:bg-blue-200"
-                >
-                  <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-                  </svg>
-                  Enviar Email
-                </a>
-              )}
+              <button
+                onClick={openEmailModal}
+                className="flex w-full items-center gap-2 rounded-md bg-blue-100 px-4 py-2 text-sm font-medium text-blue-700 hover:bg-blue-200"
+              >
+                <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                </svg>
+                Enviar por Email
+              </button>
               {quotation.status === "accepted" && (
                 <button
                   onClick={() => updateQuotation({ status: "converted" })}
@@ -445,6 +483,97 @@ export default function QuotationDetailPage() {
           )}
         </div>
       </div>
+
+      {/* Email Modal */}
+      {emailModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+          <div className="mx-4 w-full max-w-lg rounded-lg bg-white p-6 shadow-xl">
+            <div className="mb-4 flex items-center justify-between">
+              <h3 className="text-lg font-semibold text-gray-900">Enviar Cotización por Email</h3>
+              <button onClick={() => setEmailModal(false)} className="text-gray-400 hover:text-gray-600">
+                <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Para</label>
+                <input
+                  type="email"
+                  value={emailForm.to}
+                  onChange={(e) => setEmailForm({ ...emailForm, to: e.target.value })}
+                  placeholder="cliente@email.com"
+                  className="mt-1 w-full rounded-md border border-gray-300 p-2 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Asunto</label>
+                <input
+                  type="text"
+                  value={emailForm.subject}
+                  onChange={(e) => setEmailForm({ ...emailForm, subject: e.target.value })}
+                  className="mt-1 w-full rounded-md border border-gray-300 p-2 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Mensaje adicional (opcional)</label>
+                <textarea
+                  value={emailForm.message}
+                  onChange={(e) => setEmailForm({ ...emailForm, message: e.target.value })}
+                  rows={3}
+                  placeholder="Mensaje personalizado para el cliente..."
+                  className="mt-1 w-full rounded-md border border-gray-300 p-2 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+                />
+              </div>
+
+              <div className="rounded-md bg-gray-50 p-3 text-xs text-gray-500">
+                Se adjuntará automáticamente el PDF de la cotización al email.
+                <br />
+                Enviado desde: <strong>ventas@venezuelavoyages.com</strong>
+              </div>
+
+              {emailResult && (
+                <div className={`rounded-md p-3 text-sm ${emailResult.success ? "bg-green-50 text-green-700" : "bg-red-50 text-red-700"}`}>
+                  {emailResult.message}
+                </div>
+              )}
+            </div>
+
+            <div className="mt-6 flex justify-end gap-3">
+              <button
+                onClick={() => setEmailModal(false)}
+                className="rounded-md px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={sendEmail}
+                disabled={sendingEmail || !emailForm.to}
+                className="flex items-center gap-2 rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50"
+              >
+                {sendingEmail ? (
+                  <>
+                    <svg className="h-4 w-4 animate-spin" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                    </svg>
+                    Enviando...
+                  </>
+                ) : (
+                  <>
+                    <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+                    </svg>
+                    Enviar
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
