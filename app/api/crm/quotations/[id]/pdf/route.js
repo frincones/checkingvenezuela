@@ -358,7 +358,10 @@ function drawDestination(doc, page, y, item, fonts, logoImage) {
   const hl = dest.highlights;
   if (hl?.length > 0) {
     y -= 12;
-    ({ page, y } = ensureSpace(doc, page, y, 55, fonts, logoImage));
+    // Lookahead: highlights (72px) + gallery (~155px) should stay together
+    const hasGallery = item.product_images?.length >= 2;
+    const neededForBoth = 72 + (hasGallery ? 160 : 0);
+    ({ page, y } = ensureSpace(doc, page, y, neededForBoth, fonts, logoImage));
 
     const items = hl.slice(0, 4);
     const gap = 12;
@@ -905,11 +908,10 @@ async function generatePDF(q) {
       ({ page, y } = drawInclExcl(doc, page, y, item, fonts, logo));
       ({ page, y } = drawRecs(doc, page, y, item, fonts, logo));
 
-      if (y < 220) {
-        page = doc.addPage([PAGE_W, PAGE_H]);
-        drawFooter(page, fonts, logo);
-        y = PAGE_H - 40;
-      }
+      // Always start price summary on a fresh last page
+      page = doc.addPage([PAGE_W, PAGE_H]);
+      drawFooter(page, fonts, logo);
+      y = PAGE_H - 40;
       ({ page, y } = drawPrice(doc, page, y, q, fonts, logo));
       ({ page, y } = drawConditions(doc, page, y, q, fonts, logo));
       ({ page, y } = drawNotes(doc, page, y, q, fonts, logo));
