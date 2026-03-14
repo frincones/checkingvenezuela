@@ -364,7 +364,7 @@ function drawItinerary(pdfDoc, page, y, item, fonts) {
     if (day.meals) {
       const mealsText = Array.isArray(day.meals) ? day.meals.join(" · ") : day.meals;
       ({ page, y } = ensureSpace(pdfDoc, page, y, 12, fonts));
-      page.drawText(`🍽 ${mealsText}`, {
+      page.drawText(`Comidas: ${mealsText}`, {
         x: MARGIN_L + 30, y, size: 7, font: fonts.regular, color: COLORS.grayText,
       });
       y -= 12;
@@ -402,7 +402,7 @@ function drawIncludesExcludes(pdfDoc, page, y, item, fonts) {
         const result = ensureSpace(pdfDoc, page, leftY, 14, fonts);
         return { page: result.page, leftY: result.y };
       })());
-      page.drawText(`✓  ${inc}`.substring(0, 40), {
+      page.drawText(`+  ${inc}`.substring(0, 40), {
         x: MARGIN_L, y: leftY, size: 8, font: fonts.regular, color: COLORS.darkText,
       });
       leftY -= 14;
@@ -418,7 +418,7 @@ function drawIncludesExcludes(pdfDoc, page, y, item, fonts) {
     rightY -= 16;
 
     for (const exc of notIncludes.slice(0, 10)) {
-      page.drawText(`✗  ${exc}`.substring(0, 40), {
+      page.drawText(`-  ${exc}`.substring(0, 40), {
         x: rightX, y: rightY, size: 8, font: fonts.regular, color: COLORS.grayText,
       });
       rightY -= 14;
@@ -441,7 +441,7 @@ function drawProviderInfo(pdfDoc, page, y, item, fonts) {
   y -= 16;
 
   let provLine = provider.name || "";
-  if (provider.rating) provLine += `  ★ ${provider.rating}`;
+  if (provider.rating) provLine += `  * ${provider.rating}`;
   page.drawText(provLine.substring(0, 60), {
     x: MARGIN_L, y, size: 9, font: fonts.regular, color: COLORS.darkText,
   });
@@ -463,7 +463,7 @@ function drawRecommendations(pdfDoc, page, y, item, fonts) {
 
   for (const rec of recs.slice(0, 6)) {
     ({ page, y } = ensureSpace(pdfDoc, page, y, 14, fonts));
-    const lines = wrapText(`•  ${rec}`, fonts.regular, 8, CONTENT_W);
+    const lines = wrapText(`-  ${rec}`, fonts.regular, 8, CONTENT_W);
     for (const line of lines.slice(0, 2)) {
       page.drawText(line, {
         x: MARGIN_L, y, size: 8, font: fonts.regular, color: COLORS.darkText,
