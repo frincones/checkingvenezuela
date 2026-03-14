@@ -174,6 +174,13 @@ export async function POST(request) {
       quantity: item.quantity || 1,
       unit_price: item.unit_price || 0,
       total: (item.quantity || 1) * (item.unit_price || 0),
+      // Preservar enriquecimiento si existe
+      ...(item.type && { type: item.type }),
+      ...(item.inventory_id && { inventory_id: item.inventory_id }),
+      ...(item.product_images && { product_images: item.product_images }),
+      ...(item.product_details && { product_details: item.product_details }),
+      ...(item.destination_data && { destination_data: item.destination_data }),
+      ...(item.provider_data && { provider_data: item.provider_data }),
     }));
 
     const subtotal = processedItems.reduce((sum, item) => sum + item.total, 0);
