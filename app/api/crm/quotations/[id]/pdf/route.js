@@ -1,28 +1,24 @@
 /**
  * API para generar y descargar PDF de cotizaciones
  *
- * GET /api/crm/quotations/[id]/pdf - Genera, guarda en Storage y retorna URL
- *
- * Modes:
- * - Simple: classic table PDF for manual items only
- * - Brochure: multi-page visual PDF when enriched items exist
- *
  * Design reference: Pencil "Pantalla 3 - PDF Brochure Preview"
+ * Key design specs from Pencil:
+ *   - Hero: gradient stops 0→transparent, 0.6→#000000BB, 1.0→#000000EE
+ *   - Gallery images: cornerRadius 4, clip true, fill mode
+ *   - Highlight cards: cornerRadius 8, padding 20, bg-muted
+ *   - Section padding: [32, 48] (vertical, horizontal)
+ *   - Day badges: 48×48, Day1=primary, Day2+=bg-muted+border
+ *   - Price section: bg-muted, gap 16, large total in secondary color
+ *   - Footer: primary bg, padding [32, 48]
  */
 
 import { createClient, createAdminClient } from "@/lib/db/supabase/server";
 import { NextResponse } from "next/server";
 import {
-  PDFDocument,
-  rgb,
-  StandardFonts,
-  pushGraphicsState,
-  popGraphicsState,
-  moveTo,
-  lineTo,
-  closePath,
-  clip,
-  endPath,
+  PDFDocument, rgb, StandardFonts,
+  pushGraphicsState, popGraphicsState,
+  moveTo, lineTo, closePath, clip, endPath,
+  appendBezierCurve,
 } from "pdf-lib";
 import { readFileSync } from "fs";
 import { join } from "path";
@@ -31,25 +27,26 @@ import { join } from "path";
 
 const PAGE_W = 612;
 const PAGE_H = 792;
-const MARGIN_L = 48;
-const MARGIN_R = PAGE_W - 48;
-const CONTENT_W = MARGIN_R - MARGIN_L;
+const PAD = 48;                          // horizontal padding (matches Pencil 48px)
+const MARGIN_L = PAD;
+const MARGIN_R = PAGE_W - PAD;
+const CONTENT_W = MARGIN_R - MARGIN_L;   // 516
 const FOOTER_H = 60;
 
-// Brand colors (from Pencil design variables)
+// Brand colors
 const C = {
-  primary: rgb(10 / 255, 26 / 255, 68 / 255),       // #0A1A44
-  secondary: rgb(242 / 255, 169 / 255, 59 / 255),    // #F2A93B
-  accent: rgb(255 / 255, 210 / 255, 117 / 255),      // #FFD275
-  textPrimary: rgb(10 / 255, 26 / 255, 68 / 255),    // #0A1A44
-  textMuted: rgb(123 / 255, 140 / 255, 163 / 255),   // #7B8CA3
-  bgMuted: rgb(243 / 255, 244 / 255, 246 / 255),     // #F3F4F6
-  border: rgb(232 / 255, 235 / 255, 240 / 255),      // #E8EBF0
+  primary: rgb(10 / 255, 26 / 255, 68 / 255),
+  secondary: rgb(242 / 255, 169 / 255, 59 / 255),
+  accent: rgb(255 / 255, 210 / 255, 117 / 255),
+  textPrimary: rgb(10 / 255, 26 / 255, 68 / 255),
+  textMuted: rgb(123 / 255, 140 / 255, 163 / 255),
+  bgMuted: rgb(243 / 255, 244 / 255, 246 / 255),
+  border: rgb(232 / 255, 235 / 255, 240 / 255),
   white: rgb(1, 1, 1),
-  white70: rgb(180 / 255, 180 / 255, 180 / 255),
-  success: rgb(16 / 255, 185 / 255, 129 / 255),      // #10b981
-  destructive: rgb(242 / 255, 55 / 255, 63 / 255),   // #F2373F
-  black50: rgb(0, 0, 0),
+  white70: rgb(180 / 255, 180 / 255, 195 / 255),
+  success: rgb(16 / 255, 185 / 255, 129 / 255),
+  destructive: rgb(242 / 255, 55 / 255, 63 / 255),
+  shadow: rgb(0, 0, 0),
 };
 
 // ── TEXT UTILITIES ──
@@ -79,6 +76,11 @@ function rightText(page, text, rightX, y, size, font, color) {
   page.drawText(s, { x: rightX - font.widthOfTextAtSize(s, size), y, size, font, color });
 }
 
+function centerText(page, text, centerX, y, size, font, color) {
+  const s = sanitize(text);
+  page.drawText(s, { x: centerX - font.widthOfTextAtSize(s, size) / 2, y, size, font, color });
+}
+
 function hLine(page, x1, x2, y, color, thickness = 0.5) {
   page.drawLine({ start: { x: x1, y }, end: { x: x2, y }, thickness, color });
 }
@@ -90,12 +92,8 @@ function wrap(text, font, fontSize, maxW) {
   let cur = "";
   for (const w of words) {
     const test = cur ? `${cur} ${w}` : w;
-    if (font.widthOfTextAtSize(test, fontSize) > maxW && cur) {
-      lines.push(cur);
-      cur = w;
-    } else {
-      cur = test;
-    }
+    if (font.widthOfTextAtSize(test, fontSize) > maxW && cur) { lines.push(cur); cur = w; }
+    else cur = test;
   }
   if (cur) lines.push(cur);
   return lines;
@@ -124,46 +122,113 @@ async function embedImg(doc, bytes) {
   }
 }
 
+// ── CLIPPING UTILITIES ──
+
+/** Bezier control point factor for approximating quarter-circle arcs */
+const K = 0.5522847498;
+
 /**
- * Draw an image clipped to a rectangle (CSS object-fit: cover).
- * Uses pdf-lib's graphics state operators for proper clipping.
+ * Push a rounded rectangle clip path.
+ * Uses cubic bezier curves at corners for smooth rounding.
  */
-function drawClippedImage(page, image, x, y, w, h) {
-  // Save graphics state & set clip rectangle
+function clipRoundedRect(page, x, y, w, h, r) {
+  if (r <= 0) {
+    // Simple rectangle clip
+    page.pushOperators(
+      pushGraphicsState(),
+      moveTo(x, y), lineTo(x + w, y), lineTo(x + w, y + h), lineTo(x, y + h),
+      closePath(), clip(), endPath(),
+    );
+    return;
+  }
+
+  r = Math.min(r, w / 2, h / 2);
+
   page.pushOperators(
     pushGraphicsState(),
-    moveTo(x, y),
-    lineTo(x + w, y),
-    lineTo(x + w, y + h),
-    lineTo(x, y + h),
-    closePath(),
-    clip(),
-    endPath(),
+    // Start at bottom-left, just after corner
+    moveTo(x + r, y),
+    // Bottom edge → bottom-right corner
+    lineTo(x + w - r, y),
+    appendBezierCurve(x + w - r + K * r, y, x + w, y + r - K * r, x + w, y + r),
+    // Right edge → top-right corner
+    lineTo(x + w, y + h - r),
+    appendBezierCurve(x + w, y + h - r + K * r, x + w - r + K * r, y + h, x + w - r, y + h),
+    // Top edge → top-left corner
+    lineTo(x + r, y + h),
+    appendBezierCurve(x + r - K * r, y + h, x, y + h - r + K * r, x, y + h - r),
+    // Left edge → bottom-left corner
+    lineTo(x, y + r),
+    appendBezierCurve(x, y + r - K * r, x + r - K * r, y, x + r, y),
+    closePath(), clip(), endPath(),
   );
+}
 
-  // Calculate "cover" dimensions (fill cell, overflow clipped)
-  const imgAspect = image.width / image.height;
-  const cellAspect = w / h;
-  let dw, dh;
-  if (imgAspect > cellAspect) {
-    // Image wider than cell → match height, overflow width
-    dh = h;
-    dw = h * imgAspect;
-  } else {
-    // Image taller than cell → match width, overflow height
-    dw = w;
-    dh = w / imgAspect;
-  }
-  const ox = x + (w - dw) / 2;
-  const oy = y + (h - dh) / 2;
-
-  page.drawImage(image, { x: ox, y: oy, width: dw, height: dh });
-
-  // Restore graphics state (removes clip)
+function restoreClip(page) {
   page.pushOperators(popGraphicsState());
 }
 
-function space(doc, page, y, need, fonts) {
+/**
+ * Draw image in "cover" mode, clipped to a rounded rectangle.
+ * Optionally draws a subtle shadow behind the image.
+ */
+function drawClippedImage(page, image, x, y, w, h, radius = 0, shadow = false) {
+  // Shadow (slightly offset, larger)
+  if (shadow) {
+    const sr = radius > 0 ? radius + 1 : 0;
+    drawRoundedRect(page, x + 1, y - 2, w, h, sr, C.shadow, 0.08);
+    drawRoundedRect(page, x, y - 1, w, h, sr, C.shadow, 0.04);
+  }
+
+  // Background fill (visible while image loads or if transparent)
+  drawRoundedRect(page, x, y, w, h, radius, C.bgMuted, 1);
+
+  // Clip to rounded rect
+  clipRoundedRect(page, x, y, w, h, radius);
+
+  // Calculate cover dimensions
+  const imgAspect = image.width / image.height;
+  const cellAspect = w / h;
+  let dw, dh;
+  if (imgAspect > cellAspect) { dh = h; dw = h * imgAspect; }
+  else { dw = w; dh = w / imgAspect; }
+
+  page.drawImage(image, {
+    x: x + (w - dw) / 2, y: y + (h - dh) / 2, width: dw, height: dh,
+  });
+
+  restoreClip(page);
+}
+
+/**
+ * Draw a filled rounded rectangle (no clipping, just visual).
+ */
+function drawRoundedRect(page, x, y, w, h, r, color, opacity = 1) {
+  if (r <= 0) {
+    page.drawRectangle({ x, y, width: w, height: h, color, opacity });
+    return;
+  }
+  r = Math.min(r, w / 2, h / 2);
+
+  // Use clip + fill approach: save state, set clip, fill full area, restore
+  page.pushOperators(pushGraphicsState());
+  page.pushOperators(
+    moveTo(x + r, y),
+    lineTo(x + w - r, y),
+    appendBezierCurve(x + w - r + K * r, y, x + w, y + r - K * r, x + w, y + r),
+    lineTo(x + w, y + h - r),
+    appendBezierCurve(x + w, y + h - r + K * r, x + w - r + K * r, y + h, x + w - r, y + h),
+    lineTo(x + r, y + h),
+    appendBezierCurve(x + r - K * r, y + h, x, y + h - r + K * r, x, y + h - r),
+    lineTo(x, y + r),
+    appendBezierCurve(x, y + r - K * r, x + r - K * r, y, x + r, y),
+    closePath(), clip(), endPath(),
+  );
+  page.drawRectangle({ x, y, width: w, height: h, color, opacity });
+  page.pushOperators(popGraphicsState());
+}
+
+function ensureSpace(doc, page, y, need, fonts) {
   if (y - need < FOOTER_H + 10) {
     const p = doc.addPage([PAGE_W, PAGE_H]);
     drawFooter(p, fonts);
@@ -172,171 +237,168 @@ function space(doc, page, y, need, fonts) {
   return { page, y };
 }
 
-// ── FOOTER (navy full-width bar — matches Pencil) ──
+// ── FOOTER (Pencil: primary bg, padding [32, 48]) ──
 
 function drawFooter(page, fonts) {
   page.drawRectangle({ x: 0, y: 0, width: PAGE_W, height: FOOTER_H, color: C.primary });
-  safe(page, "VENEZUELA VOYAGES", { x: MARGIN_L, y: 35, size: 10, font: fonts.bold, color: C.accent });
-  safe(page, "Tu viaje comienza aqui", { x: MARGIN_L, y: 20, size: 9, font: fonts.reg, color: C.white70 });
+  safe(page, "VENEZUELA VOYAGES", { x: PAD, y: 36, size: 10, font: fonts.bold, color: C.accent });
+  safe(page, "Tu viaje comienza aqui", { x: PAD, y: 22, size: 9, font: fonts.reg, color: C.white70 });
   rightText(page, "info@venezuelavoyages.com", MARGIN_R, 38, 9, fonts.reg, C.white70);
-  rightText(page, "+58 426 403 4052", MARGIN_R, 25, 9, fonts.reg, C.white70);
-  rightText(page, "www.venezuelavoyages.com", MARGIN_R, 12, 9, fonts.reg, C.accent);
+  rightText(page, "+58 426 403 4052", MARGIN_R, 26, 9, fonts.reg, C.white70);
+  rightText(page, "www.venezuelavoyages.com", MARGIN_R, 14, 9, fonts.reg, C.accent);
 }
 
-// ── BROCHURE SECTIONS ──
+// ── HERO (Pencil: gradient 0→transparent, 0.6→#000000BB, 1.0→#000000EE) ──
 
-/**
- * HERO: Full-bleed image with gradient overlay + large title.
- * Pencil: 400px/800px = 50% of page height. PDF equivalent ~310px.
- */
 async function drawHero(doc, page, item, fonts) {
-  const heroUrl = item.product_images?.[0] || item.destination_data?.image_url;
-  if (!heroUrl) return PAGE_H - 50;
+  const url = item.product_images?.[0] || item.destination_data?.image_url;
+  if (!url) return PAGE_H - 50;
 
-  const bytes = await fetchImg(heroUrl);
+  const bytes = await fetchImg(url);
   const image = await embedImg(doc, bytes);
   if (!image) return PAGE_H - 50;
 
-  const heroH = 310;
+  const heroH = 300;
   const heroY = PAGE_H - heroH;
 
-  // Draw image clipped to hero area (full bleed, edge to edge)
-  drawClippedImage(page, image, 0, heroY, PAGE_W, heroH);
+  // Draw image clipped to hero area (full bleed)
+  clipRoundedRect(page, 0, heroY, PAGE_W, heroH, 0);
+  const imgA = image.width / image.height;
+  let dw = PAGE_W, dh = PAGE_W / imgA;
+  if (dh < heroH) { dh = heroH; dw = heroH * imgA; }
+  page.drawImage(image, { x: (PAGE_W - dw) / 2, y: heroY, width: dw, height: dh });
+  restoreClip(page);
 
-  // Gradient overlay: transparent top → dark bottom (12 steps)
-  for (let i = 0; i < 12; i++) {
-    const opacity = (i / 12) * 0.88;
+  // Smooth gradient overlay (60 steps, matching Pencil's 3-stop gradient)
+  // Pencil: pos 0 = 0% opacity, pos 0.6 = 73% opacity (#BB), pos 1.0 = 93% opacity (#EE)
+  const STEPS = 60;
+  const stepH = heroH / STEPS;
+  for (let i = 0; i < STEPS; i++) {
+    const t = i / (STEPS - 1);  // 0 to 1, where 0 = top, 1 = bottom
+    let opacity;
+    if (t <= 0.6) {
+      // Interpolate from 0 to 0.73
+      opacity = (t / 0.6) * 0.73;
+    } else {
+      // Interpolate from 0.73 to 0.93
+      opacity = 0.73 + ((t - 0.6) / 0.4) * 0.20;
+    }
     page.drawRectangle({
-      x: 0, y: heroY + (11 - i) * (heroH / 12),
-      width: PAGE_W, height: heroH / 12 + 1,
-      color: C.black50, opacity,
+      x: 0, y: heroY + (STEPS - 1 - i) * stepH,
+      width: PAGE_W, height: stepH + 0.5,
+      color: C.shadow, opacity,
     });
   }
 
-  // Small brand text top-left
-  safe(page, "VENEZUELA", { x: MARGIN_L, y: PAGE_H - 28, size: 7, font: fonts.bold, color: C.accent });
-  safe(page, "VOYAGES", { x: MARGIN_L, y: PAGE_H - 38, size: 7, font: fonts.bold, color: C.accent });
+  // Brand text top-left
+  safe(page, "VENEZUELA", { x: PAD, y: PAGE_H - 26, size: 7, font: fonts.bold, color: C.accent });
+  safe(page, "VOYAGES", { x: PAD, y: PAGE_H - 36, size: 7, font: fonts.bold, color: C.accent });
 
-  // Large destination name at bottom of hero
+  // Large destination name at bottom
   const name = item.destination_data?.name || item.description || "";
-  safe(page, name.substring(0, 30), {
-    x: MARGIN_L, y: heroY + 52, size: 30, font: fonts.bold, color: C.white,
-  });
+  safe(page, name.substring(0, 28), { x: PAD, y: heroY + 48, size: 28, font: fonts.bold, color: C.white });
 
   // Subtitle
   const sub = item.destination_data?.tags?.[0]
     ? `${item.destination_data.tags[0]}, Venezuela` : "";
-  if (sub) {
-    safe(page, sub, { x: MARGIN_L, y: heroY + 32, size: 11, font: fonts.reg, color: C.white70 });
-  }
+  if (sub) safe(page, sub, { x: PAD, y: heroY + 30, size: 11, font: fonts.reg, color: C.white70 });
 
   return heroY - 5;
 }
 
-/**
- * QUOTE INFO BAR: muted background, quote info left + validity right.
- * Pencil: quoteInfo section with bg-muted, 24px padding.
- */
+// ── QUOTE INFO BAR (Pencil: bg-muted, padding [24, 48]) ──
+
 function drawQuoteBar(page, y, q, fonts) {
-  const barH = 50;
+  const barH = 52;
   const barY = y - barH;
 
   page.drawRectangle({ x: 0, y: barY, width: PAGE_W, height: barH, color: C.bgMuted });
 
-  const t1 = barY + 30;
-  const t2 = t1 - 16;
+  const t1 = barY + 32, t2 = t1 - 16;
 
   safe(page, `Cotizacion ${q.quotation_number || "N/A"}`, {
-    x: MARGIN_L, y: t1, size: 10, font: fonts.bold, color: C.textPrimary,
+    x: PAD, y: t1, size: 10, font: fonts.bold, color: C.textPrimary,
   });
-  const cName = q.lead?.contact_name || q.metadata?.customer_name || "Cliente";
-  safe(page, `Preparada para ${cName}`.substring(0, 50), {
-    x: MARGIN_L, y: t2, size: 10, font: fonts.reg, color: C.textMuted,
+  const cn = q.lead?.contact_name || q.metadata?.customer_name || "Cliente";
+  safe(page, `Preparada para ${cn}`.substring(0, 50), {
+    x: PAD, y: t2, size: 10, font: fonts.reg, color: C.textMuted,
   });
 
-  const vDate = q.valid_until
+  const vd = q.valid_until
     ? new Date(q.valid_until).toLocaleDateString("es-VE", { day: "numeric", month: "short", year: "numeric" })
     : "N/A";
-  rightText(page, `Valida hasta ${vDate}`, MARGIN_R, t1, 10, fonts.reg, C.textMuted);
+  rightText(page, `Valida hasta ${vd}`, MARGIN_R, t1, 10, fonts.reg, C.textMuted);
 
   const pax = (q.items || []).reduce((s, i) => s + (i.quantity || 1), 0);
   rightText(page, `${pax} pasajero${pax !== 1 ? "s" : ""}`, MARGIN_R, t2, 10, fonts.bold, C.textPrimary);
 
-  return barY - 15;
+  return barY - 20;
 }
 
-/**
- * DESTINATION INFO: "Sobre el Destino" + description + highlight cards.
- * Pencil: 24px title, 13px desc, 4 highlight cards with muted bg.
- */
+// ── DESTINATION INFO (Pencil: padding [32, 48], gap 20) ──
+
 function drawDestination(doc, page, y, item, fonts) {
   const dest = item.destination_data;
   if (!dest) return { page, y };
 
-  ({ page, y } = space(doc, page, y, 100, fonts));
+  ({ page, y } = ensureSpace(doc, page, y, 100, fonts));
 
-  // Title
-  safe(page, "Sobre el Destino", { x: MARGIN_L, y, size: 18, font: fonts.bold, color: C.textPrimary });
-  y -= 24;
+  // Section title (Pencil: 24px → PDF ~18px)
+  safe(page, "Sobre el Destino", { x: PAD, y, size: 18, font: fonts.bold, color: C.textPrimary });
+  y -= 26;
 
-  // Description
+  // Description (Pencil: 13px, lineHeight 1.6)
   if (dest.description) {
     const lines = wrap(dest.description, fonts.reg, 11, CONTENT_W);
     for (const ln of lines.slice(0, 6)) {
-      ({ page, y } = space(doc, page, y, 16, fonts));
-      safe(page, ln, { x: MARGIN_L, y, size: 11, font: fonts.reg, color: C.textMuted });
-      y -= 17;
+      ({ page, y } = ensureSpace(doc, page, y, 18, fonts));
+      safe(page, ln, { x: PAD, y, size: 11, font: fonts.reg, color: C.textMuted });
+      y -= 18; // lineHeight ~1.6
     }
   }
 
-  // Highlight cards (max 4, in a row)
+  // Highlight cards (Pencil: cornerRadius 8, padding 20, gap 16, bg-muted)
   const hl = dest.highlights;
   if (hl?.length > 0) {
-    y -= 8;
-    ({ page, y } = space(doc, page, y, 50, fonts));
+    y -= 12;
+    ({ page, y } = ensureSpace(doc, page, y, 55, fonts));
 
     const items = hl.slice(0, 4);
-    const gap = 10;
-    const cardW = (CONTENT_W - gap * (items.length - 1)) / items.length;
-    const cardH = 40;
+    const gap = 12;
+    const cw = (CONTENT_W - gap * (items.length - 1)) / items.length;
+    const ch = 48;
 
     for (let i = 0; i < items.length; i++) {
-      const cx = MARGIN_L + i * (cardW + gap);
-      page.drawRectangle({ x: cx, y: y - cardH, width: cardW, height: cardH, color: C.bgMuted });
+      const cx = PAD + i * (cw + gap);
+      // Rounded card background
+      drawRoundedRect(page, cx, y - ch, cw, ch, 6, C.bgMuted);
 
-      const txt = sanitize(items[i]);
-      const tw = fonts.bold.widthOfTextAtSize(txt, 9);
-      safe(page, txt, {
-        x: cx + (cardW - tw) / 2, y: y - cardH / 2 - 4,
-        size: 9, font: fonts.bold, color: C.textPrimary,
-      });
+      // Centered text
+      const t = sanitize(items[i]);
+      centerText(page, t, cx + cw / 2, y - ch / 2 - 4, 9, fonts.bold, C.textPrimary);
     }
-    y -= cardH + 10;
+    y -= ch + 12;
   }
 
-  y -= 10;
+  y -= 16;
   return { page, y };
 }
 
-/**
- * GALLERY: 3 images in a row with clipping.
- * Pencil: 3 columns, equal height ~160px, cornerRadius 4, gap 8.
- */
+// ── GALLERY (Pencil: 3 cols, cornerRadius 4, gap 8, height 160) ──
+
 async function drawGallery(doc, page, y, item, fonts) {
   const imgs = item.product_images;
   if (!imgs || imgs.length < 2) return { page, y };
 
-  // Skip first image (hero), take next 3
-  const urls = imgs.slice(1, 4);
+  const urls = imgs.slice(1, 4); // Skip hero image
   if (urls.length < 1) return { page, y };
 
-  const cellH = 120;
-  ({ page, y } = space(doc, page, y, cellH + 35, fonts));
+  const cellH = 115;
+  ({ page, y } = ensureSpace(doc, page, y, cellH + 40, fonts));
 
-  safe(page, "Galeria", { x: MARGIN_L, y, size: 18, font: fonts.bold, color: C.textPrimary });
-  y -= 22;
+  safe(page, "Galeria", { x: PAD, y, size: 18, font: fonts.bold, color: C.textPrimary });
+  y -= 24;
 
-  // Fetch all in parallel
   const results = await Promise.allSettled(urls.map(u => fetchImg(u)));
   const loaded = [];
   for (const r of results) {
@@ -349,315 +411,300 @@ async function drawGallery(doc, page, y, item, fonts) {
 
   const gap = 8;
   const cols = loaded.length;
-  const cellW = (CONTENT_W - gap * (cols - 1)) / cols;
+  const cw = (CONTENT_W - gap * (cols - 1)) / cols;
 
   for (let j = 0; j < loaded.length; j++) {
-    const x = MARGIN_L + j * (cellW + gap);
-    const cellY = y - cellH;
-
-    // Muted background (visible if image fails or is transparent)
-    page.drawRectangle({ x, y: cellY, width: cellW, height: cellH, color: C.bgMuted });
-
-    // Draw image CLIPPED to cell (cover mode)
-    drawClippedImage(page, loaded[j], x, cellY, cellW, cellH);
+    const x = PAD + j * (cw + gap);
+    // Rounded corners + shadow
+    drawClippedImage(page, loaded[j], x, y - cellH, cw, cellH, 5, true);
   }
 
-  y -= cellH + 15;
+  y -= cellH + 20;
   return { page, y };
 }
 
-/**
- * ITINERARY: square day badges, "01"/"02", structured content.
- * Pencil: 48px badges, Day1=navy, Day2+=muted+border, title 14px, desc 12px.
- */
+// ── ITINERARY (Pencil: badges 48×48, gap 20, divider #E8EBF0) ──
+
 function drawItinerary(doc, page, y, item, fonts) {
   const itin = item.product_details?.itinerary;
   if (!itin?.length) return { page, y };
 
-  ({ page, y } = space(doc, page, y, 70, fonts));
-  safe(page, "Itinerario", { x: MARGIN_L, y, size: 18, font: fonts.bold, color: C.textPrimary });
-  y -= 28;
+  ({ page, y } = ensureSpace(doc, page, y, 70, fonts));
+  safe(page, "Itinerario", { x: PAD, y, size: 18, font: fonts.bold, color: C.textPrimary });
+  y -= 30;
 
   for (let i = 0; i < itin.length; i++) {
     const day = itin[i];
-    ({ page, y } = space(doc, page, y, 85, fonts));
+    ({ page, y } = ensureSpace(doc, page, y, 90, fonts));
 
-    // Square badge
-    const bSz = 36;
-    const bX = MARGIN_L;
-    const bY = y - bSz + 10;
+    // Badge (Pencil: 48×48, cornerRadius implicit ~4)
+    const bSz = 40;
+    const bX = PAD, bY = y - bSz + 10;
 
     if (i === 0) {
-      page.drawRectangle({ x: bX, y: bY, width: bSz, height: bSz, color: C.primary });
+      drawRoundedRect(page, bX, bY, bSz, bSz, 4, C.primary);
     } else {
-      page.drawRectangle({ x: bX, y: bY, width: bSz, height: bSz, color: C.bgMuted, borderColor: C.border, borderWidth: 1 });
+      drawRoundedRect(page, bX, bY, bSz, bSz, 4, C.bgMuted);
+      // Border effect: draw slightly smaller white inside, then muted on top
+      page.drawRectangle({ x: bX + 0.5, y: bY + 0.5, width: bSz - 1, height: bSz - 1, borderColor: C.border, borderWidth: 1, color: C.bgMuted });
     }
 
     const num = String(i + 1).padStart(2, "0");
-    const nw = fonts.bold.widthOfTextAtSize(num, 14);
+    const nw = fonts.bold.widthOfTextAtSize(num, 15);
     safe(page, num, {
-      x: bX + (bSz - nw) / 2, y: bY + (bSz - 14) / 2,
-      size: 14, font: fonts.bold, color: i === 0 ? C.white : C.textPrimary,
+      x: bX + (bSz - nw) / 2, y: bY + (bSz - 15) / 2,
+      size: 15, font: fonts.bold, color: i === 0 ? C.white : C.textPrimary,
     });
 
-    // Content right of badge
-    const cX = MARGIN_L + bSz + 16;
-    const cW = CONTENT_W - bSz - 16;
+    // Content (Pencil: title 14px medium, desc 12px, meals 11px)
+    const cX = PAD + bSz + 18;
+    const cW = CONTENT_W - bSz - 18;
 
     const title = day.title || day.day || `Dia ${i + 1}`;
     safe(page, title.substring(0, 55), { x: cX, y, size: 12, font: fonts.bold, color: C.textPrimary });
-    y -= 16;
+    y -= 18;
 
-    // Activities
     const acts = day.activities || day.description;
     if (acts) {
       const txt = Array.isArray(acts) ? acts.join(" - ") : acts;
-      const lines = wrap(txt, fonts.reg, 9.5, cW);
+      const lines = wrap(txt, fonts.reg, 9, cW);
       for (const ln of lines.slice(0, 5)) {
-        ({ page, y } = space(doc, page, y, 13, fonts));
-        safe(page, ln, { x: cX, y, size: 9.5, font: fonts.reg, color: C.textMuted });
+        ({ page, y } = ensureSpace(doc, page, y, 13, fonts));
+        safe(page, ln, { x: cX, y, size: 9, font: fonts.reg, color: C.textMuted });
         y -= 13;
       }
     }
 
-    // Meals
     if (day.meals) {
+      y -= 2;
       const meals = Array.isArray(day.meals) ? day.meals : [day.meals];
-      ({ page, y } = space(doc, page, y, 13, fonts));
+      ({ page, y } = ensureSpace(doc, page, y, 13, fonts));
       let mx = cX;
       for (const m of meals.slice(0, 4)) {
         const mt = sanitize(m);
-        safe(page, mt, { x: mx, y, size: 9, font: fonts.reg, color: C.textMuted });
-        mx += fonts.reg.widthOfTextAtSize(mt, 9) + 16;
+        safe(page, mt, { x: mx, y, size: 8.5, font: fonts.reg, color: C.textMuted });
+        mx += fonts.reg.widthOfTextAtSize(mt, 8.5) + 14;
       }
       y -= 14;
     }
 
-    // Divider between days
+    // Divider (Pencil: #E8EBF0, height 1)
     if (i < itin.length - 1) {
-      y -= 4;
-      hLine(page, MARGIN_L, MARGIN_R, y, C.border, 0.5);
-      y -= 12;
-    } else {
       y -= 8;
+      hLine(page, PAD, MARGIN_R, y, C.border, 0.5);
+      y -= 16;
+    } else {
+      y -= 10;
     }
   }
 
   return { page, y };
 }
 
-/**
- * INCLUDES / EXCLUDES: two columns, full text, check/x markers.
- * Pencil: "QUE INCLUYE" green / "NO INCLUYE" red, 13px text.
- */
+// ── INCLUDES / EXCLUDES (Pencil: gap 40 between columns, gap 12 between items) ──
+
 function drawInclExcl(doc, page, y, item, fonts) {
   const inc = item.product_details?.includes;
   const exc = item.product_details?.not_includes;
   if (!inc?.length && !exc?.length) return { page, y };
 
-  ({ page, y } = space(doc, page, y, 80, fonts));
+  ({ page, y } = ensureSpace(doc, page, y, 80, fonts));
 
-  const colW = (CONTENT_W - 30) / 2;
+  const colGap = 35;
+  const colW = (CONTENT_W - colGap) / 2;
   let lY = y, rY = y;
 
-  // Left: Includes
   if (inc?.length > 0) {
-    safe(page, "QUE INCLUYE", { x: MARGIN_L, y: lY, size: 9, font: fonts.bold, color: C.success });
-    lY -= 18;
+    safe(page, "QUE INCLUYE", { x: PAD, y: lY, size: 9, font: fonts.bold, color: C.success });
+    lY -= 20;
 
-    for (const item of inc.slice(0, 12)) {
+    for (const it of inc.slice(0, 12)) {
       ({ page, lY } = (() => {
-        const r = space(doc, page, lY, 16, fonts);
+        const r = ensureSpace(doc, page, lY, 16, fonts);
         return { page: r.page, lY: r.y };
       })());
 
-      safe(page, "+", { x: MARGIN_L, y: lY, size: 10, font: fonts.bold, color: C.success });
-      const lines = wrap(item, fonts.reg, 10, colW - 18);
+      safe(page, "+", { x: PAD + 2, y: lY, size: 10, font: fonts.bold, color: C.success });
+      const lines = wrap(it, fonts.reg, 9.5, colW - 20);
       for (const ln of lines.slice(0, 2)) {
-        safe(page, ln, { x: MARGIN_L + 16, y: lY, size: 10, font: fonts.reg, color: C.textPrimary });
-        lY -= 15;
+        safe(page, ln, { x: PAD + 18, y: lY, size: 9.5, font: fonts.reg, color: C.textPrimary });
+        lY -= 14;
       }
     }
   }
 
-  // Right: Not Includes
   if (exc?.length > 0) {
-    const rX = MARGIN_L + colW + 30;
+    const rX = PAD + colW + colGap;
     safe(page, "NO INCLUYE", { x: rX, y: rY, size: 9, font: fonts.bold, color: C.destructive });
-    rY -= 18;
+    rY -= 20;
 
-    for (const item of exc.slice(0, 10)) {
-      safe(page, "x", { x: rX, y: rY, size: 10, font: fonts.bold, color: C.destructive });
-      const lines = wrap(item, fonts.reg, 10, colW - 18);
+    for (const it of exc.slice(0, 10)) {
+      safe(page, "x", { x: rX + 2, y: rY, size: 10, font: fonts.bold, color: C.destructive });
+      const lines = wrap(it, fonts.reg, 9.5, colW - 20);
       for (const ln of lines.slice(0, 2)) {
-        safe(page, ln, { x: rX + 16, y: rY, size: 10, font: fonts.reg, color: C.textPrimary });
-        rY -= 15;
+        safe(page, ln, { x: rX + 18, y: rY, size: 9.5, font: fonts.reg, color: C.textPrimary });
+        rY -= 14;
       }
     }
   }
 
-  y = Math.min(lY, rY) - 12;
+  y = Math.min(lY, rY) - 16;
   return { page, y };
 }
 
-/**
- * PROVIDER INFO
- */
+// ── PROVIDER ──
+
 function drawProvider(doc, page, y, item, fonts) {
   const p = item.provider_data;
   if (!p) return { page, y };
-  ({ page, y } = space(doc, page, y, 30, fonts));
+  ({ page, y } = ensureSpace(doc, page, y, 35, fonts));
 
-  safe(page, "OPERADOR", { x: MARGIN_L, y, size: 9, font: fonts.bold, color: C.secondary });
+  safe(page, "OPERADOR", { x: PAD, y, size: 9, font: fonts.bold, color: C.secondary });
   y -= 18;
   let line = p.name || "";
   if (p.rating) line += `  *  ${p.rating}`;
-  safe(page, line.substring(0, 60), { x: MARGIN_L, y, size: 11, font: fonts.reg, color: C.textPrimary });
-  y -= 20;
+  safe(page, line.substring(0, 60), { x: PAD, y, size: 11, font: fonts.reg, color: C.textPrimary });
+  y -= 22;
   return { page, y };
 }
 
-/**
- * RECOMMENDATIONS
- */
+// ── RECOMMENDATIONS ──
+
 function drawRecs(doc, page, y, item, fonts) {
   const recs = item.product_details?.recommendations;
   if (!recs?.length) return { page, y };
-  ({ page, y } = space(doc, page, y, 40, fonts));
+  ({ page, y } = ensureSpace(doc, page, y, 40, fonts));
 
-  safe(page, "RECOMENDACIONES", { x: MARGIN_L, y, size: 9, font: fonts.bold, color: C.secondary });
+  safe(page, "RECOMENDACIONES", { x: PAD, y, size: 9, font: fonts.bold, color: C.secondary });
   y -= 18;
 
   for (const rec of recs.slice(0, 8)) {
-    ({ page, y } = space(doc, page, y, 14, fonts));
-    const lines = wrap(`-  ${rec}`, fonts.reg, 10, CONTENT_W);
+    ({ page, y } = ensureSpace(doc, page, y, 14, fonts));
+    const lines = wrap(`-  ${rec}`, fonts.reg, 9.5, CONTENT_W);
     for (const ln of lines.slice(0, 2)) {
-      safe(page, ln, { x: MARGIN_L, y, size: 10, font: fonts.reg, color: C.textPrimary });
+      safe(page, ln, { x: PAD, y, size: 9.5, font: fonts.reg, color: C.textPrimary });
       y -= 14;
     }
   }
-  y -= 8;
+  y -= 10;
   return { page, y };
 }
 
-/**
- * PRICE SECTION (brochure mode): clean rows + large total.
- * Pencil: "RESUMEN DE INVERSION", bg-muted, desc left + price right, large TOTAL in orange.
- */
+// ── PRICE SECTION (Pencil: bg-muted, gap 16, large total 36px in secondary) ──
+
 function drawPrice(doc, page, y, q, fonts) {
   const items = q.items || [];
-  const neededH = 60 + items.length * 26 + 80;
-  ({ page, y } = space(doc, page, y, neededH, fonts));
+  const rowsH = items.length * 26;
+  const needed = 70 + rowsH + 80;
+  ({ page, y } = ensureSpace(doc, page, y, needed, fonts));
 
   // Muted background
-  const bgH = neededH + 10;
-  page.drawRectangle({ x: 0, y: y - bgH + 20, width: PAGE_W, height: bgH, color: C.bgMuted });
+  const bgTop = y + 12;
+  const bgBottom = y - needed + 20;
+  page.drawRectangle({ x: 0, y: bgBottom, width: PAGE_W, height: bgTop - bgBottom, color: C.bgMuted });
 
-  safe(page, "RESUMEN DE INVERSION", { x: MARGIN_L, y, size: 9, font: fonts.bold, color: C.textMuted });
-  y -= 26;
+  safe(page, "RESUMEN DE INVERSION", { x: PAD, y, size: 9, font: fonts.bold, color: C.textMuted });
+  y -= 28;
 
   for (const item of items) {
-    ({ page, y } = space(doc, page, y, 24, fonts));
+    ({ page, y } = ensureSpace(doc, page, y, 24, fonts));
     let desc = sanitize(item.description || "").substring(0, 55);
     const qty = item.quantity || 1;
     if (qty > 1) desc += ` x ${qty}`;
-    safe(page, desc, { x: MARGIN_L, y, size: 11, font: fonts.reg, color: C.textPrimary });
+    safe(page, desc, { x: PAD, y, size: 11, font: fonts.reg, color: C.textPrimary });
     rightText(page, fmt(item.total || 0, q.currency), MARGIN_R, y, 11, fonts.bold, C.textPrimary);
     y -= 26;
   }
 
-  // Extra charges
   if (q.taxes > 0) {
-    safe(page, "Impuestos", { x: MARGIN_L, y, size: 11, font: fonts.reg, color: C.textMuted });
+    safe(page, "Impuestos", { x: PAD, y, size: 11, font: fonts.reg, color: C.textMuted });
     rightText(page, fmt(q.taxes, q.currency), MARGIN_R, y, 11, fonts.bold, C.textMuted);
     y -= 24;
   }
   if (q.fees > 0) {
-    safe(page, "Cargos adicionales", { x: MARGIN_L, y, size: 11, font: fonts.reg, color: C.textMuted });
+    safe(page, "Cargos adicionales", { x: PAD, y, size: 11, font: fonts.reg, color: C.textMuted });
     rightText(page, fmt(q.fees, q.currency), MARGIN_R, y, 11, fonts.bold, C.textMuted);
     y -= 24;
   }
   if (q.discount_amount > 0) {
-    safe(page, "Descuento", { x: MARGIN_L, y, size: 11, font: fonts.reg, color: C.success });
+    safe(page, "Descuento", { x: PAD, y, size: 11, font: fonts.reg, color: C.success });
     rightText(page, `-${fmt(q.discount_amount, q.currency)}`, MARGIN_R, y, 11, fonts.bold, C.success);
     y -= 24;
   }
 
-  // Divider
-  y -= 2;
-  hLine(page, MARGIN_L, MARGIN_R, y + 6, C.secondary, 2);
-  y -= 10;
+  // Divider (Pencil: secondary color, height 2)
+  y -= 4;
+  hLine(page, PAD, MARGIN_R, y + 6, C.secondary, 2);
+  y -= 12;
 
-  // TOTAL — large
-  ({ page, y } = space(doc, page, y, 40, fonts));
-  safe(page, "TOTAL", { x: MARGIN_L, y, size: 12, font: fonts.bold, color: C.textPrimary });
-  rightText(page, fmt(q.total, q.currency), MARGIN_R, y - 6, 28, fonts.bold, C.secondary);
+  // TOTAL row (Pencil: 14px label, 36px value in secondary → PDF ~28px)
+  ({ page, y } = ensureSpace(doc, page, y, 40, fonts));
+  safe(page, "TOTAL", { x: PAD, y: y + 2, size: 12, font: fonts.bold, color: C.textPrimary });
+  rightText(page, fmt(q.total, q.currency), MARGIN_R, y - 4, 26, fonts.bold, C.secondary);
   y -= 45;
 
   return { page, y };
 }
 
-/**
- * NOTES
- */
+// ── NOTES ──
+
 function drawNotes(doc, page, y, q, fonts) {
   if (!q.customer_notes) return { page, y };
-  ({ page, y } = space(doc, page, y, 40, fonts));
+  ({ page, y } = ensureSpace(doc, page, y, 40, fonts));
 
-  safe(page, "NOTAS", { x: MARGIN_L, y, size: 9, font: fonts.bold, color: C.textMuted });
+  safe(page, "NOTAS", { x: PAD, y, size: 9, font: fonts.bold, color: C.textMuted });
   y -= 16;
 
   const lines = wrap(q.customer_notes.substring(0, 500), fonts.reg, 10, CONTENT_W);
   for (const ln of lines.slice(0, 8)) {
-    ({ page, y } = space(doc, page, y, 14, fonts));
-    safe(page, ln, { x: MARGIN_L, y, size: 10, font: fonts.reg, color: C.textPrimary });
+    ({ page, y } = ensureSpace(doc, page, y, 14, fonts));
+    safe(page, ln, { x: PAD, y, size: 10, font: fonts.reg, color: C.textPrimary });
     y -= 14;
   }
   y -= 8;
   return { page, y };
 }
 
-// ── SIMPLE MODE (non-brochure) ──
+// ── SIMPLE MODE (non-brochure: traditional header + table) ──
 
 function drawSimpleFooter(page, fonts) {
   const fy = 35;
-  hLine(page, MARGIN_L, MARGIN_R, fy + 15, C.secondary, 1.5);
-  safe(page, "Venezuela Voyages", { x: MARGIN_L, y: fy, size: 9, font: fonts.bold, color: C.primary });
-  safe(page, "Explore Now", { x: MARGIN_L + 105, y: fy, size: 9, font: fonts.reg, color: C.secondary });
+  hLine(page, PAD, MARGIN_R, fy + 15, C.secondary, 1.5);
+  safe(page, "Venezuela Voyages", { x: PAD, y: fy, size: 9, font: fonts.bold, color: C.primary });
+  safe(page, "Explore Now", { x: PAD + 105, y: fy, size: 9, font: fonts.reg, color: C.secondary });
   safe(page, "www.venezuelavoyages.com  |  info@venezuelavoyages.com", {
-    x: MARGIN_L, y: fy - 14, size: 8, font: fonts.reg, color: C.textMuted,
+    x: PAD, y: fy - 14, size: 8, font: fonts.reg, color: C.textMuted,
   });
 }
 
 function drawSimpleHeader(page, q, fonts, logo) {
   let y = PAGE_H - 30;
   const lH = 90, lS = lH / logo.height, lW = logo.width * lS;
-  page.drawImage(logo, { x: MARGIN_L, y: y - lH, width: lW, height: lH });
+  page.drawImage(logo, { x: PAD, y: y - lH, width: lW, height: lH });
 
   rightText(page, "COTIZACION", MARGIN_R, y - 25, 9, fonts.reg, C.textMuted);
   rightText(page, q.quotation_number || "N/A", MARGIN_R, y - 48, q.quotation_number?.length > 16 ? 13 : 16, fonts.bold, C.primary);
   rightText(page, (q.status || "borrador").toUpperCase(), MARGIN_R, y - 66, 8, fonts.bold, C.secondary);
 
   y -= lH + 15;
-  hLine(page, MARGIN_L, MARGIN_R, y, C.secondary, 2);
+  hLine(page, PAD, MARGIN_R, y, C.secondary, 2);
 
   const iy = y - 25;
-  safe(page, "PARA", { x: MARGIN_L, y: iy, size: 8, font: fonts.bold, color: C.textMuted });
+  safe(page, "PARA", { x: PAD, y: iy, size: 8, font: fonts.bold, color: C.textMuted });
   const cn = q.lead?.contact_name || q.metadata?.customer_name || "Cliente";
   const ce = q.lead?.contact_email || q.metadata?.customer_email || "";
   const cp = q.lead?.contact_phone || q.metadata?.customer_phone || "";
-  safe(page, cn.substring(0, 35), { x: MARGIN_L, y: iy - 18, size: 11, font: fonts.bold, color: C.textPrimary });
-  if (ce) safe(page, ce.substring(0, 40), { x: MARGIN_L, y: iy - 34, size: 9, font: fonts.reg, color: C.textMuted });
-  if (cp) safe(page, cp.substring(0, 25), { x: MARGIN_L, y: iy - 48, size: 9, font: fonts.reg, color: C.textMuted });
+  safe(page, cn.substring(0, 35), { x: PAD, y: iy - 18, size: 11, font: fonts.bold, color: C.textPrimary });
+  if (ce) safe(page, ce.substring(0, 40), { x: PAD, y: iy - 34, size: 9, font: fonts.reg, color: C.textMuted });
+  if (cp) safe(page, cp.substring(0, 25), { x: PAD, y: iy - 48, size: 9, font: fonts.reg, color: C.textMuted });
 
   const dx = PAGE_W - 210;
   safe(page, "DETALLES", { x: dx, y: iy, size: 8, font: fonts.bold, color: C.textMuted });
-  const rows = [
+  [
     { l: "Fecha", v: new Date(q.created_at).toLocaleDateString("es-VE") },
     { l: "Valida hasta", v: q.valid_until ? new Date(q.valid_until).toLocaleDateString("es-VE") : "N/A" },
     { l: "Moneda", v: q.currency || "USD" },
-  ];
-  rows.forEach((r, i) => {
+  ].forEach((r, i) => {
     const ry = iy - 18 - i * 16;
     safe(page, r.l, { x: dx, y: ry, size: 9, font: fonts.reg, color: C.textMuted });
     rightText(page, r.v, MARGIN_R, ry, 9, fonts.bold, C.textPrimary);
@@ -667,12 +714,11 @@ function drawSimpleHeader(page, q, fonts, logo) {
 }
 
 function drawSimpleTable(doc, page, y, q, fonts) {
-  ({ page, y } = space(doc, page, y, 120, fonts));
-  hLine(page, MARGIN_L, MARGIN_R, y + 5, C.border, 0.5);
+  ({ page, y } = ensureSpace(doc, page, y, 120, fonts));
+  hLine(page, PAD, MARGIN_R, y + 5, C.border, 0.5);
 
-  page.drawRectangle({ x: MARGIN_L, y: y - 8, width: CONTENT_W, height: 22, color: C.primary });
-  const cD = MARGIN_L + 10, cQ = MARGIN_L + 290, cU = MARGIN_L + 390, cT = MARGIN_R - 8;
-
+  page.drawRectangle({ x: PAD, y: y - 8, width: CONTENT_W, height: 22, color: C.primary });
+  const cD = PAD + 10, cQ = PAD + 290, cU = PAD + 390, cT = MARGIN_R - 8;
   safe(page, "Descripcion", { x: cD, y: y - 2, size: 8, font: fonts.bold, color: C.white });
   rightText(page, "Cant.", cQ, y - 2, 8, fonts.bold, C.white);
   rightText(page, "P. Unit.", cU, y - 2, 8, fonts.bold, C.white);
@@ -680,8 +726,8 @@ function drawSimpleTable(doc, page, y, q, fonts) {
   y -= 22;
 
   for (let i = 0; i < (q.items || []).length; i++) {
-    ({ page, y } = space(doc, page, y, 22, fonts));
-    if (i % 2 === 0) page.drawRectangle({ x: MARGIN_L, y: y - 8, width: CONTENT_W, height: 22, color: C.bgMuted });
+    ({ page, y } = ensureSpace(doc, page, y, 22, fonts));
+    if (i % 2 === 0) page.drawRectangle({ x: PAD, y: y - 8, width: CONTENT_W, height: 22, color: C.bgMuted });
     const it = q.items[i];
     safe(page, (it.description || "").substring(0, 38), { x: cD, y: y - 1, size: 9, font: fonts.reg, color: C.textPrimary });
     rightText(page, String(it.quantity || 1), cQ, y - 1, 9, fonts.reg, C.textPrimary);
@@ -690,17 +736,14 @@ function drawSimpleTable(doc, page, y, q, fonts) {
     y -= 22;
   }
 
-  hLine(page, MARGIN_L, MARGIN_R, y, C.border, 0.5);
-  y -= 20;
-  hLine(page, PAGE_W / 2, MARGIN_R, y + 8, C.border, 0.5);
-  y -= 5;
+  hLine(page, PAD, MARGIN_R, y, C.border, 0.5);
+  y -= 25;
 
   const tr = (l, v, c = C.textMuted) => {
     rightText(page, l, PAGE_W / 2 + 55, y, 9, fonts.reg, c);
     rightText(page, v, MARGIN_R, y, 9, fonts.reg, c);
     y -= 18;
   };
-
   tr("Subtotal", fmt(q.subtotal, q.currency));
   if (q.taxes > 0) tr("Impuestos", fmt(q.taxes, q.currency));
   if (q.fees > 0) tr("Cargos", fmt(q.fees, q.currency));
@@ -712,7 +755,6 @@ function drawSimpleTable(doc, page, y, q, fonts) {
   safe(page, "TOTAL", { x: bx + 15, y: y + 4, size: 11, font: fonts.bold, color: C.white });
   rightText(page, fmt(q.total, q.currency), MARGIN_R - 8, y + 4, 11, fonts.bold, C.accent);
   y -= 40;
-
   return { page, y };
 }
 
@@ -724,33 +766,25 @@ async function generatePDF(q) {
   const bold = await doc.embedFont(StandardFonts.HelveticaBold);
   const fonts = { reg, bold };
 
-  const logoPath = join(process.cwd(), "public/images/venezuela-voyages-logo.png");
-  const logoBytes = readFileSync(logoPath);
+  const logoBytes = readFileSync(join(process.cwd(), "public/images/venezuela-voyages-logo.png"));
   const logo = await doc.embedPng(logoBytes);
 
   const items = q.items || [];
   const enriched = items.filter(i => i.inventory_id);
 
   if (enriched.length === 0) {
-    // ── SIMPLE MODE ──
     let page = doc.addPage([PAGE_W, PAGE_H]);
     let y = drawSimpleHeader(page, q, fonts, logo);
     drawSimpleFooter(page, fonts);
     ({ page, y } = drawSimpleTable(doc, page, y, q, fonts));
     ({ page, y } = drawNotes(doc, page, y, q, fonts));
   } else {
-    // ── BROCHURE MODE ──
     for (const item of enriched) {
       let page = doc.addPage([PAGE_W, PAGE_H]);
       drawFooter(page, fonts);
 
-      // Hero (full bleed from top)
       let y = await drawHero(doc, page, item, fonts);
-
-      // Quote info bar
       y = drawQuoteBar(page, y, q, fonts);
-
-      // Sections
       ({ page, y } = drawDestination(doc, page, y, item, fonts));
       ({ page, y } = await drawGallery(doc, page, y, item, fonts));
       ({ page, y } = drawItinerary(doc, page, y, item, fonts));
@@ -758,7 +792,6 @@ async function generatePDF(q) {
       ({ page, y } = drawProvider(doc, page, y, item, fonts));
       ({ page, y } = drawRecs(doc, page, y, item, fonts));
 
-      // Price — new page if not enough room
       if (y < 220) {
         page = doc.addPage([PAGE_W, PAGE_H]);
         drawFooter(page, fonts);
@@ -786,7 +819,6 @@ export async function GET(request, { params }) {
       .from("quotations")
       .select("*, lead:leads(id, contact_name, contact_email, contact_phone, interest_type)")
       .eq("id", id).single();
-
     if (error || !q) return NextResponse.json({ error: "Cotizacion no encontrada" }, { status: 404 });
 
     const pdf = await generatePDF(q);
@@ -802,11 +834,7 @@ export async function GET(request, { params }) {
     await admin.from("quotations").update({ pdf_url: urlData.publicUrl, updated_at: new Date().toISOString() }).eq("id", id);
 
     return new NextResponse(pdf, {
-      headers: {
-        "Content-Type": "application/pdf",
-        "Content-Disposition": `inline; filename="cotizacion-${q.quotation_number}.pdf"`,
-        "X-PDF-URL": urlData.publicUrl,
-      },
+      headers: { "Content-Type": "application/pdf", "Content-Disposition": `inline; filename="cotizacion-${q.quotation_number}.pdf"`, "X-PDF-URL": urlData.publicUrl },
     });
   } catch (error) {
     console.error("PDF error:", error);
@@ -826,7 +854,6 @@ export async function POST(request, { params }) {
       .from("quotations")
       .select("*, lead:leads(id, contact_name, contact_email, contact_phone, interest_type)")
       .eq("id", id).single();
-
     if (error || !q) return NextResponse.json({ error: "Cotizacion no encontrada" }, { status: 404 });
 
     const pdf = await generatePDF(q);
