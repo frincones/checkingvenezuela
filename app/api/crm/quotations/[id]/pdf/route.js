@@ -269,23 +269,26 @@ async function drawHero(doc, page, item, fonts) {
   page.drawImage(image, { x: (PAGE_W - dw) / 2, y: heroY, width: dw, height: dh });
   restoreClip(page);
 
-  // Smooth gradient overlay (60 steps, matching Pencil's 3-stop gradient)
-  // Pencil: pos 0 = 0% opacity, pos 0.6 = 73% opacity (#BB), pos 1.0 = 93% opacity (#EE)
-  const STEPS = 60;
-  const stepH = heroH / STEPS;
-  for (let i = 0; i < STEPS; i++) {
-    const t = i / (STEPS - 1);  // 0 to 1, where 0 = top, 1 = bottom
-    let opacity;
-    if (t <= 0.6) {
-      // Interpolate from 0 to 0.73
-      opacity = (t / 0.6) * 0.73;
-    } else {
-      // Interpolate from 0.73 to 0.93
-      opacity = 0.73 + ((t - 0.6) / 0.4) * 0.20;
-    }
+  // Gradient overlay using stacked transparent layers (no banding).
+  // Each layer covers progressively less of the hero from the bottom,
+  // so they accumulate naturally into a smooth dark-to-transparent gradient.
+  // This avoids the visible stripe artifacts of step-based gradients.
+  const layers = [
+    { fromBottom: 1.00, opacity: 0.12 },  // full hero, very light tint
+    { fromBottom: 0.85, opacity: 0.10 },
+    { fromBottom: 0.72, opacity: 0.10 },
+    { fromBottom: 0.60, opacity: 0.12 },
+    { fromBottom: 0.50, opacity: 0.12 },
+    { fromBottom: 0.42, opacity: 0.12 },
+    { fromBottom: 0.35, opacity: 0.14 },
+    { fromBottom: 0.28, opacity: 0.14 },
+    { fromBottom: 0.22, opacity: 0.10 },
+    { fromBottom: 0.15, opacity: 0.08 },
+  ];
+  for (const { fromBottom, opacity } of layers) {
+    const layerH = heroH * fromBottom;
     page.drawRectangle({
-      x: 0, y: heroY + (STEPS - 1 - i) * stepH,
-      width: PAGE_W, height: stepH + 0.5,
+      x: 0, y: heroY, width: PAGE_W, height: layerH,
       color: C.shadow, opacity,
     });
   }
