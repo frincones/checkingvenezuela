@@ -99,7 +99,7 @@ export default function EditInventoryPage() {
           cost_price: item.cost_price || "",
           sale_price: item.sale_price || "",
           currency: item.currency || "USD",
-          stock_quantity: item.stock_quantity ?? "",
+          stock_quantity: item.quantity_available ?? item.stock_quantity ?? "",
           min_stock_alert: item.min_stock_alert || "",
           valid_from: item.valid_from ? item.valid_from.split("T")[0] : "",
           valid_until: item.valid_until ? item.valid_until.split("T")[0] : "",
