@@ -45,7 +45,14 @@ export function QuotationItemCard({ item, index, onUpdate, onRemove, currency = 
 }
 
 function EnrichedItemCard({ item, index, onUpdate, onRemove, currency }) {
-  const [expanded, setExpanded] = useState(false);
+  const hasEnrichedData = !!(
+    item.product_details?.itinerary?.length ||
+    item.product_details?.includes?.length ||
+    item.product_details?.not_includes?.length ||
+    item.product_details?.recommendations?.length ||
+    item.product_images?.length > 0
+  );
+  const [expanded, setExpanded] = useState(hasEnrichedData);
 
   const mainImage =
     item.product_images?.[0] ||

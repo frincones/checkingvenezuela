@@ -334,11 +334,11 @@ function drawQuoteBar(page, y, q, fonts) {
 
 // ── DESTINATION INFO (Pencil: padding [32, 48], gap 20) ──
 
-function drawDestination(doc, page, y, item, fonts) {
+function drawDestination(doc, page, y, item, fonts, logoImage) {
   const dest = item.destination_data;
   if (!dest) return { page, y };
 
-  ({ page, y } = ensureSpace(doc, page, y, 100, fonts));
+  ({ page, y } = ensureSpace(doc, page, y, 100, fonts, logoImage));
 
   // Section title (Pencil: 24px → PDF ~18px)
   safe(page, "Sobre el Destino", { x: PAD, y, size: 18, font: fonts.bold, color: C.textPrimary });
@@ -348,7 +348,7 @@ function drawDestination(doc, page, y, item, fonts) {
   if (dest.description) {
     const lines = wrap(dest.description, fonts.reg, 11, CONTENT_W);
     for (const ln of lines.slice(0, 6)) {
-      ({ page, y } = ensureSpace(doc, page, y, 18, fonts));
+      ({ page, y } = ensureSpace(doc, page, y, 18, fonts, logoImage));
       safe(page, ln, { x: PAD, y, size: 11, font: fonts.reg, color: C.textMuted });
       y -= 18; // lineHeight ~1.6
     }
@@ -358,7 +358,7 @@ function drawDestination(doc, page, y, item, fonts) {
   const hl = dest.highlights;
   if (hl?.length > 0) {
     y -= 12;
-    ({ page, y } = ensureSpace(doc, page, y, 55, fonts));
+    ({ page, y } = ensureSpace(doc, page, y, 55, fonts, logoImage));
 
     const items = hl.slice(0, 4);
     const gap = 12;
@@ -383,7 +383,7 @@ function drawDestination(doc, page, y, item, fonts) {
 
 // ── GALLERY (Pencil: 3 cols, cornerRadius 4, gap 8, height 160) ──
 
-async function drawGallery(doc, page, y, item, fonts) {
+async function drawGallery(doc, page, y, item, fonts, logoImage) {
   const imgs = item.product_images;
   if (!imgs || imgs.length < 2) return { page, y };
 
@@ -391,7 +391,7 @@ async function drawGallery(doc, page, y, item, fonts) {
   if (urls.length < 1) return { page, y };
 
   const cellH = 115;
-  ({ page, y } = ensureSpace(doc, page, y, cellH + 40, fonts));
+  ({ page, y } = ensureSpace(doc, page, y, cellH + 40, fonts, logoImage));
 
   y -= 4;
 
@@ -421,17 +421,20 @@ async function drawGallery(doc, page, y, item, fonts) {
 
 // ── ITINERARY (Pencil: badges 48×48, gap 20, divider #E8EBF0) ──
 
-function drawItinerary(doc, page, y, item, fonts) {
+function drawItinerary(doc, page, y, item, fonts, logoImage) {
   const itin = item.product_details?.itinerary;
   if (!itin?.length) return { page, y };
 
-  ({ page, y } = ensureSpace(doc, page, y, 70, fonts));
+  ({ page, y } = ensureSpace(doc, page, y, 70, fonts, logoImage));
   safe(page, "Itinerario", { x: PAD, y, size: 18, font: fonts.bold, color: C.textPrimary });
   y -= 30;
 
   for (let i = 0; i < itin.length; i++) {
     const day = itin[i];
-    ({ page, y } = ensureSpace(doc, page, y, 90, fonts));
+    // Estimate space: title(18) + activities(~5 lines * 13) + meals(14) + divider(24)
+    const actCount = Array.isArray(day.activities) ? Math.min(day.activities.join(" - ").split(/\s+/).length / 8, 5) : 2;
+    const estH = 18 + actCount * 13 + (day.meals ? 16 : 0) + 24;
+    ({ page, y } = ensureSpace(doc, page, y, Math.max(90, estH), fonts, logoImage));
 
     // Badge (Pencil: 48×48, cornerRadius implicit ~4)
     const bSz = 40;
@@ -465,7 +468,7 @@ function drawItinerary(doc, page, y, item, fonts) {
       const txt = Array.isArray(acts) ? acts.join(" - ") : acts;
       const lines = wrap(txt, fonts.reg, 9, cW);
       for (const ln of lines.slice(0, 5)) {
-        ({ page, y } = ensureSpace(doc, page, y, 13, fonts));
+        ({ page, y } = ensureSpace(doc, page, y, 13, fonts, logoImage));
         safe(page, ln, { x: cX, y, size: 9, font: fonts.reg, color: C.textMuted });
         y -= 13;
       }
@@ -474,7 +477,7 @@ function drawItinerary(doc, page, y, item, fonts) {
     if (day.meals) {
       y -= 2;
       const meals = Array.isArray(day.meals) ? day.meals : [day.meals];
-      ({ page, y } = ensureSpace(doc, page, y, 13, fonts));
+      ({ page, y } = ensureSpace(doc, page, y, 13, fonts, logoImage));
       let mx = cX;
       for (const m of meals.slice(0, 4)) {
         const mt = sanitize(m);
@@ -499,27 +502,30 @@ function drawItinerary(doc, page, y, item, fonts) {
 
 // ── INCLUDES / EXCLUDES (Pencil: gap 40 between columns, gap 12 between items) ──
 
-function drawInclExcl(doc, page, y, item, fonts) {
+function drawInclExcl(doc, page, y, item, fonts, logoImage) {
   const inc = item.product_details?.includes;
   const exc = item.product_details?.not_includes;
   if (!inc?.length && !exc?.length) return { page, y };
 
-  ({ page, y } = ensureSpace(doc, page, y, 80, fonts));
-
+  // Try two-column layout if both fit on current page, otherwise render sequentially
   const colGap = 35;
   const colW = (CONTENT_W - colGap) / 2;
-  let lY = y, rY = y;
 
-  if (inc?.length > 0) {
+  // Estimate total height for both columns
+  const incH = inc?.length ? 20 + inc.slice(0, 12).length * 16 : 0;
+  const excH = exc?.length ? 20 + exc.slice(0, 10).length * 16 : 0;
+  const maxColH = Math.max(incH, excH);
+  const twoColFits = y - maxColH - 30 > FOOTER_H + 10;
+
+  if (twoColFits && inc?.length && exc?.length) {
+    // Two-column layout — both fit on current page
+    ({ page, y } = ensureSpace(doc, page, y, maxColH + 30, fonts, logoImage));
+
+    let lY = y, rY = y;
+
     safe(page, "QUE INCLUYE", { x: PAD, y: lY, size: 9, font: fonts.bold, color: C.success });
     lY -= 20;
-
     for (const it of inc.slice(0, 12)) {
-      ({ page, lY } = (() => {
-        const r = ensureSpace(doc, page, lY, 16, fonts);
-        return { page: r.page, lY: r.y };
-      })());
-
       safe(page, "+", { x: PAD + 2, y: lY, size: 10, font: fonts.bold, color: C.success });
       const lines = wrap(it, fonts.reg, 9.5, colW - 20);
       for (const ln of lines.slice(0, 2)) {
@@ -527,13 +533,10 @@ function drawInclExcl(doc, page, y, item, fonts) {
         lY -= 14;
       }
     }
-  }
 
-  if (exc?.length > 0) {
     const rX = PAD + colW + colGap;
     safe(page, "NO INCLUYE", { x: rX, y: rY, size: 9, font: fonts.bold, color: C.destructive });
     rY -= 20;
-
     for (const it of exc.slice(0, 10)) {
       safe(page, "x", { x: rX + 2, y: rY, size: 10, font: fonts.bold, color: C.destructive });
       const lines = wrap(it, fonts.reg, 9.5, colW - 20);
@@ -542,18 +545,54 @@ function drawInclExcl(doc, page, y, item, fonts) {
         rY -= 14;
       }
     }
+
+    y = Math.min(lY, rY) - 16;
+  } else {
+    // Sequential layout — render includes then excludes with proper page breaks
+    if (inc?.length > 0) {
+      ({ page, y } = ensureSpace(doc, page, y, 40, fonts, logoImage));
+      safe(page, "QUE INCLUYE", { x: PAD, y, size: 9, font: fonts.bold, color: C.success });
+      y -= 20;
+
+      for (const it of inc.slice(0, 12)) {
+        ({ page, y } = ensureSpace(doc, page, y, 16, fonts, logoImage));
+        safe(page, "+", { x: PAD + 2, y, size: 10, font: fonts.bold, color: C.success });
+        const lines = wrap(it, fonts.reg, 9.5, CONTENT_W - 20);
+        for (const ln of lines.slice(0, 2)) {
+          safe(page, ln, { x: PAD + 18, y, size: 9.5, font: fonts.reg, color: C.textPrimary });
+          y -= 14;
+        }
+      }
+      y -= 10;
+    }
+
+    if (exc?.length > 0) {
+      ({ page, y } = ensureSpace(doc, page, y, 40, fonts, logoImage));
+      safe(page, "NO INCLUYE", { x: PAD, y, size: 9, font: fonts.bold, color: C.destructive });
+      y -= 20;
+
+      for (const it of exc.slice(0, 10)) {
+        ({ page, y } = ensureSpace(doc, page, y, 16, fonts, logoImage));
+        safe(page, "x", { x: PAD + 2, y, size: 10, font: fonts.bold, color: C.destructive });
+        const lines = wrap(it, fonts.reg, 9.5, CONTENT_W - 20);
+        for (const ln of lines.slice(0, 2)) {
+          safe(page, ln, { x: PAD + 18, y, size: 9.5, font: fonts.reg, color: C.textPrimary });
+          y -= 14;
+        }
+      }
+      y -= 6;
+    }
   }
 
-  y = Math.min(lY, rY) - 16;
   return { page, y };
 }
 
 // ── PROVIDER ──
 
-function drawProvider(doc, page, y, item, fonts) {
+function drawProvider(doc, page, y, item, fonts, logoImage) {
   const p = item.provider_data;
   if (!p) return { page, y };
-  ({ page, y } = ensureSpace(doc, page, y, 35, fonts));
+  ({ page, y } = ensureSpace(doc, page, y, 35, fonts, logoImage));
 
   safe(page, "OPERADOR", { x: PAD, y, size: 9, font: fonts.bold, color: C.secondary });
   y -= 18;
@@ -566,16 +605,16 @@ function drawProvider(doc, page, y, item, fonts) {
 
 // ── RECOMMENDATIONS ──
 
-function drawRecs(doc, page, y, item, fonts) {
+function drawRecs(doc, page, y, item, fonts, logoImage) {
   const recs = item.product_details?.recommendations;
   if (!recs?.length) return { page, y };
-  ({ page, y } = ensureSpace(doc, page, y, 40, fonts));
+  ({ page, y } = ensureSpace(doc, page, y, 40, fonts, logoImage));
 
   safe(page, "RECOMENDACIONES", { x: PAD, y, size: 9, font: fonts.bold, color: C.secondary });
   y -= 18;
 
   for (const rec of recs.slice(0, 8)) {
-    ({ page, y } = ensureSpace(doc, page, y, 14, fonts));
+    ({ page, y } = ensureSpace(doc, page, y, 14, fonts, logoImage));
     const lines = wrap(`-  ${rec}`, fonts.reg, 9.5, CONTENT_W);
     for (const ln of lines.slice(0, 2)) {
       safe(page, ln, { x: PAD, y, size: 9.5, font: fonts.reg, color: C.textPrimary });
@@ -712,7 +751,7 @@ function drawPrice(doc, page, y, q, fonts, logoImage) {
   y -= 12;
 
   // TOTAL row (Pencil: 14px label, 36px value in secondary → PDF ~28px)
-  ({ page, y } = ensureSpace(doc, page, y, 40, fonts));
+  ({ page, y } = ensureSpace(doc, page, y, 40, fonts, logoImage));
   safe(page, "TOTAL", { x: PAD, y: y + 2, size: 12, font: fonts.bold, color: C.textPrimary });
   rightText(page, fmt(q.total, q.currency), MARGIN_R, y - 4, 26, fonts.bold, C.secondary);
   y -= 45;
@@ -722,16 +761,16 @@ function drawPrice(doc, page, y, q, fonts, logoImage) {
 
 // ── NOTES ──
 
-function drawNotes(doc, page, y, q, fonts) {
+function drawNotes(doc, page, y, q, fonts, logoImage) {
   if (!q.customer_notes) return { page, y };
-  ({ page, y } = ensureSpace(doc, page, y, 40, fonts));
+  ({ page, y } = ensureSpace(doc, page, y, 40, fonts, logoImage));
 
   safe(page, "NOTAS", { x: PAD, y, size: 9, font: fonts.bold, color: C.textMuted });
   y -= 16;
 
   const lines = wrap(q.customer_notes.substring(0, 500), fonts.reg, 10, CONTENT_W);
   for (const ln of lines.slice(0, 8)) {
-    ({ page, y } = ensureSpace(doc, page, y, 14, fonts));
+    ({ page, y } = ensureSpace(doc, page, y, 14, fonts, logoImage));
     safe(page, ln, { x: PAD, y, size: 10, font: fonts.reg, color: C.textPrimary });
     y -= 14;
   }
@@ -860,11 +899,11 @@ async function generatePDF(q) {
       let y = await drawHero(doc, page, item, fonts, logo);
       y = drawQuoteBar(page, y, q, fonts);
       ({ page, y } = drawTravelDetails(doc, page, y, q, fonts, logo));
-      ({ page, y } = drawDestination(doc, page, y, item, fonts));
-      ({ page, y } = await drawGallery(doc, page, y, item, fonts));
-      ({ page, y } = drawItinerary(doc, page, y, item, fonts));
-      ({ page, y } = drawInclExcl(doc, page, y, item, fonts));
-      ({ page, y } = drawRecs(doc, page, y, item, fonts));
+      ({ page, y } = drawDestination(doc, page, y, item, fonts, logo));
+      ({ page, y } = await drawGallery(doc, page, y, item, fonts, logo));
+      ({ page, y } = drawItinerary(doc, page, y, item, fonts, logo));
+      ({ page, y } = drawInclExcl(doc, page, y, item, fonts, logo));
+      ({ page, y } = drawRecs(doc, page, y, item, fonts, logo));
 
       if (y < 220) {
         page = doc.addPage([PAGE_W, PAGE_H]);
@@ -873,7 +912,7 @@ async function generatePDF(q) {
       }
       ({ page, y } = drawPrice(doc, page, y, q, fonts, logo));
       ({ page, y } = drawConditions(doc, page, y, q, fonts, logo));
-      ({ page, y } = drawNotes(doc, page, y, q, fonts));
+      ({ page, y } = drawNotes(doc, page, y, q, fonts, logo));
     }
   }
 
