@@ -8,6 +8,7 @@ import { PackageDetailsTab } from "@/components/pages/packages/sections/PackageD
 import { PackageItinerary } from "@/components/pages/packages/sections/PackageItinerary";
 import { PackageIncludes } from "@/components/pages/packages/sections/PackageIncludes";
 import { PackageActions } from "@/components/pages/packages/components/PackageActions";
+import { PackageBottomCTA } from "@/components/pages/packages/components/PackageBottomCTA";
 import { formatCurrency } from "@/lib/utils";
 import { createClient } from "@/lib/db/supabase/server";
 import { createAdminClient } from "@/lib/db/supabase/server";
@@ -143,8 +144,9 @@ export default async function PackageDetailPage({ params }) {
 
           <PackageActions
             packageName={packageData.name}
-            whatsappUrl={whatsappUrl}
+            whatsappMessage={`Hola! Estoy interesado en el paquete "${packageData.name}". Me gustaría recibir más información y cotización. Precio visto: ${formatCurrency(displayPrice)}`}
             shareUrl={shareUrl}
+            displayPrice={displayPrice}
           />
         </div>
       </div>
@@ -230,11 +232,7 @@ export default async function PackageDetailPage({ params }) {
         <p className="mb-6 text-gray-600">
           Reserva ahora y asegura tu lugar en esta experiencia única
         </p>
-        <Button asChild size="lg" className="min-w-[200px]">
-          <a href={whatsappUrl} target="_blank" rel="noopener noreferrer">
-            Reservar {packageData.name}
-          </a>
-        </Button>
+        <PackageBottomCTA packageName={packageData.name} displayPrice={displayPrice} />
       </div>
     </main>
   );

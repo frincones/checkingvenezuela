@@ -7,6 +7,8 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/components/ui/use-toast";
 import { Calendar, Users, Mail, Phone, MessageSquare } from "lucide-react";
+import { COUNTRY_CODES, DEFAULT_COUNTRY_CODE } from "@/data/countryCodes";
+import Link from "next/link";
 
 export function PackageBookingForm({ packageData, userEmail, userId }) {
   const { toast } = useToast();
@@ -14,47 +16,79 @@ export function PackageBookingForm({ packageData, userEmail, userId }) {
   const [formData, setFormData] = useState({
     numberOfPeople: 1,
     travelDate: "",
-    contactName: "",
+    contactFirstName: "",
+    contactLastName: "",
     contactEmail: userEmail || "",
+    dialCode: DEFAULT_COUNTRY_CODE,
     contactPhone: "",
     specialRequests: "",
+    habeasData: false,
   });
 
   const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
+    const { name, value, type, checked } = e.target;
+    setFormData((prev) => ({
+      ...prev,
+      [name]: type === "checkbox" ? checked : value,
+    }));
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    if (!formData.habeasData) {
+      toast({
+        title: "Autorización requerida",
+        description: "Debes autorizar el tratamiento de datos personales para continuar.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setIsSubmitting(true);
 
     try {
-      // Aquí puedes integrar con tu sistema de cotizaciones/leads del dashboard
-      const requestData = {
-        packageId: packageData.id,
-        packageName: packageData.name,
-        userId,
-        ...formData,
-        requestedAt: new Date().toISOString(),
-      };
+      const contactName = `${formData.contactFirstName} ${formData.contactLastName}`.trim();
 
-      // Simulación de envío - Reemplazar con API call real
-      await new Promise((resolve) => setTimeout(resolve, 1500));
+      // Create lead in CRM
+      await fetch("/api/crm/leads", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          contact_name: contactName,
+          contact_email: formData.contactEmail,
+          contact_phone: formData.contactPhone,
+          contact_phone_dial_code: formData.dialCode,
+          source: "web_form",
+          interest_type: "package",
+          interest_details: {
+            package_id: packageData.id,
+            package_name: packageData.name,
+            number_of_people: formData.numberOfPeople,
+            travel_date: formData.travelDate,
+            special_requests: formData.specialRequests,
+            origin: "booking_form",
+          },
+          preferred_contact_method: "whatsapp",
+          landing_page: typeof window !== "undefined" ? window.location.pathname : null,
+        }),
+      });
 
       toast({
         title: "¡Solicitud Enviada!",
         description: "Hemos recibido tu solicitud. Te contactaremos pronto con los detalles de tu paquete.",
       });
 
-      // Resetear formulario
       setFormData({
         numberOfPeople: 1,
         travelDate: "",
-        contactName: "",
+        contactFirstName: "",
+        contactLastName: "",
         contactEmail: userEmail || "",
+        dialCode: DEFAULT_COUNTRY_CODE,
         contactPhone: "",
         specialRequests: "",
+        habeasData: false,
       });
     } catch (error) {
       console.error("Error submitting booking:", error);
@@ -103,26 +137,38 @@ export function PackageBookingForm({ packageData, userEmail, userId }) {
             name="travelDate"
             type="date"
             required
-            min={new Date().toISOString().split('T')[0]}
+            min={new Date().toISOString().split("T")[0]}
             value={formData.travelDate}
             onChange={handleChange}
           />
         </div>
 
         {/* Contact Name */}
-        <div>
-          <Label htmlFor="contactName">
-            Nombre Completo *
-          </Label>
-          <Input
-            id="contactName"
-            name="contactName"
-            type="text"
-            required
-            value={formData.contactName}
-            onChange={handleChange}
-            placeholder="Tu nombre completo"
-          />
+        <div className="grid grid-cols-2 gap-3">
+          <div>
+            <Label htmlFor="contactFirstName">Nombre *</Label>
+            <Input
+              id="contactFirstName"
+              name="contactFirstName"
+              type="text"
+              required
+              value={formData.contactFirstName}
+              onChange={handleChange}
+              placeholder="Juan"
+            />
+          </div>
+          <div>
+            <Label htmlFor="contactLastName">Apellido *</Label>
+            <Input
+              id="contactLastName"
+              name="contactLastName"
+              type="text"
+              required
+              value={formData.contactLastName}
+              onChange={handleChange}
+              placeholder="Pérez"
+            />
+          </div>
         </div>
 
         {/* Contact Email */}
@@ -142,21 +188,35 @@ export function PackageBookingForm({ packageData, userEmail, userId }) {
           />
         </div>
 
-        {/* Contact Phone */}
+        {/* Contact Phone with Country Code */}
         <div>
           <Label htmlFor="contactPhone" className="mb-2 flex items-center gap-2">
             <Phone className="h-4 w-4" />
             Teléfono *
           </Label>
-          <Input
-            id="contactPhone"
-            name="contactPhone"
-            type="tel"
-            required
-            value={formData.contactPhone}
-            onChange={handleChange}
-            placeholder="+58 424 1234567"
-          />
+          <div className="flex gap-2">
+            <select
+              name="dialCode"
+              value={formData.dialCode}
+              onChange={handleChange}
+              className="h-10 w-[130px] shrink-0 rounded-md border border-input bg-background px-2 text-sm ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
+            >
+              {COUNTRY_CODES.map((c) => (
+                <option key={c.code} value={c.code}>
+                  {c.flag} {c.code}
+                </option>
+              ))}
+            </select>
+            <Input
+              id="contactPhone"
+              name="contactPhone"
+              type="tel"
+              required
+              value={formData.contactPhone}
+              onChange={handleChange}
+              placeholder="4241234567"
+            />
+          </div>
         </div>
 
         {/* Special Requests */}
@@ -178,6 +238,29 @@ export function PackageBookingForm({ packageData, userEmail, userId }) {
           </p>
         </div>
 
+        {/* Habeas Data */}
+        <div className="flex items-start gap-2.5">
+          <input
+            id="habeasData"
+            name="habeasData"
+            type="checkbox"
+            checked={formData.habeasData}
+            onChange={handleChange}
+            className="mt-0.5 h-4 w-4 shrink-0 rounded border-gray-300 text-primary focus:ring-primary"
+          />
+          <label htmlFor="habeasData" className="text-xs text-gray-600 leading-relaxed">
+            Autorizo el tratamiento de mis datos personales de acuerdo con la{" "}
+            <Link
+              href="/privacy-policy"
+              target="_blank"
+              className="font-medium text-primary underline hover:text-primary/80"
+            >
+              Política de Privacidad
+            </Link>
+            . *
+          </label>
+        </div>
+
         {/* Submit Button */}
         <Button
           type="submit"
@@ -187,10 +270,6 @@ export function PackageBookingForm({ packageData, userEmail, userId }) {
         >
           {isSubmitting ? "Enviando..." : "Solicitar Cotización"}
         </Button>
-
-        <p className="text-center text-xs text-gray-500">
-          Al enviar esta solicitud, recibirás una cotización personalizada vía email
-        </p>
       </form>
     </div>
   );

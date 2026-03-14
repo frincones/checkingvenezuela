@@ -19,17 +19,25 @@ export async function GET(request) {
     const providerId = searchParams.get("providerId") || searchParams.get("provider_id");
     const destinationId = searchParams.get("destinationId") || searchParams.get("destination_id");
     const featured = searchParams.get("featured") === "true";
+    const published = searchParams.get("published") === "true";
+    const search = searchParams.get("search");
+    const enrich = searchParams.get("enrich") === "true";
     const page = parseInt(searchParams.get("page") || "1");
     const limit = parseInt(searchParams.get("limit") || "20");
 
-    let query = adminClient
-      .from("service_inventory")
-      .select(`
-        *,
+    const selectFields = enrich
+      ? `*,
+        provider:tourism_providers(id, name, slug, logo_url, rating, description),
+        service:catalog_services(id, name, slug),
+        destination:destinations(id, name, slug, description, image_url, highlights, tags)`
+      : `*,
         provider:tourism_providers(id, name, slug),
         service:catalog_services(id, name, slug),
-        destination:destinations(id, name, slug)
-      `, { count: "exact" })
+        destination:destinations(id, name, slug)`;
+
+    let query = adminClient
+      .from("service_inventory")
+      .select(selectFields, { count: "exact" })
       .order("created_at", { ascending: false })
       .range((page - 1) * limit, page * limit - 1);
 
@@ -51,6 +59,14 @@ export async function GET(request) {
 
     if (featured) {
       query = query.eq("is_featured", true);
+    }
+
+    if (published) {
+      query = query.eq("is_published", true);
+    }
+
+    if (search) {
+      query = query.or(`name.ilike.%${search}%,description.ilike.%${search}%`);
     }
 
     const { data, error, count } = await query;

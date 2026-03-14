@@ -3,6 +3,8 @@
 import { useState, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
+import { ProductSelectorModal } from "@/components/dashboard/quotations/ProductSelectorModal";
+import { QuotationItemCard } from "@/components/dashboard/quotations/QuotationItemCard";
 
 export default function NewQuotationPage() {
   const router = useRouter();
@@ -11,6 +13,7 @@ export default function NewQuotationPage() {
 
   const [saving, setSaving] = useState(false);
   const [lead, setLead] = useState(null);
+  const [selectorOpen, setSelectorOpen] = useState(false);
   const [formData, setFormData] = useState({
     customer_name: "",
     customer_email: "",
@@ -19,7 +22,7 @@ export default function NewQuotationPage() {
     currency: "USD",
     valid_until: "",
     notes: "",
-    items: [{ description: "", quantity: 1, unit_price: 0 }],
+    items: [],
   });
 
   useEffect(() => {
@@ -60,18 +63,27 @@ export default function NewQuotationPage() {
   }
 
   function removeItem(index) {
-    if (formData.items.length > 1) {
-      const newItems = formData.items.filter((_, i) => i !== index);
-      setFormData({ ...formData, items: newItems });
-    }
+    const newItems = formData.items.filter((_, i) => i !== index);
+    setFormData({ ...formData, items: newItems });
+  }
+
+  function addInventoryItem(enrichedItem) {
+    setFormData((prev) => ({
+      ...prev,
+      items: [...prev.items, enrichedItem],
+    }));
   }
 
   function calculateTotal() {
-    return formData.items.reduce((sum, item) => sum + item.quantity * item.unit_price, 0);
+    return formData.items.reduce((sum, item) => sum + (item.quantity || 1) * (item.unit_price || 0), 0);
   }
 
   async function handleSubmit(e) {
     e.preventDefault();
+    if (formData.items.length === 0) {
+      alert("Agrega al menos un item a la cotización");
+      return;
+    }
     setSaving(true);
 
     try {
@@ -177,70 +189,66 @@ export default function NewQuotationPage() {
 
             {/* Items */}
             <div className="rounded-lg bg-white p-6 shadow-md">
-              <h2 className="mb-4 text-lg font-semibold text-gray-900">Items de la Cotizacion</h2>
-              <div className="space-y-4">
-                {formData.items.map((item, index) => (
-                  <div key={index} className="grid gap-4 sm:grid-cols-12 items-end">
-                    <div className="sm:col-span-6">
-                      <label className="block text-sm font-medium text-gray-700">Descripcion</label>
-                      <input
-                        type="text"
-                        required
-                        value={item.description}
-                        onChange={(e) => updateItem(index, "description", e.target.value)}
-                        placeholder="Ej: Vuelo CCS-MIA ida y vuelta"
-                        className="mt-1 w-full rounded-md border border-gray-300 p-2 text-sm focus:border-primary focus:ring-primary"
-                      />
-                    </div>
-                    <div className="sm:col-span-2">
-                      <label className="block text-sm font-medium text-gray-700">Cantidad</label>
-                      <input
-                        type="number"
-                        min="1"
-                        required
-                        value={item.quantity}
-                        onChange={(e) => updateItem(index, "quantity", parseInt(e.target.value) || 1)}
-                        className="mt-1 w-full rounded-md border border-gray-300 p-2 text-sm focus:border-primary focus:ring-primary"
-                      />
-                    </div>
-                    <div className="sm:col-span-3">
-                      <label className="block text-sm font-medium text-gray-700">Precio Unitario</label>
-                      <input
-                        type="number"
-                        min="0"
-                        step="0.01"
-                        required
-                        value={item.unit_price}
-                        onChange={(e) => updateItem(index, "unit_price", parseFloat(e.target.value) || 0)}
-                        className="mt-1 w-full rounded-md border border-gray-300 p-2 text-sm focus:border-primary focus:ring-primary"
-                      />
-                    </div>
-                    <div className="sm:col-span-1">
-                      <button
-                        type="button"
-                        onClick={() => removeItem(index)}
-                        disabled={formData.items.length === 1}
-                        className="rounded-md bg-red-100 p-2 text-red-700 hover:bg-red-200 disabled:opacity-50"
-                      >
-                        <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                        </svg>
-                      </button>
-                    </div>
-                  </div>
-                ))}
+              <h2 className="mb-4 text-lg font-semibold text-gray-900">Items de la Cotización</h2>
+
+              {formData.items.length === 0 ? (
+                <div className="flex flex-col items-center justify-center rounded-lg border-2 border-dashed border-gray-200 py-12 text-center">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="mb-3 text-gray-300">
+                    <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/>
+                    <polyline points="3.27 6.96 12 12.01 20.73 6.96"/>
+                    <line x1="12" y1="22.08" x2="12" y2="12"/>
+                  </svg>
+                  <p className="text-sm font-medium text-gray-500">No hay items en la cotización</p>
+                  <p className="mt-1 text-xs text-gray-400">Agrega productos del inventario o items manuales</p>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {formData.items.map((item, index) => (
+                    <QuotationItemCard
+                      key={index}
+                      item={item}
+                      index={index}
+                      onUpdate={updateItem}
+                      onRemove={removeItem}
+                      currency={formData.currency}
+                    />
+                  ))}
+                </div>
+              )}
+
+              {/* Action buttons */}
+              <div className="mt-4 flex flex-wrap gap-3">
+                <button
+                  type="button"
+                  onClick={() => setSelectorOpen(true)}
+                  className="flex items-center gap-2 rounded-md bg-primary px-4 py-2.5 text-sm font-medium text-white hover:bg-primary/90"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/>
+                    <polyline points="3.27 6.96 12 12.01 20.73 6.96"/>
+                    <line x1="12" y1="22.08" x2="12" y2="12"/>
+                  </svg>
+                  Agregar del Inventario
+                </button>
+                <button
+                  type="button"
+                  onClick={addItem}
+                  className="flex items-center gap-2 rounded-md border border-gray-300 bg-white px-4 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-50"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path d="M12 5v14M5 12h14"/>
+                  </svg>
+                  Agregar Item Manual
+                </button>
               </div>
-              <button
-                type="button"
-                onClick={addItem}
-                className="mt-4 flex items-center gap-2 rounded-md bg-gray-100 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-200"
-              >
-                <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                </svg>
-                Agregar Item
-              </button>
             </div>
+
+            {/* Product Selector Modal */}
+            <ProductSelectorModal
+              open={selectorOpen}
+              onOpenChange={setSelectorOpen}
+              onAddItem={addInventoryItem}
+            />
 
             {/* Notes */}
             <div className="rounded-lg bg-white p-6 shadow-md">
@@ -308,7 +316,7 @@ export default function NewQuotationPage() {
                       {item.description || `Item ${index + 1}`}
                     </span>
                     <span className="text-gray-900">
-                      {formatCurrency(item.quantity * item.unit_price)}
+                      {formatCurrency((item.quantity || 1) * (item.unit_price || 0))}
                     </span>
                   </div>
                 ))}

@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Logo } from "@/components/Logo";
 import { MapPin, Phone, Clock, Instagram, Facebook, Youtube } from "lucide-react";
+import { FooterWhatsAppLink } from "@/components/sections/FooterWhatsAppLink";
 
 // Configuración de redes sociales - Actualizar URLs cuando estén disponibles
 const socialLinks = [
@@ -166,14 +167,7 @@ export function QuickLinks() {
         <div className="text-[0.875rem] font-medium text-white/70">
           <h3 className="mb-[16px] font-bold text-accent">Contact</h3>
           <div className="flex flex-col gap-3">
-            <a
-              href="https://wa.me/584264034052"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-[0.875rem] hover:text-accent inline font-medium text-white/70 transition-colors"
-            >
-              WhatsApp
-            </a>
+            <FooterWhatsAppLink />
             <span className="text-[0.875rem] font-medium text-white/40">
               Email: Coming Soon
             </span>
