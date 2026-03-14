@@ -40,6 +40,26 @@ const COLORS = {
 
 // ── UTILITIES ──
 
+/**
+ * Strips characters outside WinAnsi range to prevent pdf-lib encoding errors.
+ * WinAnsi covers U+0000-00FF minus some control chars, plus a few extras.
+ * We keep printable ASCII + Latin-1 Supplement and replace the rest.
+ */
+function sanitize(text) {
+  if (!text) return "";
+  // Replace common unicode with ASCII equivalents, then strip remaining non-WinAnsi
+  return String(text)
+    .replace(/[\u2713\u2714]/g, "+")    // ✓ ✔
+    .replace(/[\u2717\u2718]/g, "-")    // ✗ ✘
+    .replace(/[\u2605\u2606]/g, "*")    // ★ ☆
+    .replace(/\u2022/g, "-")            // •
+    .replace(/[\u2013\u2014]/g, "-")    // – —
+    .replace(/[\u2018\u2019]/g, "'")    // ' '
+    .replace(/[\u201C\u201D]/g, '"')    // " "
+    .replace(/\u2026/g, "...")          // …
+    .replace(/[^\x00-\xFF]/g, "");      // strip anything outside Latin-1
+}
+
 function formatCurrency(amount, currency = "USD") {
   return new Intl.NumberFormat("es-VE", {
     style: "currency",
@@ -53,8 +73,16 @@ function drawLine(page, x1, x2, y, color, thickness = 0.5) {
 }
 
 function drawTextRight(page, text, rightX, yPos, size, font, color) {
-  const tw = font.widthOfTextAtSize(text, size);
-  page.drawText(text, { x: rightX - tw, y: yPos, size, font, color });
+  const safe = sanitize(text);
+  const tw = font.widthOfTextAtSize(safe, size);
+  page.drawText(safe, { x: rightX - tw, y: yPos, size, font, color });
+}
+
+/**
+ * Safe drawText wrapper that sanitizes text before rendering
+ */
+function safeDrawText(page, text, options) {
+  page.drawText(sanitize(text), options);
 }
 
 /**
@@ -62,7 +90,7 @@ function drawTextRight(page, text, rightX, yPos, size, font, color) {
  */
 function wrapText(text, font, fontSize, maxWidth) {
   if (!text) return [];
-  const words = text.split(/\s+/);
+  const words = sanitize(text).split(/\s+/);
   const lines = [];
   let currentLine = "";
 
@@ -138,13 +166,13 @@ function ensureSpace(pdfDoc, page, y, requiredSpace, fonts) {
 function drawPageFooter(page, fonts) {
   const footerY = 35;
   drawLine(page, MARGIN_L, MARGIN_R, footerY + 15, COLORS.orange, 1.5);
-  page.drawText("Venezuela Voyages", {
+  safeDrawText(page,"Venezuela Voyages", {
     x: MARGIN_L, y: footerY, size: 9, font: fonts.bold, color: COLORS.navy,
   });
-  page.drawText("Explore Now", {
+  safeDrawText(page,"Explore Now", {
     x: MARGIN_L + 105, y: footerY, size: 9, font: fonts.regular, color: COLORS.orange,
   });
-  page.drawText("www.venezuelavoyages.com  |  info@venezuelavoyages.com", {
+  safeDrawText(page,"www.venezuelavoyages.com  |  info@venezuelavoyages.com", {
     x: MARGIN_L, y: footerY - 14, size: 8, font: fonts.regular, color: COLORS.grayText,
   });
 }
@@ -185,7 +213,7 @@ async function drawHeroSection(pdfDoc, page, y, item, fonts, logoImage) {
   // Destination name overlay
   const destName = item.destination_data?.name || item.description;
   if (destName) {
-    page.drawText(destName.substring(0, 50), {
+    safeDrawText(page,destName.substring(0, 50), {
       x: MARGIN_L + 15, y: y - drawH + 14, size: 16, font: fonts.bold, color: COLORS.white,
     });
   }
@@ -201,7 +229,7 @@ function drawDestinationInfo(pdfDoc, page, y, item, fonts) {
   ({ page, y } = ensureSpace(pdfDoc, page, y, 80, fonts));
 
   // Section title
-  page.drawText("SOBRE EL DESTINO", {
+  safeDrawText(page,"SOBRE EL DESTINO", {
     x: MARGIN_L, y, size: 8, font: fonts.bold, color: COLORS.orange,
   });
   y -= 18;
@@ -211,7 +239,7 @@ function drawDestinationInfo(pdfDoc, page, y, item, fonts) {
     const lines = wrapText(dest.description, fonts.regular, 9, CONTENT_W);
     for (const line of lines.slice(0, 6)) {
       ({ page, y } = ensureSpace(pdfDoc, page, y, 14, fonts));
-      page.drawText(line, {
+      safeDrawText(page,line, {
         x: MARGIN_L, y, size: 9, font: fonts.regular, color: COLORS.darkText,
       });
       y -= 14;
@@ -235,7 +263,7 @@ function drawDestinationInfo(pdfDoc, page, y, item, fonts) {
         x: tagX, y: y - 4, width: tagW, height: 16,
         color: COLORS.lightGray, borderColor: COLORS.borderGray, borderWidth: 0.5,
       });
-      page.drawText(tagText, {
+      safeDrawText(page,tagText, {
         x: tagX + 4, y: y, size: 8, font: fonts.regular, color: COLORS.navy,
       });
       tagX += tagW + 6;
@@ -257,7 +285,7 @@ async function drawPhotoGallery(pdfDoc, page, y, item, fonts) {
 
   ({ page, y } = ensureSpace(pdfDoc, page, y, 160, fonts));
 
-  page.drawText("GALERÍA", {
+  safeDrawText(page,"GALERÍA", {
     x: MARGIN_L, y, size: 8, font: fonts.bold, color: COLORS.orange,
   });
   y -= 15;
@@ -321,7 +349,7 @@ function drawItinerary(pdfDoc, page, y, item, fonts) {
 
   ({ page, y } = ensureSpace(pdfDoc, page, y, 60, fonts));
 
-  page.drawText("ITINERARIO", {
+  safeDrawText(page,"ITINERARIO", {
     x: MARGIN_L, y, size: 8, font: fonts.bold, color: COLORS.orange,
   });
   y -= 20;
@@ -335,13 +363,13 @@ function drawItinerary(pdfDoc, page, y, item, fonts) {
     page.drawCircle({
       x: circleX, y: y + 2, size: 10, color: COLORS.navy,
     });
-    page.drawText(String(i + 1), {
+    safeDrawText(page,String(i + 1), {
       x: circleX - (i + 1 >= 10 ? 5 : 3), y: y - 2, size: 8, font: fonts.bold, color: COLORS.white,
     });
 
     // Day title
     const dayTitle = day.title || day.day || `Día ${i + 1}`;
-    page.drawText(dayTitle.substring(0, 60), {
+    safeDrawText(page,dayTitle.substring(0, 60), {
       x: MARGIN_L + 30, y, size: 10, font: fonts.bold, color: COLORS.darkText,
     });
     y -= 14;
@@ -353,7 +381,7 @@ function drawItinerary(pdfDoc, page, y, item, fonts) {
       const lines = wrapText(actText, fonts.regular, 8, CONTENT_W - 30);
       for (const line of lines.slice(0, 3)) {
         ({ page, y } = ensureSpace(pdfDoc, page, y, 12, fonts));
-        page.drawText(line, {
+        safeDrawText(page,line, {
           x: MARGIN_L + 30, y, size: 8, font: fonts.regular, color: COLORS.grayText,
         });
         y -= 12;
@@ -364,7 +392,7 @@ function drawItinerary(pdfDoc, page, y, item, fonts) {
     if (day.meals) {
       const mealsText = Array.isArray(day.meals) ? day.meals.join(" · ") : day.meals;
       ({ page, y } = ensureSpace(pdfDoc, page, y, 12, fonts));
-      page.drawText(`Comidas: ${mealsText}`, {
+      safeDrawText(page,`Comidas: ${mealsText}`, {
         x: MARGIN_L + 30, y, size: 7, font: fonts.regular, color: COLORS.grayText,
       });
       y -= 12;
@@ -392,7 +420,7 @@ function drawIncludesExcludes(pdfDoc, page, y, item, fonts) {
 
   // Left: Includes
   if (includes?.length > 0) {
-    page.drawText("INCLUYE", {
+    safeDrawText(page,"INCLUYE", {
       x: MARGIN_L, y: leftY, size: 8, font: fonts.bold, color: COLORS.green,
     });
     leftY -= 16;
@@ -402,7 +430,7 @@ function drawIncludesExcludes(pdfDoc, page, y, item, fonts) {
         const result = ensureSpace(pdfDoc, page, leftY, 14, fonts);
         return { page: result.page, leftY: result.y };
       })());
-      page.drawText(`+  ${inc}`.substring(0, 40), {
+      safeDrawText(page,`+  ${inc}`.substring(0, 40), {
         x: MARGIN_L, y: leftY, size: 8, font: fonts.regular, color: COLORS.darkText,
       });
       leftY -= 14;
@@ -412,13 +440,13 @@ function drawIncludesExcludes(pdfDoc, page, y, item, fonts) {
   // Right: Not Includes
   if (notIncludes?.length > 0) {
     const rightX = MARGIN_L + colW + 20;
-    page.drawText("NO INCLUYE", {
+    safeDrawText(page,"NO INCLUYE", {
       x: rightX, y: rightY, size: 8, font: fonts.bold, color: COLORS.red,
     });
     rightY -= 16;
 
     for (const exc of notIncludes.slice(0, 10)) {
-      page.drawText(`-  ${exc}`.substring(0, 40), {
+      safeDrawText(page,`-  ${exc}`.substring(0, 40), {
         x: rightX, y: rightY, size: 8, font: fonts.regular, color: COLORS.grayText,
       });
       rightY -= 14;
@@ -435,14 +463,14 @@ function drawProviderInfo(pdfDoc, page, y, item, fonts) {
 
   ({ page, y } = ensureSpace(pdfDoc, page, y, 30, fonts));
 
-  page.drawText("OPERADOR", {
+  safeDrawText(page,"OPERADOR", {
     x: MARGIN_L, y, size: 8, font: fonts.bold, color: COLORS.orange,
   });
   y -= 16;
 
   let provLine = provider.name || "";
   if (provider.rating) provLine += `  * ${provider.rating}`;
-  page.drawText(provLine.substring(0, 60), {
+  safeDrawText(page,provLine.substring(0, 60), {
     x: MARGIN_L, y, size: 9, font: fonts.regular, color: COLORS.darkText,
   });
   y -= 20;
@@ -456,7 +484,7 @@ function drawRecommendations(pdfDoc, page, y, item, fonts) {
 
   ({ page, y } = ensureSpace(pdfDoc, page, y, 40, fonts));
 
-  page.drawText("RECOMENDACIONES", {
+  safeDrawText(page,"RECOMENDACIONES", {
     x: MARGIN_L, y, size: 8, font: fonts.bold, color: COLORS.orange,
   });
   y -= 16;
@@ -465,7 +493,7 @@ function drawRecommendations(pdfDoc, page, y, item, fonts) {
     ({ page, y } = ensureSpace(pdfDoc, page, y, 14, fonts));
     const lines = wrapText(`-  ${rec}`, fonts.regular, 8, CONTENT_W);
     for (const line of lines.slice(0, 2)) {
-      page.drawText(line, {
+      safeDrawText(page,line, {
         x: MARGIN_L, y, size: 8, font: fonts.regular, color: COLORS.darkText,
       });
       y -= 12;
@@ -494,7 +522,7 @@ function drawPriceTable(pdfDoc, page, y, quotation, fonts) {
   const colUnitRight = MARGIN_L + 390;
   const colTotalRight = MARGIN_R - 8;
 
-  page.drawText("Descripción", {
+  safeDrawText(page,"Descripción", {
     x: colDescX, y: y - 2, size: 8, font: fonts.bold, color: COLORS.white,
   });
   drawTextRight(page, "Cant.", colQtyRight, y - 2, 8, fonts.bold, COLORS.white);
@@ -515,7 +543,7 @@ function drawPriceTable(pdfDoc, page, y, quotation, fonts) {
 
     const item = items[i];
     const description = (item.description || "").substring(0, 38);
-    page.drawText(description, {
+    safeDrawText(page,description, {
       x: colDescX, y: y - 1, size: 9, font: fonts.regular, color: COLORS.darkText,
     });
     drawTextRight(page, String(item.quantity || 1), colQtyRight, y - 1, 9, fonts.regular, COLORS.darkText);
@@ -550,7 +578,7 @@ function drawPriceTable(pdfDoc, page, y, quotation, fonts) {
   page.drawRectangle({
     x: totalBarX, y: y - 6, width: MARGIN_R - totalBarX, height: 28, color: COLORS.navy,
   });
-  page.drawText("TOTAL", {
+  safeDrawText(page,"TOTAL", {
     x: totalBarX + 15, y: y + 4, size: 11, font: fonts.bold, color: COLORS.white,
   });
   drawTextRight(page, formatCurrency(quotation.total, quotation.currency), MARGIN_R - 8, y + 4, 11, fonts.bold, COLORS.gold);
@@ -587,7 +615,7 @@ function drawHeader(page, quotation, fonts, logoImage) {
   // Customer info (left) + Details (right)
   const infoTopY = y - 25;
 
-  page.drawText("PARA", {
+  safeDrawText(page,"PARA", {
     x: MARGIN_L, y: infoTopY, size: 8, font: fonts.bold, color: COLORS.grayText,
   });
 
@@ -595,23 +623,23 @@ function drawHeader(page, quotation, fonts, logoImage) {
   const customerEmail = quotation.lead?.contact_email || quotation.metadata?.customer_email || "";
   const customerPhone = quotation.lead?.contact_phone || quotation.metadata?.customer_phone || "";
 
-  page.drawText(customerName.substring(0, 35), {
+  safeDrawText(page,customerName.substring(0, 35), {
     x: MARGIN_L, y: infoTopY - 18, size: 11, font: fonts.bold, color: COLORS.darkText,
   });
   if (customerEmail) {
-    page.drawText(customerEmail.substring(0, 40), {
+    safeDrawText(page,customerEmail.substring(0, 40), {
       x: MARGIN_L, y: infoTopY - 34, size: 9, font: fonts.regular, color: COLORS.grayText,
     });
   }
   if (customerPhone) {
-    page.drawText(customerPhone.substring(0, 25), {
+    safeDrawText(page,customerPhone.substring(0, 25), {
       x: MARGIN_L, y: infoTopY - 48, size: 9, font: fonts.regular, color: COLORS.grayText,
     });
   }
 
   // Right column - Details
   const detailLabelX = PAGE_W - 210;
-  page.drawText("DETALLES", {
+  safeDrawText(page,"DETALLES", {
     x: detailLabelX, y: infoTopY, size: 8, font: fonts.bold, color: COLORS.grayText,
   });
 
@@ -623,7 +651,7 @@ function drawHeader(page, quotation, fonts, logoImage) {
 
   detailRows.forEach((row, i) => {
     const rowY = infoTopY - 18 - i * 16;
-    page.drawText(row.label, {
+    safeDrawText(page,row.label, {
       x: detailLabelX, y: rowY, size: 9, font: fonts.regular, color: COLORS.grayText,
     });
     drawTextRight(page, row.value, MARGIN_R, rowY, 9, fonts.bold, COLORS.darkText);
@@ -639,7 +667,7 @@ function drawNotes(pdfDoc, page, y, quotation, fonts) {
 
   ({ page, y } = ensureSpace(pdfDoc, page, y, 40, fonts));
 
-  page.drawText("NOTAS", {
+  safeDrawText(page,"NOTAS", {
     x: MARGIN_L, y, size: 8, font: fonts.bold, color: COLORS.grayText,
   });
   y -= 14;
@@ -647,7 +675,7 @@ function drawNotes(pdfDoc, page, y, quotation, fonts) {
   const noteLines = wrapText(quotation.customer_notes.substring(0, 500), fonts.regular, 9, CONTENT_W);
   for (const line of noteLines.slice(0, 8)) {
     ({ page, y } = ensureSpace(pdfDoc, page, y, 14, fonts));
-    page.drawText(line, {
+    safeDrawText(page,line, {
       x: MARGIN_L, y, size: 9, font: fonts.regular, color: COLORS.darkText,
     });
     y -= 14;
@@ -703,12 +731,12 @@ async function generateQuotationPDF(quotation) {
         ({ page, y } = ensureSpace(pdfDoc, page, y, 30, fonts));
         const typeLabel = item.type ? item.type.toUpperCase() : "";
         if (typeLabel) {
-          page.drawText(typeLabel, {
+          safeDrawText(page,typeLabel, {
             x: MARGIN_L, y, size: 8, font: fonts.bold, color: COLORS.orange,
           });
           y -= 14;
         }
-        page.drawText((item.description || "Producto").substring(0, 60), {
+        safeDrawText(page,(item.description || "Producto").substring(0, 60), {
           x: MARGIN_L, y, size: 14, font: fonts.bold, color: COLORS.navy,
         });
         y -= 25;
@@ -731,7 +759,7 @@ async function generateQuotationPDF(quotation) {
       y = PAGE_H - 50;
 
       // Mini header for pricing page
-      page.drawText("RESUMEN DE PRECIOS", {
+      safeDrawText(page,"RESUMEN DE PRECIOS", {
         x: MARGIN_L, y, size: 12, font: fonts.bold, color: COLORS.navy,
       });
       drawLine(page, MARGIN_L, MARGIN_R, y - 8, COLORS.orange, 1.5);
