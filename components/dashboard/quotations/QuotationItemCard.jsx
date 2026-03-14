@@ -1,6 +1,10 @@
 "use client";
 
+import { useState } from "react";
 import Image from "next/image";
+import { DynamicStringList } from "@/components/dashboard/shared/DynamicStringList";
+import { ItineraryBuilder } from "@/components/dashboard/shared/ItineraryBuilder";
+import { ImageUrlList } from "@/components/dashboard/shared/ImageUrlList";
 
 const TYPE_LABELS = {
   flight: "Vuelo",
@@ -41,6 +45,8 @@ export function QuotationItemCard({ item, index, onUpdate, onRemove, currency = 
 }
 
 function EnrichedItemCard({ item, index, onUpdate, onRemove, currency }) {
+  const [expanded, setExpanded] = useState(false);
+
   const mainImage =
     item.product_images?.[0] ||
     item.destination_data?.image_url ||
@@ -54,6 +60,13 @@ function EnrichedItemCard({ item, index, onUpdate, onRemove, currency }) {
   const itineraryDays = item.product_details?.itinerary?.length || 0;
 
   const lineTotal = (item.quantity || 1) * (item.unit_price || 0);
+
+  function updateDetails(field, value) {
+    onUpdate(index, "product_details", {
+      ...(item.product_details || {}),
+      [field]: value,
+    });
+  }
 
   return (
     <div className="overflow-hidden rounded-lg border border-border bg-white">
@@ -98,25 +111,33 @@ function EnrichedItemCard({ item, index, onUpdate, onRemove, currency }) {
               </div>
             </div>
 
-            {/* Remove button */}
-            <button
-              type="button"
-              onClick={() => onRemove(index)}
-              className="shrink-0 rounded p-1.5 text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive"
-              title="Quitar item"
-            >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width="16"
-                height="16"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
+            {/* Action buttons */}
+            <div className="flex shrink-0 gap-1">
+              <button
+                type="button"
+                onClick={() => setExpanded(!expanded)}
+                className="rounded p-1.5 text-muted-foreground transition-colors hover:bg-primary/10 hover:text-primary"
+                title={expanded ? "Cerrar detalles" : "Editar detalles"}
               >
-                <path d="M3 6h18M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2" />
-              </svg>
-            </button>
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  {expanded ? (
+                    <path d="m18 15-6-6-6 6" />
+                  ) : (
+                    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+                  )}
+                </svg>
+              </button>
+              <button
+                type="button"
+                onClick={() => onRemove(index)}
+                className="shrink-0 rounded p-1.5 text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive"
+                title="Quitar item"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M3 6h18M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2" />
+                </svg>
+              </button>
+            </div>
           </div>
 
           {/* Includes summary */}
@@ -125,7 +146,7 @@ function EnrichedItemCard({ item, index, onUpdate, onRemove, currency }) {
               {itineraryDays > 0 && (
                 <span className="flex items-center gap-1">
                   <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
-                  {itineraryDays} días
+                  {itineraryDays} dias
                 </span>
               )}
               {includesCount > 0 && (
@@ -173,6 +194,63 @@ function EnrichedItemCard({ item, index, onUpdate, onRemove, currency }) {
           </div>
         </div>
       </div>
+
+      {/* Expanded edit panel */}
+      {expanded && (
+        <div className="border-t border-border bg-gray-50/50 p-4 space-y-5">
+          <h5 className="text-xs font-semibold uppercase tracking-wide text-gray-500">Editar Detalles del Producto</h5>
+
+          {/* Duration */}
+          <div>
+            <label className="mb-1 block text-sm font-medium text-gray-700">Duracion</label>
+            <input
+              type="text"
+              value={item.product_details?.duration || ""}
+              onChange={(e) => updateDetails("duration", e.target.value)}
+              placeholder="Ej: 3 dias / 2 noches"
+              className="h-9 w-full max-w-xs rounded-md border border-gray-300 px-3 text-sm focus:border-primary focus:outline-none"
+            />
+          </div>
+
+          {/* Images */}
+          <ImageUrlList
+            images={item.product_images || []}
+            onChange={(newImages) => onUpdate(index, "product_images", newImages)}
+            label="Imagenes del Producto"
+          />
+
+          {/* Itinerary */}
+          <ItineraryBuilder
+            itinerary={item.product_details?.itinerary || []}
+            onChange={(newItinerary) => updateDetails("itinerary", newItinerary)}
+            label="Itinerario"
+          />
+
+          {/* Includes */}
+          <DynamicStringList
+            items={item.product_details?.includes || []}
+            onChange={(newList) => updateDetails("includes", newList)}
+            placeholder="Ej: Alojamiento en posada"
+            label="Incluye"
+          />
+
+          {/* Not includes */}
+          <DynamicStringList
+            items={item.product_details?.not_includes || []}
+            onChange={(newList) => updateDetails("not_includes", newList)}
+            placeholder="Ej: Vuelos nacionales"
+            label="No Incluye"
+          />
+
+          {/* Recommendations */}
+          <DynamicStringList
+            items={item.product_details?.recommendations || []}
+            onChange={(newList) => updateDetails("recommendations", newList)}
+            placeholder="Ej: Llevar protector solar"
+            label="Recomendaciones"
+          />
+        </div>
+      )}
     </div>
   );
 }
@@ -185,7 +263,7 @@ function ManualItemRow({ item, index, onUpdate, onRemove }) {
       {/* Description */}
       <div className="flex-1">
         <label className="mb-1 block text-xs text-muted-foreground">
-          Descripción
+          Descripcion
         </label>
         <input
           type="text"

@@ -3,6 +3,9 @@
 import { useState, useEffect } from "react";
 import { useRouter, useParams } from "next/navigation";
 import Link from "next/link";
+import { DynamicStringList } from "@/components/dashboard/shared/DynamicStringList";
+import { ItineraryBuilder } from "@/components/dashboard/shared/ItineraryBuilder";
+import { ImageUrlList } from "@/components/dashboard/shared/ImageUrlList";
 
 const productTypes = [
   { value: "flight", label: "Vuelo" },
@@ -21,11 +24,13 @@ export default function EditInventoryPage() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState(null);
   const [providers, setProviders] = useState([]);
+  const [destinations, setDestinations] = useState([]);
   const [formData, setFormData] = useState({
     name: "",
     sku: "",
     product_type: "tour",
     provider_id: "",
+    destination_id: "",
     description: "",
     cost_price: "",
     sale_price: "",
@@ -35,10 +40,19 @@ export default function EditInventoryPage() {
     valid_from: "",
     valid_until: "",
     status: "available",
+    images: [],
+    details: {
+      duration: "",
+      itinerary: [],
+      includes: [],
+      not_includes: [],
+      recommendations: [],
+    },
   });
 
   useEffect(() => {
     fetchProviders();
+    fetchDestinations();
     fetchInventory();
   }, [params.id]);
 
@@ -54,6 +68,18 @@ export default function EditInventoryPage() {
     }
   }
 
+  async function fetchDestinations() {
+    try {
+      const response = await fetch("/api/destinations");
+      const data = await response.json();
+      if (!data.error) {
+        setDestinations(data.data || []);
+      }
+    } catch (err) {
+      console.error("Error fetching destinations:", err);
+    }
+  }
+
   async function fetchInventory() {
     try {
       const response = await fetch(`/api/inventory/${params.id}`);
@@ -62,11 +88,13 @@ export default function EditInventoryPage() {
         setError(data.error);
       } else {
         const item = data.data;
+        const details = item.details || {};
         setFormData({
           name: item.name || "",
           sku: item.sku || "",
           product_type: item.product_type || "tour",
           provider_id: item.provider_id || "",
+          destination_id: item.destination_id || "",
           description: item.description || "",
           cost_price: item.cost_price || "",
           sale_price: item.sale_price || "",
@@ -76,6 +104,14 @@ export default function EditInventoryPage() {
           valid_from: item.valid_from ? item.valid_from.split("T")[0] : "",
           valid_until: item.valid_until ? item.valid_until.split("T")[0] : "",
           status: item.status || "available",
+          images: item.images || [],
+          details: {
+            duration: details.duration || "",
+            itinerary: details.itinerary || [],
+            includes: details.includes || [],
+            not_includes: details.not_includes || [],
+            recommendations: details.recommendations || [],
+          },
         });
       }
     } catch (err) {
@@ -93,6 +129,13 @@ export default function EditInventoryPage() {
     }));
   }
 
+  function updateDetails(field, value) {
+    setFormData((prev) => ({
+      ...prev,
+      details: { ...prev.details, [field]: value },
+    }));
+  }
+
   async function handleSubmit(e) {
     e.preventDefault();
     setSaving(true);
@@ -105,6 +148,7 @@ export default function EditInventoryPage() {
         body: JSON.stringify({
           ...formData,
           provider_id: formData.provider_id || null,
+          destination_id: formData.destination_id || null,
           cost_price: formData.cost_price ? parseFloat(formData.cost_price) : null,
           sale_price: formData.sale_price ? parseFloat(formData.sale_price) : null,
           stock_quantity: formData.stock_quantity !== "" ? parseInt(formData.stock_quantity) : null,
@@ -129,7 +173,7 @@ export default function EditInventoryPage() {
   }
 
   async function handleDelete() {
-    if (!confirm("¿Estás seguro de eliminar este producto?")) return;
+    if (!confirm("Estas seguro de eliminar este producto?")) return;
 
     try {
       const response = await fetch(`/api/inventory/${params.id}`, {
@@ -172,228 +216,305 @@ export default function EditInventoryPage() {
         <div className="mb-4 rounded-md bg-red-50 p-4 text-red-700">{error}</div>
       )}
 
-      <form onSubmit={handleSubmit} className="rounded-lg bg-white p-6 shadow-md">
-        {/* Información básica */}
-        <h3 className="text-sm font-semibold text-gray-700 mb-4">Información Básica</h3>
-        <div className="grid gap-6 md:grid-cols-3">
-          <div>
-            <label className="block text-sm font-medium text-gray-700">
-              Nombre *
-            </label>
-            <input
-              type="text"
-              name="name"
-              value={formData.name}
-              onChange={handleChange}
-              required
-              className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
-            />
+      <form onSubmit={handleSubmit} className="space-y-6">
+        <div className="rounded-lg bg-white p-6 shadow-md">
+          {/* Información básica */}
+          <h3 className="text-sm font-semibold text-gray-700 mb-4">Informacion Basica</h3>
+          <div className="grid gap-6 md:grid-cols-3">
+            <div>
+              <label className="block text-sm font-medium text-gray-700">
+                Nombre *
+              </label>
+              <input
+                type="text"
+                name="name"
+                value={formData.name}
+                onChange={handleChange}
+                required
+                className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700">
+                SKU *
+              </label>
+              <input
+                type="text"
+                name="sku"
+                value={formData.sku}
+                onChange={handleChange}
+                required
+                className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700">
+                Tipo *
+              </label>
+              <select
+                name="product_type"
+                value={formData.product_type}
+                onChange={handleChange}
+                required
+                className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
+              >
+                {productTypes.map((type) => (
+                  <option key={type.value} value={type.value}>
+                    {type.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700">
+                Proveedor
+              </label>
+              <select
+                name="provider_id"
+                value={formData.provider_id}
+                onChange={handleChange}
+                className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
+              >
+                <option value="">Sin proveedor</option>
+                {providers.map((prov) => (
+                  <option key={prov.id} value={prov.id}>
+                    {prov.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700">
+                Destino
+              </label>
+              <select
+                name="destination_id"
+                value={formData.destination_id}
+                onChange={handleChange}
+                className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
+              >
+                <option value="">Sin destino</option>
+                {destinations.map((dest) => (
+                  <option key={dest.id} value={dest.id}>
+                    {dest.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div className="md:col-span-2">
+              <label className="block text-sm font-medium text-gray-700">
+                Descripcion
+              </label>
+              <textarea
+                name="description"
+                value={formData.description}
+                onChange={handleChange}
+                rows={2}
+                className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
+              />
+            </div>
           </div>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700">
-              SKU *
-            </label>
-            <input
-              type="text"
-              name="sku"
-              value={formData.sku}
-              onChange={handleChange}
-              required
-              className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
-            />
+          {/* Precios */}
+          <h3 className="text-sm font-semibold text-gray-700 mb-4 mt-6 pt-4 border-t">Precios</h3>
+          <div className="grid gap-6 md:grid-cols-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700">
+                Precio de costo
+              </label>
+              <input
+                type="number"
+                name="cost_price"
+                value={formData.cost_price}
+                onChange={handleChange}
+                min="0"
+                step="0.01"
+                className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700">
+                Precio de venta
+              </label>
+              <input
+                type="number"
+                name="sale_price"
+                value={formData.sale_price}
+                onChange={handleChange}
+                min="0"
+                step="0.01"
+                className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700">
+                Moneda
+              </label>
+              <select
+                name="currency"
+                value={formData.currency}
+                onChange={handleChange}
+                className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
+              >
+                <option value="USD">USD</option>
+                <option value="EUR">EUR</option>
+                <option value="VES">VES</option>
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700">
+                Margen
+              </label>
+              <div className="mt-1 block w-full rounded-md border border-gray-200 bg-gray-50 px-3 py-2 text-gray-500">
+                {formData.cost_price && formData.sale_price
+                  ? `${(((parseFloat(formData.sale_price) - parseFloat(formData.cost_price)) / parseFloat(formData.cost_price)) * 100).toFixed(1)}%`
+                  : "-"}
+              </div>
+            </div>
           </div>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700">
-              Tipo *
-            </label>
-            <select
-              name="product_type"
-              value={formData.product_type}
-              onChange={handleChange}
-              required
-              className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
-            >
-              {productTypes.map((type) => (
-                <option key={type.value} value={type.value}>
-                  {type.label}
-                </option>
-              ))}
-            </select>
-          </div>
+          {/* Stock y validez */}
+          <h3 className="text-sm font-semibold text-gray-700 mb-4 mt-6 pt-4 border-t">Stock y Validez</h3>
+          <div className="grid gap-6 md:grid-cols-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700">
+                Cantidad en stock
+              </label>
+              <input
+                type="number"
+                name="stock_quantity"
+                value={formData.stock_quantity}
+                onChange={handleChange}
+                min="0"
+                placeholder="Vacio = ilimitado"
+                className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
+              />
+            </div>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700">
-              Proveedor
-            </label>
-            <select
-              name="provider_id"
-              value={formData.provider_id}
-              onChange={handleChange}
-              className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
-            >
-              <option value="">Sin proveedor</option>
-              {providers.map((prov) => (
-                <option key={prov.id} value={prov.id}>
-                  {prov.name}
-                </option>
-              ))}
-            </select>
-          </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700">
+                Alerta stock minimo
+              </label>
+              <input
+                type="number"
+                name="min_stock_alert"
+                value={formData.min_stock_alert}
+                onChange={handleChange}
+                min="0"
+                className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
+              />
+            </div>
 
-          <div className="md:col-span-2">
-            <label className="block text-sm font-medium text-gray-700">
-              Descripción
-            </label>
-            <textarea
-              name="description"
-              value={formData.description}
-              onChange={handleChange}
-              rows={2}
-              className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
-            />
-          </div>
-        </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700">
+                Valido desde
+              </label>
+              <input
+                type="date"
+                name="valid_from"
+                value={formData.valid_from}
+                onChange={handleChange}
+                className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
+              />
+            </div>
 
-        {/* Precios */}
-        <h3 className="text-sm font-semibold text-gray-700 mb-4 mt-6 pt-4 border-t">Precios</h3>
-        <div className="grid gap-6 md:grid-cols-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700">
-              Precio de costo
-            </label>
-            <input
-              type="number"
-              name="cost_price"
-              value={formData.cost_price}
-              onChange={handleChange}
-              min="0"
-              step="0.01"
-              className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
-            />
-          </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700">
+                Valido hasta
+              </label>
+              <input
+                type="date"
+                name="valid_until"
+                value={formData.valid_until}
+                onChange={handleChange}
+                className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
+              />
+            </div>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700">
-              Precio de venta
-            </label>
-            <input
-              type="number"
-              name="sale_price"
-              value={formData.sale_price}
-              onChange={handleChange}
-              min="0"
-              step="0.01"
-              className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700">
-              Moneda
-            </label>
-            <select
-              name="currency"
-              value={formData.currency}
-              onChange={handleChange}
-              className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
-            >
-              <option value="USD">USD</option>
-              <option value="EUR">EUR</option>
-              <option value="VES">VES</option>
-            </select>
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700">
-              Margen
-            </label>
-            <div className="mt-1 block w-full rounded-md border border-gray-200 bg-gray-50 px-3 py-2 text-gray-500">
-              {formData.cost_price && formData.sale_price
-                ? `${(((parseFloat(formData.sale_price) - parseFloat(formData.cost_price)) / parseFloat(formData.cost_price)) * 100).toFixed(1)}%`
-                : "-"}
+            <div>
+              <label className="block text-sm font-medium text-gray-700">
+                Estado
+              </label>
+              <select
+                name="status"
+                value={formData.status}
+                onChange={handleChange}
+                className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
+              >
+                <option value="available">Disponible</option>
+                <option value="limited">Limitado</option>
+                <option value="sold_out">Agotado</option>
+                <option value="discontinued">Descontinuado</option>
+              </select>
             </div>
           </div>
         </div>
 
-        {/* Stock y validez */}
-        <h3 className="text-sm font-semibold text-gray-700 mb-4 mt-6 pt-4 border-t">Stock y Validez</h3>
-        <div className="grid gap-6 md:grid-cols-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700">
-              Cantidad en stock
-            </label>
+        {/* Detalles del Producto */}
+        <div className="rounded-lg bg-white p-6 shadow-md">
+          <h3 className="text-sm font-semibold text-gray-700 mb-4">Detalles del Producto</h3>
+
+          <div className="mb-6">
+            <label className="block text-sm font-medium text-gray-700">Duracion</label>
             <input
-              type="number"
-              name="stock_quantity"
-              value={formData.stock_quantity}
-              onChange={handleChange}
-              min="0"
-              placeholder="Vacío = ilimitado"
-              className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
+              type="text"
+              value={formData.details.duration}
+              onChange={(e) => updateDetails("duration", e.target.value)}
+              placeholder="Ej: 3 dias / 2 noches"
+              className="mt-1 block w-full max-w-sm rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
             />
           </div>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700">
-              Alerta stock mínimo
-            </label>
-            <input
-              type="number"
-              name="min_stock_alert"
-              value={formData.min_stock_alert}
-              onChange={handleChange}
-              min="0"
-              className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
+          <div className="mb-6">
+            <ImageUrlList
+              images={formData.images}
+              onChange={(newImages) => setFormData((prev) => ({ ...prev, images: newImages }))}
+              label="Imagenes del Producto"
             />
           </div>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700">
-              Válido desde
-            </label>
-            <input
-              type="date"
-              name="valid_from"
-              value={formData.valid_from}
-              onChange={handleChange}
-              className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
+          <div className="mb-6">
+            <ItineraryBuilder
+              itinerary={formData.details.itinerary}
+              onChange={(newItinerary) => updateDetails("itinerary", newItinerary)}
+              label="Itinerario"
             />
           </div>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700">
-              Válido hasta
-            </label>
-            <input
-              type="date"
-              name="valid_until"
-              value={formData.valid_until}
-              onChange={handleChange}
-              className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
+          <div className="grid gap-6 md:grid-cols-2">
+            <DynamicStringList
+              items={formData.details.includes}
+              onChange={(newList) => updateDetails("includes", newList)}
+              placeholder="Ej: Alojamiento en posada"
+              label="Incluye"
+            />
+            <DynamicStringList
+              items={formData.details.not_includes}
+              onChange={(newList) => updateDetails("not_includes", newList)}
+              placeholder="Ej: Vuelos nacionales"
+              label="No Incluye"
             />
           </div>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700">
-              Estado
-            </label>
-            <select
-              name="status"
-              value={formData.status}
-              onChange={handleChange}
-              className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
-            >
-              <option value="available">Disponible</option>
-              <option value="limited">Limitado</option>
-              <option value="sold_out">Agotado</option>
-              <option value="discontinued">Descontinuado</option>
-            </select>
+          <div className="mt-6">
+            <DynamicStringList
+              items={formData.details.recommendations}
+              onChange={(newList) => updateDetails("recommendations", newList)}
+              placeholder="Ej: Llevar protector solar"
+              label="Recomendaciones"
+            />
           </div>
         </div>
 
-        <div className="mt-6 flex justify-between">
+        <div className="flex justify-between">
           <div className="flex gap-4">
             <button
               type="submit"
