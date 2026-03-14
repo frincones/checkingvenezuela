@@ -269,29 +269,11 @@ async function drawHero(doc, page, item, fonts) {
   page.drawImage(image, { x: (PAGE_W - dw) / 2, y: heroY, width: dw, height: dh });
   restoreClip(page);
 
-  // Gradient overlay using stacked transparent layers (no banding).
-  // Each layer covers progressively less of the hero from the bottom,
-  // so they accumulate naturally into a smooth dark-to-transparent gradient.
-  // This avoids the visible stripe artifacts of step-based gradients.
-  const layers = [
-    { fromBottom: 1.00, opacity: 0.12 },  // full hero, very light tint
-    { fromBottom: 0.85, opacity: 0.10 },
-    { fromBottom: 0.72, opacity: 0.10 },
-    { fromBottom: 0.60, opacity: 0.12 },
-    { fromBottom: 0.50, opacity: 0.12 },
-    { fromBottom: 0.42, opacity: 0.12 },
-    { fromBottom: 0.35, opacity: 0.14 },
-    { fromBottom: 0.28, opacity: 0.14 },
-    { fromBottom: 0.22, opacity: 0.10 },
-    { fromBottom: 0.15, opacity: 0.08 },
-  ];
-  for (const { fromBottom, opacity } of layers) {
-    const layerH = heroH * fromBottom;
-    page.drawRectangle({
-      x: 0, y: heroY, width: PAGE_W, height: layerH,
-      color: C.shadow, opacity,
-    });
-  }
+  // Dark overlay only at the bottom for text legibility (no gradient)
+  page.drawRectangle({
+    x: 0, y: heroY, width: PAGE_W, height: heroH * 0.35,
+    color: C.shadow, opacity: 0.55,
+  });
 
   // Brand text top-left
   safe(page, "VENEZUELA", { x: PAD, y: PAGE_H - 26, size: 7, font: fonts.bold, color: C.accent });
