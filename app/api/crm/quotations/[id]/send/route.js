@@ -205,6 +205,27 @@ export async function POST(request, { params }) {
       })
       .eq("id", id);
 
+    // Sync: guardar en tabla emails para el módulo de correo
+    await adminClient.from("emails").insert({
+      resend_id: emailData?.id,
+      direction: "outbound",
+      folder: "sent",
+      from_email: FROM_EMAIL,
+      from_name: "Venezuela Voyages",
+      to_emails: [{ email: toEmail, name: customerName }],
+      subject: body.subject || `Cotización ${quotation.quotation_number} — Venezuela Voyages`,
+      body_html: htmlBody,
+      body_text: `Cotización ${quotation.quotation_number} enviada a ${customerName}`,
+      attachments: [{
+        filename: `cotizacion-${quotation.quotation_number}.pdf`,
+        size: pdfBuffer.length,
+        content_type: "application/pdf",
+      }],
+      status: "sent",
+      is_read: true,
+      metadata: { quotation_id: id, quotation_number: quotation.quotation_number },
+    }).then(() => {}).catch((err) => console.error("Email sync error:", err));
+
     return NextResponse.json({
       success: true,
       message: `Cotización enviada a ${toEmail}`,
