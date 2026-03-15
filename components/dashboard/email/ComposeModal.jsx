@@ -429,12 +429,13 @@ function TemplateSelector({ onLoad, editorContent, subject }) {
 }
 
 /* ── Main ComposeModal ── */
-export default function ComposeModal({ isOpen, onClose, replyTo, forwardEmail, onSent }) {
+export default function ComposeModal({ isOpen, onClose, replyTo, forwardEmail, onSent, mailboxes, defaultFromAddress }) {
   const [to, setTo] = useState(replyTo?.from_email || "");
   const [cc, setCc] = useState("");
   const [bcc, setBcc] = useState("");
   const [showCc, setShowCc] = useState(false);
   const [showBcc, setShowBcc] = useState(false);
+  const [fromAddress, setFromAddress] = useState(defaultFromAddress || "ventas@venezuelavoyages.com");
   const [subject, setSubject] = useState(() => {
     if (replyTo) return replyTo.subject?.startsWith("Re: ") ? replyTo.subject : `Re: ${replyTo.subject || ""}`;
     if (forwardEmail) return `Fwd: ${forwardEmail.subject || ""}`;
@@ -581,7 +582,7 @@ export default function ComposeModal({ isOpen, onClose, replyTo, forwardEmail, o
         })
       );
 
-      const payload = { to: toEmails, subject, html, text };
+      const payload = { to: toEmails, subject, html, text, from_address: fromAddress };
       if (ccEmails.length) payload.cc = ccEmails;
       if (bccEmails.length) payload.bcc = bccEmails;
       if (attPayload.length) payload.attachments = attPayload;
@@ -672,6 +673,23 @@ export default function ComposeModal({ isOpen, onClose, replyTo, forwardEmail, o
 
         {/* Fields */}
         <div className="border-b border-gray-200 text-sm">
+          {/* From selector */}
+          {mailboxes?.length > 0 && (
+            <div className="flex items-center px-4 py-1.5 border-b border-gray-100">
+              <span className="text-gray-500 w-12">De:</span>
+              <select
+                value={fromAddress}
+                onChange={(e) => setFromAddress(e.target.value)}
+                className="flex-1 text-sm outline-none bg-transparent"
+              >
+                {mailboxes.map((mb) => (
+                  <option key={mb.id} value={mb.address}>
+                    {mb.display_name || mb.name} &lt;{mb.address}&gt;
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
           <div className="flex items-center px-4 py-1.5 border-b border-gray-100">
             <span className="text-gray-500 w-12">Para:</span>
             <input type="text" value={to} onChange={(e) => setTo(e.target.value)} placeholder="email@ejemplo.com" className="flex-1 outline-none text-sm" />

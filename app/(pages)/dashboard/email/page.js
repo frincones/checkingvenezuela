@@ -16,16 +16,29 @@ export default function EmailPage() {
   const [search, setSearch] = useState("");
   const [total, setTotal] = useState(0);
 
+  // Mailboxes
+  const [mailboxes, setMailboxes] = useState([]);
+  const [activeMailbox, setActiveMailbox] = useState(null); // null = all
+
   // Compose state
   const [composeOpen, setComposeOpen] = useState(false);
   const [replyTo, setReplyTo] = useState(null);
   const [forwardEmail, setForwardEmail] = useState(null);
+
+  // Fetch mailboxes on mount
+  useEffect(() => {
+    fetch("/api/email/mailboxes")
+      .then((r) => r.json())
+      .then((d) => setMailboxes(d.mailboxes || []))
+      .catch(() => {});
+  }, []);
 
   const fetchEmails = useCallback(async () => {
     setLoading(true);
     try {
       const params = new URLSearchParams({ folder });
       if (search) params.set("search", search);
+      if (activeMailbox) params.set("mailbox_id", activeMailbox);
       const res = await fetch(`/api/email?${params}`);
       const data = await res.json();
       setEmails(data.emails || []);
@@ -36,7 +49,7 @@ export default function EmailPage() {
     } finally {
       setLoading(false);
     }
-  }, [folder, search]);
+  }, [folder, search, activeMailbox]);
 
   useEffect(() => {
     fetchEmails();
@@ -54,7 +67,6 @@ export default function EmailPage() {
       const res = await fetch(`/api/email/${id}`);
       const data = await res.json();
       setSelectedEmail(data);
-      // Update local state to reflect read
       setEmails((prev) =>
         prev.map((e) => (e.id === id ? { ...e, is_read: true } : e))
       );
@@ -125,6 +137,17 @@ export default function EmailPage() {
     [fetchEmails]
   );
 
+  const handleMailboxChange = useCallback((mbId) => {
+    setActiveMailbox(mbId);
+    setSelectedId(null);
+    setSelectedEmail(null);
+  }, []);
+
+  // Get active mailbox address for compose default
+  const activeMailboxAddress = activeMailbox
+    ? mailboxes.find((mb) => mb.id === activeMailbox)?.address
+    : null;
+
   const totalUnread = Object.values(unread).reduce((a, b) => a + b, 0);
 
   return (
@@ -191,6 +214,9 @@ export default function EmailPage() {
           }}
           unread={unread}
           onCompose={openCompose}
+          mailboxes={mailboxes}
+          activeMailbox={activeMailbox}
+          onMailboxChange={handleMailboxChange}
         />
 
         {/* Email list */}
@@ -240,6 +266,8 @@ export default function EmailPage() {
         replyTo={replyTo}
         forwardEmail={forwardEmail}
         onSent={fetchEmails}
+        mailboxes={mailboxes}
+        defaultFromAddress={activeMailboxAddress}
       />
     </div>
   );

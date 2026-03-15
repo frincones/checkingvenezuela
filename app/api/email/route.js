@@ -25,6 +25,7 @@ export async function GET(request) {
     const folder = searchParams.get("folder") || "inbox";
     const search = searchParams.get("search") || "";
     const starred = searchParams.get("starred");
+    const mailboxId = searchParams.get("mailbox_id");
     const page = parseInt(searchParams.get("page") || "1");
     const limit = parseInt(searchParams.get("limit") || "50");
     const offset = (page - 1) * limit;
@@ -32,10 +33,14 @@ export async function GET(request) {
     const adminClient = createAdminClient();
     let query = adminClient
       .from("emails")
-      .select("id, resend_id, direction, folder, from_email, from_name, to_emails, subject, body_text, status, is_read, is_starred, thread_id, attachments, created_at", { count: "exact" })
+      .select("id, resend_id, direction, folder, from_email, from_name, to_emails, subject, body_text, status, is_read, is_starred, thread_id, attachments, mailbox_id, created_at", { count: "exact" })
       .eq("folder", folder)
       .order("created_at", { ascending: false })
       .range(offset, offset + limit - 1);
+
+    if (mailboxId) {
+      query = query.eq("mailbox_id", mailboxId);
+    }
 
     if (starred === "true") {
       query = query.eq("is_starred", true);
@@ -51,12 +56,18 @@ export async function GET(request) {
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
 
-    // Count unread per folder
-    const { data: unreadCounts } = await adminClient
+    // Count unread per folder (filtered by mailbox if specified)
+    let unreadQuery = adminClient
       .from("emails")
       .select("folder")
       .eq("is_read", false)
       .not("folder", "eq", "trash");
+
+    if (mailboxId) {
+      unreadQuery = unreadQuery.eq("mailbox_id", mailboxId);
+    }
+
+    const { data: unreadCounts } = await unreadQuery;
 
     const unreadByFolder = {};
     (unreadCounts || []).forEach((e) => {
@@ -85,7 +96,7 @@ export async function POST(request) {
     }
 
     const body = await request.json();
-    const { to, cc, bcc, subject, html, text, reply_to, attachments, isDraft } = body;
+    const { to, cc, bcc, subject, html, text, reply_to, attachments, isDraft, from_address } = body;
 
     if (!isDraft && (!to || to.length === 0)) {
       return NextResponse.json({ error: "Destinatario requerido" }, { status: 400 });
@@ -96,6 +107,20 @@ export async function POST(request) {
       typeof e === "string" ? { email: e } : e
     );
 
+    // Resolve mailbox for the sender address
+    const senderAddress = from_address || FROM_EMAIL;
+    let mailboxId = null;
+    let senderDisplayName = "Venezuela Voyages";
+    const { data: mailbox } = await adminClient
+      .from("mailboxes")
+      .select("id, display_name")
+      .eq("address", senderAddress)
+      .single();
+    if (mailbox) {
+      mailboxId = mailbox.id;
+      senderDisplayName = mailbox.display_name || "Venezuela Voyages";
+    }
+
     // Save as draft
     if (isDraft) {
       const { data: draft, error: draftError } = await adminClient
@@ -103,8 +128,8 @@ export async function POST(request) {
         .insert({
           direction: "outbound",
           folder: "drafts",
-          from_email: FROM_EMAIL,
-          from_name: "Venezuela Voyages",
+          from_email: senderAddress,
+          from_name: senderDisplayName,
           to_emails: toEmails,
           cc: cc || [],
           bcc: bcc || [],
@@ -113,6 +138,7 @@ export async function POST(request) {
           body_text: text || "",
           status: "draft",
           is_read: true,
+          mailbox_id: mailboxId,
         })
         .select("id")
         .single();
@@ -125,7 +151,7 @@ export async function POST(request) {
 
     // Send via Resend
     const emailPayload = {
-      from: `Venezuela Voyages <${FROM_EMAIL}>`,
+      from: `${senderDisplayName} <${senderAddress}>`,
       to: toEmails.map((e) => e.email),
       subject: subject || "(Sin asunto)",
       html: html || text || "",
@@ -149,8 +175,9 @@ export async function POST(request) {
         resend_id: emailData?.id,
         direction: "outbound",
         folder: "sent",
-        from_email: FROM_EMAIL,
-        from_name: "Venezuela Voyages",
+        from_email: senderAddress,
+        from_name: senderDisplayName,
+        mailbox_id: mailboxId,
         to_emails: toEmails,
         cc: cc || [],
         bcc: bcc || [],
