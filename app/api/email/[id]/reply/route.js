@@ -7,7 +7,9 @@ import { createClient, createAdminClient } from "@/lib/db/supabase/server";
 import { NextResponse } from "next/server";
 import { Resend } from "resend";
 
-const resend = new Resend(process.env.RESEND_API_KEY);
+function getResend() {
+  return new Resend(process.env.RESEND_API_KEY);
+}
 const FROM_EMAIL = process.env.RESEND_FROM_EMAIL || "ventas@venezuelavoyages.com";
 
 export async function POST(request, { params }) {
@@ -66,7 +68,7 @@ export async function POST(request, { params }) {
       : [replyTo];
 
     // Send via Resend
-    const { data: emailData, error: emailError } = await resend.emails.send({
+    const { data: emailData, error: emailError } = await getResend().emails.send({
       from: `Venezuela Voyages <${FROM_EMAIL}>`,
       to: toList,
       subject,
