@@ -1,47 +1,450 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 import { useEditor, EditorContent } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
-import Link from "@tiptap/extension-link";
+import LinkExt from "@tiptap/extension-link";
 import Placeholder from "@tiptap/extension-placeholder";
+import Underline from "@tiptap/extension-underline";
+import TextAlign from "@tiptap/extension-text-align";
+import TextStyle from "@tiptap/extension-text-style";
+import Color from "@tiptap/extension-color";
+import Highlight from "@tiptap/extension-highlight";
+import FontFamily from "@tiptap/extension-font-family";
+import Image from "@tiptap/extension-image";
+import Table from "@tiptap/extension-table";
+import TableRow from "@tiptap/extension-table-row";
+import TableCell from "@tiptap/extension-table-cell";
+import TableHeader from "@tiptap/extension-table-header";
+import Subscript from "@tiptap/extension-subscript";
+import Superscript from "@tiptap/extension-superscript";
+import { useDropzone } from "react-dropzone";
 
-function EditorToolbar({ editor }) {
+/* ── Constants ── */
+const MAX_ATTACHMENT_SIZE = 40 * 1024 * 1024; // 40 MB Resend limit
+const MAX_TOTAL_SIZE = 40 * 1024 * 1024;
+
+const FONTS = [
+  { label: "Sans Serif", value: "Arial, sans-serif" },
+  { label: "Serif", value: "Georgia, serif" },
+  { label: "Monospace", value: "monospace" },
+  { label: "Helvetica", value: "Helvetica, Arial, sans-serif" },
+  { label: "Verdana", value: "Verdana, sans-serif" },
+  { label: "Tahoma", value: "Tahoma, sans-serif" },
+];
+
+const COLORS = [
+  "#000000", "#434343", "#666666", "#999999", "#cccccc",
+  "#ef4444", "#f97316", "#eab308", "#22c55e", "#3b82f6",
+  "#8b5cf6", "#ec4899", "#0A1A44", "#F2A93B", "#FFD275",
+];
+
+const FILE_ICONS = {
+  pdf: "M7 21h10a2 2 0 002-2V9l-5-5H7a2 2 0 00-2 2v13a2 2 0 002 2z",
+  image: "M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z",
+  default: "M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13",
+};
+
+function getFileIcon(type) {
+  if (type?.startsWith("image/")) return FILE_ICONS.image;
+  if (type === "application/pdf") return FILE_ICONS.pdf;
+  return FILE_ICONS.default;
+}
+
+function formatSize(bytes) {
+  if (bytes < 1024) return `${bytes} B`;
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(0)} KB`;
+  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+}
+
+/* ── Toolbar ── */
+function EditorToolbar({ editor, onInsertImage, onToggleEmoji }) {
+  const [showColorPicker, setShowColorPicker] = useState(null); // "text" | "bg" | null
+  const [showFontMenu, setShowFontMenu] = useState(false);
+  const [showTableMenu, setShowTableMenu] = useState(false);
+  const pickerRef = useRef(null);
+
+  useEffect(() => {
+    function handleClick(e) {
+      if (pickerRef.current && !pickerRef.current.contains(e.target)) {
+        setShowColorPicker(null);
+        setShowFontMenu(false);
+        setShowTableMenu(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClick);
+    return () => document.removeEventListener("mousedown", handleClick);
+  }, []);
+
   if (!editor) return null;
-  const btn = (active, onClick, children) => (
+
+  const btn = (active, onClick, children, title) => (
     <button
       type="button"
       onClick={onClick}
-      className={`p-1.5 rounded text-sm ${active ? "bg-gray-200 text-gray-900" : "text-gray-500 hover:bg-gray-100"}`}
+      title={title}
+      className={`p-1 rounded text-sm ${active ? "bg-gray-200 text-gray-900" : "text-gray-500 hover:bg-gray-100"}`}
     >
       {children}
     </button>
   );
 
+  const icon = (d) => (
+    <svg className="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={d} />
+    </svg>
+  );
+
   return (
-    <div className="flex items-center gap-0.5 px-3 py-1.5 border-b border-gray-200 bg-gray-50">
-      {btn(editor.isActive("bold"), () => editor.chain().focus().toggleBold().run(), <strong>B</strong>)}
-      {btn(editor.isActive("italic"), () => editor.chain().focus().toggleItalic().run(), <em>I</em>)}
-      {btn(editor.isActive("bulletList"), () => editor.chain().focus().toggleBulletList().run(),
-        <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" /></svg>
+    <div className="flex flex-wrap items-center gap-0.5 px-2 py-1 border-b border-gray-200 bg-gray-50 relative" ref={pickerRef}>
+      {/* Font family */}
+      <div className="relative">
+        <button
+          type="button"
+          onClick={() => { setShowFontMenu(!showFontMenu); setShowColorPicker(null); setShowTableMenu(false); }}
+          className="text-xs px-1.5 py-1 rounded text-gray-500 hover:bg-gray-100 max-w-[80px] truncate"
+          title="Fuente"
+        >
+          Fuente ▾
+        </button>
+        {showFontMenu && (
+          <div className="absolute top-full left-0 mt-1 bg-white border rounded-lg shadow-lg z-10 py-1 w-40">
+            {FONTS.map((f) => (
+              <button
+                key={f.value}
+                type="button"
+                onClick={() => { editor.chain().focus().setFontFamily(f.value).run(); setShowFontMenu(false); }}
+                className="block w-full text-left px-3 py-1.5 text-sm hover:bg-gray-100"
+                style={{ fontFamily: f.value }}
+              >
+                {f.label}
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
+
+      <div className="w-px h-4 bg-gray-200 mx-0.5" />
+
+      {/* Basic formatting */}
+      {btn(editor.isActive("bold"), () => editor.chain().focus().toggleBold().run(), <strong className="text-xs">B</strong>, "Negrita")}
+      {btn(editor.isActive("italic"), () => editor.chain().focus().toggleItalic().run(), <em className="text-xs">I</em>, "Cursiva")}
+      {btn(editor.isActive("underline"), () => editor.chain().focus().toggleUnderline().run(), <span className="text-xs underline">U</span>, "Subrayado")}
+      {btn(editor.isActive("strike"), () => editor.chain().focus().toggleStrike().run(), <span className="text-xs line-through">S</span>, "Tachado")}
+      {btn(editor.isActive("subscript"), () => editor.chain().focus().toggleSubscript().run(), <span className="text-[10px]">X₂</span>, "Subíndice")}
+      {btn(editor.isActive("superscript"), () => editor.chain().focus().toggleSuperscript().run(), <span className="text-[10px]">X²</span>, "Superíndice")}
+
+      <div className="w-px h-4 bg-gray-200 mx-0.5" />
+
+      {/* Colors */}
+      <div className="relative">
+        <button
+          type="button"
+          onClick={() => { setShowColorPicker(showColorPicker === "text" ? null : "text"); setShowFontMenu(false); setShowTableMenu(false); }}
+          title="Color de texto"
+          className="p-1 rounded text-gray-500 hover:bg-gray-100"
+        >
+          <span className="text-xs font-bold" style={{ color: editor.getAttributes("textStyle").color || "#000" }}>A</span>
+        </button>
+        {showColorPicker === "text" && (
+          <div className="absolute top-full left-0 mt-1 bg-white border rounded-lg shadow-lg z-10 p-2 grid grid-cols-5 gap-1 w-fit">
+            {COLORS.map((c) => (
+              <button
+                key={c}
+                type="button"
+                onClick={() => { editor.chain().focus().setColor(c).run(); setShowColorPicker(null); }}
+                className="w-5 h-5 rounded border border-gray-200 hover:scale-110 transition"
+                style={{ backgroundColor: c }}
+              />
+            ))}
+          </div>
+        )}
+      </div>
+
+      <div className="relative">
+        <button
+          type="button"
+          onClick={() => { setShowColorPicker(showColorPicker === "bg" ? null : "bg"); setShowFontMenu(false); setShowTableMenu(false); }}
+          title="Color de fondo"
+          className="p-1 rounded text-gray-500 hover:bg-gray-100"
+        >
+          <span className="text-xs font-bold bg-yellow-200 px-0.5">A</span>
+        </button>
+        {showColorPicker === "bg" && (
+          <div className="absolute top-full left-0 mt-1 bg-white border rounded-lg shadow-lg z-10 p-2 grid grid-cols-5 gap-1 w-fit">
+            {COLORS.map((c) => (
+              <button
+                key={c}
+                type="button"
+                onClick={() => { editor.chain().focus().toggleHighlight({ color: c }).run(); setShowColorPicker(null); }}
+                className="w-5 h-5 rounded border border-gray-200 hover:scale-110 transition"
+                style={{ backgroundColor: c }}
+              />
+            ))}
+          </div>
+        )}
+      </div>
+
+      <div className="w-px h-4 bg-gray-200 mx-0.5" />
+
+      {/* Alignment */}
+      {btn(editor.isActive({ textAlign: "left" }), () => editor.chain().focus().setTextAlign("left").run(), icon("M4 6h16M4 12h10M4 18h14"), "Izquierda")}
+      {btn(editor.isActive({ textAlign: "center" }), () => editor.chain().focus().setTextAlign("center").run(), icon("M4 6h16M8 12h8M6 18h12"), "Centro")}
+      {btn(editor.isActive({ textAlign: "right" }), () => editor.chain().focus().setTextAlign("right").run(), icon("M4 6h16M10 12h10M6 18h14"), "Derecha")}
+
+      <div className="w-px h-4 bg-gray-200 mx-0.5" />
+
+      {/* Lists */}
+      {btn(editor.isActive("bulletList"), () => editor.chain().focus().toggleBulletList().run(), icon("M4 6h16M4 12h16M4 18h16"), "Lista")}
+      {btn(editor.isActive("orderedList"), () => editor.chain().focus().toggleOrderedList().run(), <span className="text-[10px] font-mono">1.</span>, "Lista numerada")}
+      {btn(editor.isActive("blockquote"), () => editor.chain().focus().toggleBlockquote().run(), icon("M4 6h16M4 12h8M4 18h16"), "Cita")}
+
+      <div className="w-px h-4 bg-gray-200 mx-0.5" />
+
+      {/* Link */}
+      {btn(editor.isActive("link"), () => {
+        if (editor.isActive("link")) {
+          editor.chain().focus().unsetLink().run();
+        } else {
+          const url = prompt("URL del enlace:");
+          if (url) editor.chain().focus().setLink({ href: url, target: "_blank" }).run();
+        }
+      }, icon("M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101"), "Enlace")}
+
+      {/* Image */}
+      {btn(false, onInsertImage, icon("M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"), "Imagen inline")}
+
+      {/* Table */}
+      <div className="relative">
+        <button
+          type="button"
+          onClick={() => { setShowTableMenu(!showTableMenu); setShowColorPicker(null); setShowFontMenu(false); }}
+          title="Tabla"
+          className="p-1 rounded text-gray-500 hover:bg-gray-100"
+        >
+          {icon("M3 10h18M3 14h18M3 6h18M3 18h18M10 6v12M17 6v12")}
+        </button>
+        {showTableMenu && (
+          <div className="absolute top-full right-0 mt-1 bg-white border rounded-lg shadow-lg z-10 py-1 w-44">
+            <button type="button" onClick={() => { editor.chain().focus().insertTable({ rows: 3, cols: 3 }).run(); setShowTableMenu(false); }} className="block w-full text-left px-3 py-1.5 text-sm hover:bg-gray-100">Insertar tabla 3×3</button>
+            <button type="button" onClick={() => { editor.chain().focus().insertTable({ rows: 2, cols: 2 }).run(); setShowTableMenu(false); }} className="block w-full text-left px-3 py-1.5 text-sm hover:bg-gray-100">Insertar tabla 2×2</button>
+            {editor.can().deleteTable() && (
+              <>
+                <div className="border-t my-1" />
+                <button type="button" onClick={() => { editor.chain().focus().addColumnAfter().run(); setShowTableMenu(false); }} className="block w-full text-left px-3 py-1.5 text-sm hover:bg-gray-100">+ Columna</button>
+                <button type="button" onClick={() => { editor.chain().focus().addRowAfter().run(); setShowTableMenu(false); }} className="block w-full text-left px-3 py-1.5 text-sm hover:bg-gray-100">+ Fila</button>
+                <button type="button" onClick={() => { editor.chain().focus().deleteColumn().run(); setShowTableMenu(false); }} className="block w-full text-left px-3 py-1.5 text-sm hover:bg-gray-100 text-red-500">- Columna</button>
+                <button type="button" onClick={() => { editor.chain().focus().deleteRow().run(); setShowTableMenu(false); }} className="block w-full text-left px-3 py-1.5 text-sm hover:bg-gray-100 text-red-500">- Fila</button>
+                <button type="button" onClick={() => { editor.chain().focus().deleteTable().run(); setShowTableMenu(false); }} className="block w-full text-left px-3 py-1.5 text-sm hover:bg-gray-100 text-red-500">Eliminar tabla</button>
+              </>
+            )}
+          </div>
+        )}
+      </div>
+
+      {/* Emoji */}
+      {btn(false, onToggleEmoji, <span className="text-sm">😊</span>, "Emojis")}
+
+      {/* Horizontal rule */}
+      {btn(false, () => editor.chain().focus().setHorizontalRule().run(), icon("M4 12h16"), "Línea horizontal")}
+    </div>
+  );
+}
+
+/* ── Emoji Picker (lazy loaded) ── */
+function EmojiPicker({ onSelect }) {
+  const [Picker, setPicker] = useState(null);
+  const [data, setData] = useState(null);
+
+  useEffect(() => {
+    Promise.all([
+      import("@emoji-mart/react"),
+      import("@emoji-mart/data"),
+    ]).then(([pickerMod, dataMod]) => {
+      setPicker(() => pickerMod.default);
+      setData(dataMod.default);
+    });
+  }, []);
+
+  if (!Picker || !data) return <div className="p-4 text-sm text-gray-400">Cargando emojis...</div>;
+
+  return (
+    <Picker
+      data={data}
+      onEmojiSelect={(emoji) => onSelect(emoji.native)}
+      theme="light"
+      locale="es"
+      previewPosition="none"
+      skinTonePosition="none"
+      maxFrequentRows={1}
+    />
+  );
+}
+
+/* ── Attachment item ── */
+function AttachmentItem({ file, onRemove }) {
+  const isImage = file.type?.startsWith("image/");
+  const isOversize = file.size > MAX_ATTACHMENT_SIZE;
+
+  return (
+    <div className={`flex items-center gap-2 border rounded-lg px-2.5 py-1.5 text-sm ${isOversize ? "border-red-300 bg-red-50" : "bg-gray-50"}`}>
+      {isImage && file.preview ? (
+        <img src={file.preview} alt="" className="h-8 w-8 rounded object-cover flex-shrink-0" />
+      ) : (
+        <svg className="h-4 w-4 text-gray-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={getFileIcon(file.type)} />
+        </svg>
       )}
-      {btn(editor.isActive("orderedList"), () => editor.chain().focus().toggleOrderedList().run(),
-        <span className="text-xs font-mono">1.</span>
+      <div className="min-w-0 flex-1">
+        <p className="truncate text-xs text-gray-700">{file.name}</p>
+        <p className={`text-[10px] ${isOversize ? "text-red-500 font-semibold" : "text-gray-400"}`}>
+          {formatSize(file.size)} {isOversize && "— Excede 40 MB"}
+        </p>
+      </div>
+      <button type="button" onClick={onRemove} className="text-gray-400 hover:text-red-500 flex-shrink-0">
+        <svg className="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+        </svg>
+      </button>
+    </div>
+  );
+}
+
+/* ── Signature selector ── */
+function SignatureSelector({ onSelect }) {
+  const [signatures, setSignatures] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetch("/api/email/signatures")
+      .then((r) => r.json())
+      .then((d) => setSignatures(d.signatures || []))
+      .catch(() => {})
+      .finally(() => setLoading(false));
+  }, []);
+
+  if (loading || !signatures.length) return null;
+
+  return (
+    <div className="border-t border-gray-200 px-3 py-1.5 bg-gray-50">
+      <div className="flex items-center gap-2">
+        <span className="text-xs text-gray-400">Firma:</span>
+        {signatures.map((sig) => (
+          <button
+            key={sig.id}
+            type="button"
+            onClick={() => onSelect(sig.body_html)}
+            className="text-xs text-[#0A1A44] hover:underline"
+          >
+            {sig.name}
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+/* ── Template selector ── */
+function TemplateSelector({ onLoad, editorContent, subject }) {
+  const [templates, setTemplates] = useState([]);
+  const [showMenu, setShowMenu] = useState(false);
+  const [showSave, setShowSave] = useState(false);
+  const [saveName, setSaveName] = useState("");
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    fetch("/api/email/templates")
+      .then((r) => r.json())
+      .then((d) => setTemplates(d.templates || []))
+      .catch(() => {});
+  }, []);
+
+  const handleSave = async () => {
+    if (!saveName.trim()) return;
+    setSaving(true);
+    try {
+      await fetch("/api/email/templates", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name: saveName, subject, body_html: editorContent }),
+      });
+      const res = await fetch("/api/email/templates");
+      const d = await res.json();
+      setTemplates(d.templates || []);
+      setShowSave(false);
+      setSaveName("");
+    } catch {}
+    setSaving(false);
+  };
+
+  return (
+    <div className="relative">
+      <button
+        type="button"
+        onClick={() => setShowMenu(!showMenu)}
+        className="text-xs text-gray-400 hover:text-gray-600 px-2 py-1"
+        title="Plantillas"
+      >
+        Plantillas ▾
+      </button>
+      {showMenu && (
+        <div className="absolute bottom-full right-0 mb-1 bg-white border rounded-lg shadow-lg z-20 py-1 w-52">
+          {templates.length > 0 && templates.map((t) => (
+            <button
+              key={t.id}
+              type="button"
+              onClick={() => { onLoad(t); setShowMenu(false); }}
+              className="block w-full text-left px-3 py-1.5 text-sm hover:bg-gray-100 truncate"
+            >
+              {t.name}
+            </button>
+          ))}
+          {templates.length === 0 && (
+            <p className="px-3 py-1.5 text-xs text-gray-400">Sin plantillas</p>
+          )}
+          <div className="border-t my-1" />
+          {showSave ? (
+            <div className="px-3 py-1.5 flex gap-1">
+              <input
+                type="text"
+                value={saveName}
+                onChange={(e) => setSaveName(e.target.value)}
+                placeholder="Nombre"
+                className="flex-1 text-xs border rounded px-1.5 py-1 outline-none"
+                onKeyDown={(e) => e.key === "Enter" && handleSave()}
+              />
+              <button type="button" onClick={handleSave} disabled={saving} className="text-xs text-[#0A1A44] font-semibold">
+                {saving ? "..." : "OK"}
+              </button>
+            </div>
+          ) : (
+            <button type="button" onClick={() => setShowSave(true)} className="block w-full text-left px-3 py-1.5 text-sm text-[#0A1A44] hover:bg-gray-100">
+              + Guardar como plantilla
+            </button>
+          )}
+        </div>
       )}
     </div>
   );
 }
 
+/* ── Main ComposeModal ── */
 export default function ComposeModal({ isOpen, onClose, replyTo, forwardEmail, onSent }) {
   const [to, setTo] = useState(replyTo?.from_email || "");
   const [cc, setCc] = useState("");
+  const [bcc, setBcc] = useState("");
   const [showCc, setShowCc] = useState(false);
+  const [showBcc, setShowBcc] = useState(false);
   const [subject, setSubject] = useState(() => {
     if (replyTo) return replyTo.subject?.startsWith("Re: ") ? replyTo.subject : `Re: ${replyTo.subject || ""}`;
     if (forwardEmail) return `Fwd: ${forwardEmail.subject || ""}`;
     return "";
   });
   const [sending, setSending] = useState(false);
+  const [attachments, setAttachments] = useState([]);
+  const [showEmoji, setShowEmoji] = useState(false);
+  const autoSaveTimer = useRef(null);
+  const draftIdRef = useRef(null);
 
   const initialContent = forwardEmail
     ? `<br/><br/><blockquote style="border-left:2px solid #ccc;padding-left:12px;color:#666;">
@@ -59,8 +462,21 @@ export default function ComposeModal({ isOpen, onClose, replyTo, forwardEmail, o
   const editor = useEditor({
     extensions: [
       StarterKit,
-      Link.configure({ openOnClick: false }),
+      LinkExt.configure({ openOnClick: false }),
       Placeholder.configure({ placeholder: "Escribe tu mensaje..." }),
+      Underline,
+      TextAlign.configure({ types: ["heading", "paragraph"] }),
+      TextStyle,
+      Color,
+      Highlight.configure({ multicolor: true }),
+      FontFamily,
+      Image.configure({ inline: true }),
+      Table.configure({ resizable: true }),
+      TableRow,
+      TableCell,
+      TableHeader,
+      Subscript,
+      Superscript,
     ],
     content: initialContent,
     editorProps: {
@@ -70,31 +486,111 @@ export default function ComposeModal({ isOpen, onClose, replyTo, forwardEmail, o
     },
   });
 
+  /* ── Dropzone ── */
+  const onDrop = useCallback((acceptedFiles) => {
+    const newFiles = acceptedFiles.map((f) =>
+      Object.assign(f, { preview: f.type.startsWith("image/") ? URL.createObjectURL(f) : null })
+    );
+    setAttachments((prev) => [...prev, ...newFiles]);
+  }, []);
+
+  const { getRootProps, getInputProps, isDragActive, open: openFileDialog } = useDropzone({
+    onDrop,
+    noClick: true,
+    noKeyboard: true,
+  });
+
+  const removeAttachment = useCallback((index) => {
+    setAttachments((prev) => {
+      const removed = prev[index];
+      if (removed?.preview) URL.revokeObjectURL(removed.preview);
+      return prev.filter((_, i) => i !== index);
+    });
+  }, []);
+
+  const totalSize = attachments.reduce((s, f) => s + f.size, 0);
+  const oversized = totalSize > MAX_TOTAL_SIZE;
+
+  /* ── Insert inline image ── */
+  const handleInsertImage = useCallback(() => {
+    const url = prompt("URL de la imagen:");
+    if (url && editor) {
+      editor.chain().focus().setImage({ src: url }).run();
+    }
+  }, [editor]);
+
+  /* ── Emoji ── */
+  const handleEmojiSelect = useCallback((native) => {
+    if (editor) editor.chain().focus().insertContent(native).run();
+    setShowEmoji(false);
+  }, [editor]);
+
+  /* ── Signature insert ── */
+  const handleSignatureInsert = useCallback((html) => {
+    if (!editor) return;
+    editor.chain().focus().command(({ tr, state }) => {
+      tr.insert(state.doc.content.size, state.schema.text("\n"));
+      return true;
+    }).insertContent(html).run();
+  }, [editor]);
+
+  /* ── Template load ── */
+  const handleTemplateLoad = useCallback((template) => {
+    if (template.subject) setSubject(template.subject);
+    if (template.body_html && editor) {
+      editor.commands.setContent(template.body_html);
+    }
+  }, [editor]);
+
+  /* ── Draft auto-save (every 30s) ── */
+  useEffect(() => {
+    if (!isOpen || replyTo) return;
+    autoSaveTimer.current = setInterval(async () => {
+      const html = editor?.getHTML() || "";
+      const text = editor?.getText() || "";
+      if (!html || html === "<p></p>") return;
+      try {
+        const toEmails = to.split(",").map((e) => e.trim()).filter(Boolean);
+        await fetch("/api/email", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ to: toEmails, subject, html, text, isDraft: true }),
+        });
+      } catch {}
+    }, 30000);
+    return () => clearInterval(autoSaveTimer.current);
+  }, [isOpen, to, subject, editor, replyTo]);
+
+  /* ── Send ── */
   const handleSend = useCallback(async () => {
-    if (!to.trim()) return;
+    if (!to.trim() || oversized) return;
     setSending(true);
     try {
       const toEmails = to.split(",").map((e) => e.trim()).filter(Boolean);
       const ccEmails = cc.split(",").map((e) => e.trim()).filter(Boolean);
+      const bccEmails = bcc.split(",").map((e) => e.trim()).filter(Boolean);
       const html = editor?.getHTML() || "";
       const text = editor?.getText() || "";
 
-      const payload = {
-        to: toEmails,
-        subject,
-        html,
-        text,
-      };
+      // Convert attachments to base64
+      const attPayload = await Promise.all(
+        attachments.map(async (f) => {
+          const buf = await f.arrayBuffer();
+          const base64 = btoa(String.fromCharCode(...new Uint8Array(buf)));
+          return { filename: f.name, content: base64, type: f.type };
+        })
+      );
+
+      const payload = { to: toEmails, subject, html, text };
       if (ccEmails.length) payload.cc = ccEmails;
+      if (bccEmails.length) payload.bcc = bccEmails;
+      if (attPayload.length) payload.attachments = attPayload;
       if (replyTo) {
         payload.in_reply_to = replyTo.message_id;
         payload.thread_id = replyTo.thread_id || replyTo.id;
       }
 
-      const endpoint = replyTo
-        ? `/api/email/${replyTo.id}/reply`
-        : "/api/email";
-
+      const endpoint = replyTo ? `/api/email/${replyTo.id}/reply` : "/api/email";
       const res = await fetch(endpoint, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -106,6 +602,8 @@ export default function ComposeModal({ isOpen, onClose, replyTo, forwardEmail, o
         throw new Error(err.error || "Error al enviar");
       }
 
+      // Cleanup previews
+      attachments.forEach((f) => f.preview && URL.revokeObjectURL(f.preview));
       onSent?.();
       onClose();
     } catch (error) {
@@ -113,8 +611,9 @@ export default function ComposeModal({ isOpen, onClose, replyTo, forwardEmail, o
     } finally {
       setSending(false);
     }
-  }, [to, cc, subject, editor, replyTo, onSent, onClose]);
+  }, [to, cc, bcc, subject, editor, replyTo, attachments, oversized, onSent, onClose]);
 
+  /* ── Save draft ── */
   const handleDraft = useCallback(async () => {
     try {
       const toEmails = to.split(",").map((e) => e.trim()).filter(Boolean);
@@ -136,16 +635,32 @@ export default function ComposeModal({ isOpen, onClose, replyTo, forwardEmail, o
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end justify-end p-4">
-      <div className="w-full max-w-lg bg-white rounded-t-xl shadow-2xl border border-gray-200 flex flex-col max-h-[80vh]">
+    <div className="fixed inset-0 z-50 flex items-end justify-end p-4" {...getRootProps()}>
+      <input {...getInputProps()} />
+
+      {/* Drag overlay */}
+      {isDragActive && (
+        <div className="absolute inset-0 bg-[#0A1A44]/20 z-50 flex items-center justify-center rounded-xl border-2 border-dashed border-[#0A1A44]">
+          <p className="text-lg font-semibold text-[#0A1A44] bg-white/90 px-6 py-3 rounded-lg">
+            Suelta los archivos aquí para adjuntar
+          </p>
+        </div>
+      )}
+
+      <div className="w-full max-w-2xl bg-white rounded-t-xl shadow-2xl border border-gray-200 flex flex-col max-h-[85vh]">
         {/* Header */}
-        <div className="flex items-center justify-between px-4 py-3 bg-[#0A1A44] rounded-t-xl">
+        <div className="flex items-center justify-between px-4 py-2.5 bg-[#0A1A44] rounded-t-xl">
           <h3 className="text-white font-semibold text-sm">
             {replyTo ? "Responder" : forwardEmail ? "Reenviar" : "Nuevo mensaje"}
           </h3>
           <div className="flex items-center gap-1">
+            <TemplateSelector
+              onLoad={handleTemplateLoad}
+              editorContent={editor?.getHTML() || ""}
+              subject={subject}
+            />
             <button onClick={handleDraft} className="text-white/70 hover:text-white text-xs px-2 py-1">
-              Guardar borrador
+              Borrador
             </button>
             <button onClick={onClose} className="text-white/70 hover:text-white">
               <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -156,60 +671,88 @@ export default function ComposeModal({ isOpen, onClose, replyTo, forwardEmail, o
         </div>
 
         {/* Fields */}
-        <div className="border-b border-gray-200">
-          <div className="flex items-center px-4 py-2 border-b border-gray-100">
-            <span className="text-sm text-gray-500 w-12">Para:</span>
-            <input
-              type="text"
-              value={to}
-              onChange={(e) => setTo(e.target.value)}
-              placeholder="email@ejemplo.com"
-              className="flex-1 text-sm outline-none"
-            />
-            {!showCc && (
-              <button onClick={() => setShowCc(true)} className="text-xs text-gray-400 hover:text-gray-600">
-                CC
-              </button>
-            )}
+        <div className="border-b border-gray-200 text-sm">
+          <div className="flex items-center px-4 py-1.5 border-b border-gray-100">
+            <span className="text-gray-500 w-12">Para:</span>
+            <input type="text" value={to} onChange={(e) => setTo(e.target.value)} placeholder="email@ejemplo.com" className="flex-1 outline-none text-sm" />
+            <div className="flex gap-1">
+              {!showCc && <button type="button" onClick={() => setShowCc(true)} className="text-xs text-gray-400 hover:text-gray-600">CC</button>}
+              {!showBcc && <button type="button" onClick={() => setShowBcc(true)} className="text-xs text-gray-400 hover:text-gray-600">BCC</button>}
+            </div>
           </div>
           {showCc && (
-            <div className="flex items-center px-4 py-2 border-b border-gray-100">
-              <span className="text-sm text-gray-500 w-12">CC:</span>
-              <input
-                type="text"
-                value={cc}
-                onChange={(e) => setCc(e.target.value)}
-                placeholder="email@ejemplo.com"
-                className="flex-1 text-sm outline-none"
-              />
+            <div className="flex items-center px-4 py-1.5 border-b border-gray-100">
+              <span className="text-gray-500 w-12">CC:</span>
+              <input type="text" value={cc} onChange={(e) => setCc(e.target.value)} placeholder="email@ejemplo.com" className="flex-1 outline-none text-sm" />
             </div>
           )}
-          <div className="flex items-center px-4 py-2">
-            <span className="text-sm text-gray-500 w-12">Asunto:</span>
-            <input
-              type="text"
-              value={subject}
-              onChange={(e) => setSubject(e.target.value)}
-              placeholder="Asunto del correo"
-              className="flex-1 text-sm outline-none"
-            />
+          {showBcc && (
+            <div className="flex items-center px-4 py-1.5 border-b border-gray-100">
+              <span className="text-gray-500 w-12">BCC:</span>
+              <input type="text" value={bcc} onChange={(e) => setBcc(e.target.value)} placeholder="email@ejemplo.com" className="flex-1 outline-none text-sm" />
+            </div>
+          )}
+          <div className="flex items-center px-4 py-1.5">
+            <span className="text-gray-500 w-12">Asunto:</span>
+            <input type="text" value={subject} onChange={(e) => setSubject(e.target.value)} placeholder="Asunto del correo" className="flex-1 outline-none text-sm" />
           </div>
         </div>
 
+        {/* Toolbar */}
+        <EditorToolbar
+          editor={editor}
+          onInsertImage={handleInsertImage}
+          onToggleEmoji={() => setShowEmoji(!showEmoji)}
+        />
+
+        {/* Emoji picker */}
+        {showEmoji && (
+          <div className="absolute bottom-20 right-8 z-50 shadow-xl rounded-lg overflow-hidden">
+            <EmojiPicker onSelect={handleEmojiSelect} />
+          </div>
+        )}
+
         {/* Editor */}
-        <EditorToolbar editor={editor} />
         <div className="flex-1 overflow-y-auto">
           <EditorContent editor={editor} />
         </div>
 
+        {/* Signature */}
+        <SignatureSelector onSelect={handleSignatureInsert} />
+
+        {/* Attachments */}
+        {attachments.length > 0 && (
+          <div className="border-t border-gray-200 px-3 py-2 bg-gray-50 max-h-32 overflow-y-auto">
+            <div className="flex items-center justify-between mb-1">
+              <span className="text-xs text-gray-500">{attachments.length} adjunto(s) — {formatSize(totalSize)}</span>
+              {oversized && <span className="text-xs text-red-500 font-semibold">Excede el límite de 40 MB</span>}
+            </div>
+            <div className="flex flex-wrap gap-1.5">
+              {attachments.map((f, i) => (
+                <AttachmentItem key={`${f.name}-${i}`} file={f} onRemove={() => removeAttachment(i)} />
+              ))}
+            </div>
+          </div>
+        )}
+
         {/* Footer */}
-        <div className="flex items-center justify-between px-4 py-3 border-t border-gray-200 bg-gray-50">
+        <div className="flex items-center justify-between px-4 py-2.5 border-t border-gray-200 bg-gray-50">
           <div className="flex items-center gap-2">
-            {/* Future: attach file button */}
+            <button
+              type="button"
+              onClick={openFileDialog}
+              className="flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-700 px-2 py-1 rounded hover:bg-gray-100"
+              title="Adjuntar archivo"
+            >
+              <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" />
+              </svg>
+              Adjuntar
+            </button>
           </div>
           <button
             onClick={handleSend}
-            disabled={sending || !to.trim()}
+            disabled={sending || !to.trim() || oversized}
             className="flex items-center gap-2 rounded-lg bg-[#0A1A44] px-4 py-2 text-sm font-semibold text-white hover:bg-[#0A1A44]/90 disabled:opacity-50 transition"
           >
             {sending ? (
