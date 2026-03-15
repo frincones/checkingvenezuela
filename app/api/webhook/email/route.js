@@ -89,6 +89,19 @@ export async function POST(request) {
           url: a.download_url,
         }));
 
+        // Resolve mailbox by matching recipient address
+        let mailboxId = null;
+        const allRecipients = toEmails.map((e) => e.email?.toLowerCase()).filter(Boolean);
+        if (allRecipients.length > 0) {
+          const { data: mailbox } = await supabase
+            .from("mailboxes")
+            .select("id")
+            .in("address", allRecipients)
+            .limit(1)
+            .single();
+          if (mailbox) mailboxId = mailbox.id;
+        }
+
         await supabase.from("emails").insert({
           resend_id: emailId,
           direction: "inbound",
@@ -106,6 +119,7 @@ export async function POST(request) {
           thread_id: threadId,
           in_reply_to: fullEmail?.in_reply_to || null,
           message_id: fullEmail?.message_id || null,
+          mailbox_id: mailboxId,
         });
         break;
       }
