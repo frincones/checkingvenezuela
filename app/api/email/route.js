@@ -1,0 +1,183 @@
+/**
+ * Email CRUD API
+ * GET  /api/email — list emails (folder, search, starred)
+ * POST /api/email — send/compose a new email
+ */
+
+import { createClient, createAdminClient } from "@/lib/db/supabase/server";
+import { NextResponse } from "next/server";
+import { Resend } from "resend";
+
+function getResend() {
+  return new Resend(process.env.RESEND_API_KEY);
+}
+const FROM_EMAIL = process.env.RESEND_FROM_EMAIL || "ventas@venezuelavoyages.com";
+
+export async function GET(request) {
+  try {
+    const supabase = await createClient();
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    if (authError || !user) {
+      return NextResponse.json({ error: "No autorizado" }, { status: 401 });
+    }
+
+    const { searchParams } = new URL(request.url);
+    const folder = searchParams.get("folder") || "inbox";
+    const search = searchParams.get("search") || "";
+    const starred = searchParams.get("starred");
+    const page = parseInt(searchParams.get("page") || "1");
+    const limit = parseInt(searchParams.get("limit") || "50");
+    const offset = (page - 1) * limit;
+
+    const adminClient = createAdminClient();
+    let query = adminClient
+      .from("emails")
+      .select("id, resend_id, direction, folder, from_email, from_name, to_emails, subject, body_text, status, is_read, is_starred, thread_id, attachments, created_at", { count: "exact" })
+      .eq("folder", folder)
+      .order("created_at", { ascending: false })
+      .range(offset, offset + limit - 1);
+
+    if (starred === "true") {
+      query = query.eq("is_starred", true);
+    }
+
+    if (search) {
+      query = query.or(`subject.ilike.%${search}%,from_email.ilike.%${search}%,body_text.ilike.%${search}%`);
+    }
+
+    const { data: emails, error, count } = await query;
+
+    if (error) {
+      return NextResponse.json({ error: error.message }, { status: 500 });
+    }
+
+    // Count unread per folder
+    const { data: unreadCounts } = await adminClient
+      .from("emails")
+      .select("folder")
+      .eq("is_read", false)
+      .not("folder", "eq", "trash");
+
+    const unreadByFolder = {};
+    (unreadCounts || []).forEach((e) => {
+      unreadByFolder[e.folder] = (unreadByFolder[e.folder] || 0) + 1;
+    });
+
+    return NextResponse.json({
+      emails: emails || [],
+      total: count || 0,
+      page,
+      limit,
+      unread: unreadByFolder,
+    });
+  } catch (error) {
+    console.error("GET /api/email error:", error);
+    return NextResponse.json({ error: "Error interno" }, { status: 500 });
+  }
+}
+
+export async function POST(request) {
+  try {
+    const supabase = await createClient();
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    if (authError || !user) {
+      return NextResponse.json({ error: "No autorizado" }, { status: 401 });
+    }
+
+    const body = await request.json();
+    const { to, cc, bcc, subject, html, text, reply_to, attachments, isDraft } = body;
+
+    if (!isDraft && (!to || to.length === 0)) {
+      return NextResponse.json({ error: "Destinatario requerido" }, { status: 400 });
+    }
+
+    const adminClient = createAdminClient();
+    const toEmails = (Array.isArray(to) ? to : [to]).map((e) =>
+      typeof e === "string" ? { email: e } : e
+    );
+
+    // Save as draft
+    if (isDraft) {
+      const { data: draft, error: draftError } = await adminClient
+        .from("emails")
+        .insert({
+          direction: "outbound",
+          folder: "drafts",
+          from_email: FROM_EMAIL,
+          from_name: "Venezuela Voyages",
+          to_emails: toEmails,
+          cc: cc || [],
+          bcc: bcc || [],
+          subject: subject || "",
+          body_html: html || "",
+          body_text: text || "",
+          status: "draft",
+          is_read: true,
+        })
+        .select("id")
+        .single();
+
+      if (draftError) {
+        return NextResponse.json({ error: draftError.message }, { status: 500 });
+      }
+      return NextResponse.json({ success: true, id: draft.id, isDraft: true });
+    }
+
+    // Send via Resend
+    const emailPayload = {
+      from: `Venezuela Voyages <${FROM_EMAIL}>`,
+      to: toEmails.map((e) => e.email),
+      subject: subject || "(Sin asunto)",
+      html: html || text || "",
+    };
+
+    if (cc?.length) emailPayload.cc = cc;
+    if (bcc?.length) emailPayload.bcc = bcc;
+    if (reply_to) emailPayload.reply_to = reply_to;
+    if (attachments?.length) emailPayload.attachments = attachments;
+
+    const { data: emailData, error: emailError } = await getResend().emails.send(emailPayload);
+
+    if (emailError) {
+      return NextResponse.json({ error: emailError.message }, { status: 500 });
+    }
+
+    // Save to DB
+    const { data: saved } = await adminClient
+      .from("emails")
+      .insert({
+        resend_id: emailData?.id,
+        direction: "outbound",
+        folder: "sent",
+        from_email: FROM_EMAIL,
+        from_name: "Venezuela Voyages",
+        to_emails: toEmails,
+        cc: cc || [],
+        bcc: bcc || [],
+        subject: subject || "(Sin asunto)",
+        body_html: html || "",
+        body_text: text || "",
+        status: "sent",
+        is_read: true,
+        reply_to: reply_to || null,
+        in_reply_to: body.in_reply_to || null,
+        thread_id: body.thread_id || null,
+        attachments: (attachments || []).map((a) => ({
+          filename: a.filename,
+          size: a.content?.length || 0,
+          content_type: a.type || "application/octet-stream",
+        })),
+      })
+      .select("id")
+      .single();
+
+    return NextResponse.json({
+      success: true,
+      id: saved?.id,
+      resend_id: emailData?.id,
+    });
+  } catch (error) {
+    console.error("POST /api/email error:", error);
+    return NextResponse.json({ error: "Error interno" }, { status: 500 });
+  }
+}
