@@ -16,6 +16,19 @@ import Link from "next/link";
 import { getAvailableSeats } from "@/lib/services/flights";
 import { strToObjectId } from "@/lib/db/utilsDB";
 
+export async function generateMetadata({ params }) {
+  try {
+    const flight = await getOneDoc("Flight", { flightNumber: params.flightNumber }, [], 0);
+    if (!flight) return { title: "Vuelo no encontrado | Venezuela Voyages" };
+    return {
+      title: `Vuelo ${flight.flightNumber} - ${flight.departureCity} a ${flight.arrivalCity} | Venezuela Voyages`,
+      description: `Vuelo ${flight.flightNumber} de ${flight.departureCity} a ${flight.arrivalCity}. Reserva con Venezuela Voyages.`,
+    };
+  } catch {
+    return { title: "Vuelo | Venezuela Voyages" };
+  }
+}
+
 export default async function FlightDetailsPage({ params }) {
   const session = await auth();
   const loggedIn = !!session?.user;

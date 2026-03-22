@@ -344,10 +344,11 @@ function drawDestination(doc, page, y, item, fonts, logoImage) {
   safe(page, "Sobre el Destino", { x: PAD, y, size: 18, font: fonts.bold, color: C.textPrimary });
   y -= 26;
 
-  // Description (Pencil: 13px, lineHeight 1.6)
-  if (dest.description) {
-    const lines = wrap(dest.description, fonts.reg, 11, CONTENT_W);
-    for (const ln of lines.slice(0, 6)) {
+  // Description — prefer cultural_description from metadata if available
+  const descText = dest.metadata?.cultural_description || dest.description;
+  if (descText) {
+    const lines = wrap(descText, fonts.reg, 11, CONTENT_W);
+    for (const ln of lines.slice(0, 8)) {
       ({ page, y } = ensureSpace(doc, page, y, 18, fonts, logoImage));
       safe(page, ln, { x: PAD, y, size: 11, font: fonts.reg, color: C.textMuted });
       y -= 18; // lineHeight ~1.6
@@ -378,6 +379,59 @@ function drawDestination(doc, page, y, item, fonts, logoImage) {
       centerText(page, t, cx + cw / 2, y - ch / 2 - 4, 9, fonts.bold, C.textPrimary);
     }
     y -= ch + 12;
+  }
+
+  // Must-see places from metadata (if available)
+  const places = dest.metadata?.must_see_places;
+  if (places?.length > 0) {
+    y -= 4;
+    ({ page, y } = ensureSpace(doc, page, y, 30, fonts, logoImage));
+    safe(page, "LUGARES IMPRESCINDIBLES", { x: PAD, y, size: 9, font: fonts.bold, color: C.secondary });
+    y -= 18;
+    for (const p of places.slice(0, 6)) {
+      ({ page, y } = ensureSpace(doc, page, y, 14, fonts, logoImage));
+      safe(page, `-  ${sanitize(p.name || "")}`, { x: PAD, y, size: 9.5, font: fonts.bold, color: C.textPrimary });
+      y -= 14;
+      if (p.description) {
+        const pLines = wrap(p.description, fonts.reg, 9, CONTENT_W - 16);
+        for (const ln of pLines.slice(0, 2)) {
+          ({ page, y } = ensureSpace(doc, page, y, 13, fonts, logoImage));
+          safe(page, ln, { x: PAD + 16, y, size: 9, font: fonts.reg, color: C.textMuted });
+          y -= 13;
+        }
+      }
+    }
+    y -= 8;
+  }
+
+  // Practical info from metadata (if available)
+  const pInfo = dest.metadata?.practical_info;
+  if (pInfo && (pInfo.climate || pInfo.currency || pInfo.how_to_get_there)) {
+    ({ page, y } = ensureSpace(doc, page, y, 30, fonts, logoImage));
+    safe(page, "INFORMACION PRACTICA", { x: PAD, y, size: 9, font: fonts.bold, color: C.secondary });
+    y -= 18;
+    const infoItems = [
+      { label: "Clima", val: pInfo.climate },
+      { label: "Moneda", val: pInfo.currency },
+      { label: "Como llegar", val: pInfo.how_to_get_there },
+      { label: "Transporte", val: pInfo.local_transport },
+      { label: "Consejo", val: pInfo.useful_tips },
+    ];
+    for (const item of infoItems) {
+      if (!item.val) continue;
+      ({ page, y } = ensureSpace(doc, page, y, 14, fonts, logoImage));
+      safe(page, `${item.label}:`, { x: PAD, y, size: 9, font: fonts.bold, color: C.textPrimary });
+      const iLines = wrap(item.val, fonts.reg, 9, CONTENT_W - 80);
+      const firstLine = iLines[0] || "";
+      safe(page, firstLine, { x: PAD + 75, y, size: 9, font: fonts.reg, color: C.textMuted });
+      y -= 14;
+      for (const ln of iLines.slice(1, 3)) {
+        ({ page, y } = ensureSpace(doc, page, y, 13, fonts, logoImage));
+        safe(page, ln, { x: PAD + 75, y, size: 9, font: fonts.reg, color: C.textMuted });
+        y -= 13;
+      }
+    }
+    y -= 8;
   }
 
   y -= 16;
@@ -874,6 +928,36 @@ function drawSimpleTable(doc, page, y, q, fonts) {
   return { page, y };
 }
 
+// ── POLICIES ──
+
+function drawPolicies(doc, page, y, fonts, logoImage) {
+  ({ page, y } = ensureSpace(doc, page, y, 120, fonts, logoImage));
+
+  y -= 8;
+  hLine(page, PAD, MARGIN_R, y + 6, C.border, 0.5);
+  y -= 16;
+
+  safe(page, "POLITICAS Y CONDICIONES", { x: PAD, y, size: 9, font: fonts.bold, color: C.textMuted });
+  y -= 18;
+
+  const policies = [
+    { label: "Politica de Devolucion y Reembolso", url: "venezuelavoyages.com/return-policy" },
+    { label: "Politicas de Seguridad", url: "venezuelavoyages.com/security-policy" },
+    { label: "Terminos y Condiciones", url: "venezuelavoyages.com/terms-of-service" },
+    { label: "Politica de Privacidad", url: "venezuelavoyages.com/privacy-policy" },
+  ];
+
+  for (const p of policies) {
+    ({ page, y } = ensureSpace(doc, page, y, 16, fonts, logoImage));
+    safe(page, `-  ${p.label}`, { x: PAD, y, size: 9, font: fonts.reg, color: C.textPrimary });
+    rightText(page, p.url, MARGIN_R, y, 8, fonts.reg, C.secondary);
+    y -= 16;
+  }
+
+  y -= 8;
+  return { page, y };
+}
+
 // ── MAIN GENERATOR ──
 
 async function generatePDF(q) {
@@ -894,6 +978,7 @@ async function generatePDF(q) {
     drawSimpleFooter(page, fonts);
     ({ page, y } = drawSimpleTable(doc, page, y, q, fonts));
     ({ page, y } = drawNotes(doc, page, y, q, fonts));
+    ({ page, y } = drawPolicies(doc, page, y, fonts));
   } else {
     for (const item of enriched) {
       let page = doc.addPage([PAGE_W, PAGE_H]);
@@ -915,6 +1000,7 @@ async function generatePDF(q) {
       ({ page, y } = drawPrice(doc, page, y, q, fonts, logo));
       ({ page, y } = drawConditions(doc, page, y, q, fonts, logo));
       ({ page, y } = drawNotes(doc, page, y, q, fonts, logo));
+      ({ page, y } = drawPolicies(doc, page, y, fonts, logo));
     }
   }
 

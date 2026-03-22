@@ -77,8 +77,11 @@ export async function VenezuelaDestinations() {
                     key={destination.id}
                     className="group overflow-hidden transition-all hover:shadow-xl"
                   >
-                    {/* Imagen */}
-                    <div className="relative h-48 overflow-hidden">
+                    {/* Imagen - clickeable a página del destino */}
+                    <Link
+                      href={destination.slug ? `/destinos/${destination.slug}` : "#"}
+                      className="relative block h-48 overflow-hidden"
+                    >
                       <Image
                         src={destination.image}
                         alt={destination.name}
@@ -94,7 +97,7 @@ export async function VenezuelaDestinations() {
                           {destination.name}
                         </h4>
                       </div>
-                    </div>
+                    </Link>
 
                     <CardContent className="p-4">
                       {/* Tags */}

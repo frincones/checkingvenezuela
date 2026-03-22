@@ -70,5 +70,17 @@
   "support": {
     "title": "Support",
     "path": "/support"
+  },
+  "return-policy": {
+    "title": "Devolución y Reembolso",
+    "path": "/return-policy"
+  },
+  "security-policy": {
+    "title": "Políticas de Seguridad",
+    "path": "/security-policy"
+  },
+  "blog": {
+    "title": "Blog",
+    "path": "/blog"
   }
 }

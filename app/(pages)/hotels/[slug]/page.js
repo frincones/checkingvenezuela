@@ -38,6 +38,28 @@ import { cookies } from "next/headers";
 import validateHotelSearchParams from "@/lib/zodSchemas/hotelSearchParams";
 import NotFound from "@/app/not-found";
 import routes from "@/data/routes.json";
+
+export async function generateMetadata({ params }) {
+  try {
+    const hotel = await getHotel(params.slug);
+    if (!hotel) return { title: "Hotel no encontrado | Venezuela Voyages" };
+    return {
+      title: `${hotel.name} | Venezuela Voyages`,
+      description: hotel.description
+        ? hotel.description.substring(0, 160)
+        : `Reserva ${hotel.name} con Venezuela Voyages. Alojamiento de calidad.`,
+      openGraph: {
+        title: `${hotel.name} | Venezuela Voyages`,
+        description: hotel.description?.substring(0, 160) || `Hotel ${hotel.name}`,
+        images: hotel.images?.[0] ? [hotel.images[0]] : [],
+        locale: "es_VE",
+      },
+    };
+  } catch {
+    return { title: "Hotel | Venezuela Voyages" };
+  }
+}
+
 export default async function HotelDetailsPage({ params }) {
   const session = await auth();
   const slug = params.slug;

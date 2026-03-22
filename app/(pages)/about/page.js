@@ -1,9 +1,17 @@
 import { ContactCTA } from "@/components/pages/about/ContactCTA";
 
 export const metadata = {
-  title: "Our Story | Venezuela Voyages",
+  title: "Nuestra Historia | Venezuela Voyages",
   description:
-    "Discover the story of Venezuela Voyages, 17 years of experience crafting epic expeditions across Venezuela.",
+    "Conoce la historia de Venezuela Voyages, 17 años de experiencia organizando expediciones por Venezuela. Tu agencia de viajes de confianza.",
+  keywords: ["venezuela voyages", "agencia de viajes", "nuestra historia", "sobre nosotros", "viajes venezuela"],
+  openGraph: {
+    title: "Nuestra Historia | Venezuela Voyages",
+    description:
+      "17 años de experiencia organizando expediciones por Venezuela. Conoce nuestra historia.",
+    locale: "es_VE",
+    type: "website",
+  },
 };
 
 export default function AboutPage() {

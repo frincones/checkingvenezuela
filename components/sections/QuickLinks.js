@@ -77,6 +77,10 @@ export function QuickLinks() {
         href: "/about",
       },
       {
+        name: "Blog",
+        href: "/blog",
+      },
+      {
         name: "Work With Us",
         href: "#",
       },
@@ -168,9 +172,43 @@ export function QuickLinks() {
           <h3 className="mb-[16px] font-bold text-accent">Contact</h3>
           <div className="flex flex-col gap-3">
             <FooterWhatsAppLink />
-            <span className="text-[0.875rem] font-medium text-white/40">
-              Email: Coming Soon
-            </span>
+            <a
+              href="mailto:info@venezuelavoyages.com"
+              className="text-[0.875rem] font-medium text-white/70 transition-colors hover:text-accent"
+            >
+              info@venezuelavoyages.com
+            </a>
+          </div>
+        </div>
+
+        {/* Legal section */}
+        <div className="text-[0.875rem] font-medium text-white/70">
+          <h3 className="mb-[16px] font-bold text-accent">Legal</h3>
+          <div className="flex flex-col gap-3">
+            <Link
+              href="/privacy-policy"
+              className="text-[0.875rem] font-medium text-white/70 transition-colors hover:text-accent"
+            >
+              Política de Privacidad
+            </Link>
+            <Link
+              href="/terms-of-service"
+              className="text-[0.875rem] font-medium text-white/70 transition-colors hover:text-accent"
+            >
+              Términos y Condiciones
+            </Link>
+            <Link
+              href="/return-policy"
+              className="text-[0.875rem] font-medium text-white/70 transition-colors hover:text-accent"
+            >
+              Devolución y Reembolso
+            </Link>
+            <Link
+              href="/security-policy"
+              className="text-[0.875rem] font-medium text-white/70 transition-colors hover:text-accent"
+            >
+              Políticas de Seguridad
+            </Link>
           </div>
         </div>
       </div>

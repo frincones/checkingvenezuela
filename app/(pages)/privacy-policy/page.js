@@ -1,147 +1,183 @@
 import "./privacy-policy.css";
+
+export const metadata = {
+  title: "Política de Privacidad | Venezuela Voyages",
+  description:
+    "Política de privacidad de Venezuela Voyages. Conoce cómo recopilamos, usamos y protegemos tu información personal.",
+};
+
 export default function PrivacyPolicyPage() {
   return (
     <div
-      id={"privacy-policy-container"}
-      className={"mx-auto w-[90%] lg:mb-[80px] mb-[40px] mt-5"}
+      id="privacy-policy-container"
+      className="mx-auto w-[90%] lg:mb-[80px] mb-[40px] mt-5"
     >
-      <h1>Privacy Policy</h1>
+      <h1>Política de Privacidad</h1>
       <p>
-        <strong>Effective Date: 2024-12-03</strong>
+        <strong>Venezuela Voyages</strong>
       </p>
 
-      <h2>1. Information We Collect</h2>
-      <h3>1.1 Information You Provide</h3>
-      <ol>
-        <li>
-          <b>Account Information:</b> First name, last name, email, phone number
-          (optional).
-        </li>
-        <li>
-          <b>Profile Data:</b> Profile picture and cover photo.
-        </li>
-        <li>
-          <b>Booking and Search Data:</b> Flight and hotel search queries,
-          booking details.
-        </li>
-        <li>
-          <b>Subscription:</b> Email addresses provided for subscribing to
-          updates.
-        </li>
-      </ol>
-
-      <h3>1.2 Automatically Collected Information</h3>
-      <ol>
-        <li>
-          <b>Cookies:</b>
-          <ol>
-            <li>
-              A cookie is set to track the client’s timezone for localizing
-              flight times.
-            </li>
-            <li>
-              Temporary cookies are used for password reset and email
-              verification, which are deleted after the process completes.
-            </li>
-          </ol>
-        </li>
-        <li>
-          <b>Analytics Data:</b>
-          <ol>
-            <li>Visitor behavior is tracked using analytics services.</li>
-            <li>
-              Hosting provider (Vercel) also collects visitor behavior data.
-            </li>
-          </ol>
-        </li>
-      </ol>
-
-      <h3>1.3 Third-Party Services</h3>
-      <ol>
-        <li>
-          <b>Mailjet:</b> Used for sending emails, which may collect information
-          independently.
-        </li>
-        <li>
-          <b>Firebase Storage:</b> Stores profile and cover photos.
-        </li>
-        <li>
-          <b>MongoDB:</b> Used as the primary database for storing user and
-          booking data.
-        </li>
-      </ol>
-
-      <h2>2. How We Use Your Information</h2>
-      <ol>
-        <li>Provide and improve our flight and hotel booking services.</li>
-        <li>Send updates, verifications, and communications using Mailjet.</li>
-        <li>
-          Customize flight and hotel search results based on timezone and
-          preferences.
-        </li>
-      </ol>
-
-      <h2>3. Sharing Your Information</h2>
-      <div>
-        <b>We may share your data with:</b>
-        <ol>
-          <li>
-            <b>Service Providers:</b> Mailjet, Firebase, MongoDB, and analytics
-            services to deliver our services.
-          </li>
-          <li>
-            <b>Legal Authorities:</b> As required by law.
-          </li>
-        </ol>
-      </div>
-
-      <h2>4. Cookies and Tracking</h2>
       <p>
-        We use cookies to track user timezone for displaying local times and
-        manage password resets and email verifications temporarily. You can
-        control cookies through your browser settings.
-      </p>
-
-      <h2>5. Data Security</h2>
-      <p>
-        We take reasonable measures to protect your data. However, as this is a
-        development project, users should avoid providing real sensitive
-        information, including card details.
-      </p>
-
-      <h2>6. User Rights</h2>
-      <ol>
-        <li>Access, correct, or delete your personal data.</li>
-        <li>Withdraw consent for email communications.</li>
-      </ol>
-      <p>
-        For requests, contact us at{" "}
-        <strong>
-          <a href="mailto:example@email.com">example@email.com</a>
-        </strong>
+        En Venezuela Voyages, la protección de tu información personal es
+        fundamental. Esta política describe cómo recopilamos, utilizamos y
+        protegemos los datos que nos proporcionas al usar nuestro sitio web{" "}
+        <a href="https://www.venezuelavoyages.com">
+          www.venezuelavoyages.com
+        </a>
         .
       </p>
 
-      <h2>7. Disclaimer</h2>
+      <h2>1. Información que Recopilamos</h2>
+
+      <h3>1.1 Información que Proporcionas</h3>
+      <ol>
+        <li>
+          <b>Información de Cuenta:</b> Nombre completo, correo electrónico,
+          número de teléfono.
+        </li>
+        <li>
+          <b>Datos de Perfil:</b> Foto de perfil y foto de portada.
+        </li>
+        <li>
+          <b>Datos de Búsqueda y Reservas:</b> Consultas de vuelos, hoteles y
+          paquetes turísticos, detalles de reservas.
+        </li>
+        <li>
+          <b>Suscripción:</b> Correo electrónico proporcionado para recibir
+          actualizaciones y promociones.
+        </li>
+        <li>
+          <b>Documentación:</b> Nombre completo, número de pasaporte,
+          nacionalidad, edad, sexo y cualquier condición médica o preferencia
+          alimentaria necesaria para la reserva.
+        </li>
+      </ol>
+
+      <h3>1.2 Información Recopilada Automáticamente</h3>
+      <ol>
+        <li>
+          <b>Cookies:</b> Utilizamos cookies para rastrear la zona horaria del
+          usuario y personalizar horarios de vuelos. También se usan cookies
+          temporales para verificación de email y restablecimiento de
+          contraseña.
+        </li>
+        <li>
+          <b>Datos de Analítica:</b> Se recopilan datos de comportamiento de
+          visitantes mediante servicios de analítica para mejorar la experiencia
+          del usuario.
+        </li>
+      </ol>
+
+      <h3>1.3 Servicios de Terceros</h3>
+      <ol>
+        <li>
+          <b>Resend:</b> Utilizado para el envío de correos electrónicos
+          transaccionales y comunicaciones.
+        </li>
+        <li>
+          <b>Supabase:</b> Almacenamiento de datos de usuario, reservas e
+          imágenes.
+        </li>
+        <li>
+          <b>Stripe:</b> Procesamiento seguro de pagos.
+        </li>
+        <li>
+          <b>Vercel:</b> Hosting y analítica de la plataforma.
+        </li>
+      </ol>
+
+      <h2>2. Cómo Utilizamos tu Información</h2>
+      <ol>
+        <li>
+          Proporcionar y mejorar nuestros servicios de reserva de vuelos,
+          hoteles y paquetes turísticos.
+        </li>
+        <li>
+          Enviar actualizaciones, verificaciones, cotizaciones y comunicaciones
+          relevantes.
+        </li>
+        <li>
+          Personalizar resultados de búsqueda según tus preferencias y
+          ubicación.
+        </li>
+        <li>Coordinar servicios con proveedores turísticos autorizados.</li>
+      </ol>
+
+      <h2>3. Compartición de Información</h2>
       <p>
-        This is a development project, and services, including payments, are
-        simulated. Users are responsible for understanding and agreeing to the
-        limitations of this project.
+        <b>Podemos compartir tus datos con:</b>
+      </p>
+      <ol>
+        <li>
+          <b>Proveedores de Servicios:</b> Aerolíneas, hoteles, operadores
+          turísticos y proveedores de transporte necesarios para cumplir con tu
+          reserva.
+        </li>
+        <li>
+          <b>Servicios Tecnológicos:</b> Resend, Supabase, Stripe y servicios de
+          analítica para operar nuestra plataforma.
+        </li>
+        <li>
+          <b>Autoridades Legales:</b> Según lo requiera la ley venezolana
+          aplicable.
+        </li>
+      </ol>
+
+      <h2>4. Cookies y Seguimiento</h2>
+      <p>
+        Utilizamos cookies para rastrear la zona horaria del usuario, mostrar
+        horarios locales y gestionar procesos de verificación de correo
+        electrónico y restablecimiento de contraseña. Puedes controlar las
+        cookies a través de la configuración de tu navegador.
       </p>
 
-      <h2>8. Updates to This Policy</h2>
+      <h2>5. Seguridad de Datos</h2>
       <p>
-        We may revise this Privacy Policy. Updates will be posted here with the
-        effective date.
+        Tomamos medidas razonables para proteger tu información personal.
+        Utilizamos tecnologías de cifrado avanzadas, incluyendo SSL para datos
+        en tránsito y AES-256 para datos en reposo. Para más información,
+        consulta nuestras{" "}
+        <a href="/security-policy">Políticas de Seguridad</a>.
       </p>
 
-      <h2>9. Contact</h2>
+      <h2>6. Derechos del Usuario</h2>
+      <ol>
+        <li>Acceder, corregir o eliminar tus datos personales.</li>
+        <li>Retirar el consentimiento para comunicaciones por correo.</li>
+        <li>
+          Solicitar información sobre cómo se procesan tus datos personales.
+        </li>
+      </ol>
       <p>
-        For privacy-related inquiries, contact us at{" "}
+        Para solicitudes, contáctanos en:{" "}
         <strong>
-          <a href="mailto:example@email.com">example@email.com</a>
+          <a href="mailto:info@venezuelavoyages.com">
+            info@venezuelavoyages.com
+          </a>
         </strong>
-        .
+      </p>
+
+      <h2>7. Actualizaciones de esta Política</h2>
+      <p>
+        Nos reservamos el derecho de actualizar esta Política de Privacidad.
+        Cualquier cambio será publicado en esta página con la fecha de vigencia
+        actualizada.
+      </p>
+
+      <h2>8. Contacto</h2>
+      <p>
+        Para consultas relacionadas con privacidad, contáctanos en:{" "}
+        <strong>
+          <a href="mailto:info@venezuelavoyages.com">
+            info@venezuelavoyages.com
+          </a>
+        </strong>
+      </p>
+      <p>
+        Teléfono:{" "}
+        <strong>
+          <a href="tel:+584264034052">+58 426 4034052</a>
+        </strong>
       </p>
     </div>
   );
