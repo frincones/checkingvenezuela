@@ -1,13 +1,9 @@
 import { notFound } from "next/navigation";
 import Image from "next/image";
-import Link from "next/link";
-import { Nav } from "@/components/sections/Nav";
-import { Footer } from "@/components/sections/Footer";
 import { BreadcrumbUI } from "@/components/local-ui/breadcrumb";
 import { PackageCard } from "@/components/pages/packages/components/PackageCard";
 import { DualCTA } from "@/components/ui/DualCTA";
 import { createAdminClient } from "@/lib/db/supabase/server";
-import { auth } from "@/lib/auth";
 import {
   MapPin, Compass, Utensils, Hotel, Sun, Banknote, Plane,
   Bus, Lightbulb, Quote, Package as PackageIcon, Map as MapIcon,
@@ -58,7 +54,6 @@ export default async function DestinationPage({ params }) {
   const dest = await getDestination(params.slug);
   if (!dest) return notFound();
 
-  const session = await auth();
   const packages = await getPackages(dest.id);
   const meta = dest.metadata || {};
   const coords = dest.coordinates;
@@ -75,23 +70,20 @@ export default async function DestinationPage({ params }) {
   return (
     <>
       {/* Hero */}
-      <header className="relative">
-        <Nav type="home" className="absolute left-0 top-0 z-10" session={session} />
-        <section className="relative flex h-[500px] items-end overflow-hidden sm:h-[550px]">
-          <Image src={heroImage} alt={dest.name} fill className="object-cover" priority />
-          <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent" />
-          <div className="relative z-10 w-full px-[5%] pb-12 text-white">
-            <div className="mb-2 flex items-center gap-2 text-sm font-medium uppercase tracking-wider opacity-80">
-              <MapPin className="h-4 w-4" />
-              <span>{dest.country}</span>
-            </div>
-            <h1 className="text-4xl font-bold sm:text-5xl lg:text-6xl">{dest.name}</h1>
-            {dest.short_description && (
-              <p className="mt-3 max-w-2xl text-lg text-white/80">{dest.short_description}</p>
-            )}
+      <section className="relative flex h-[420px] items-end overflow-hidden sm:h-[480px]">
+        <Image src={heroImage} alt={dest.name} fill className="object-cover" priority />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent" />
+        <div className="relative z-10 w-full px-[5%] pb-12 text-white">
+          <div className="mb-2 flex items-center gap-2 text-sm font-medium uppercase tracking-wider opacity-80">
+            <MapPin className="h-4 w-4" />
+            <span>{dest.country}</span>
           </div>
-        </section>
-      </header>
+          <h1 className="text-4xl font-bold sm:text-5xl lg:text-6xl">{dest.name}</h1>
+          {dest.short_description && (
+            <p className="mt-3 max-w-2xl text-lg text-white/80">{dest.short_description}</p>
+          )}
+        </div>
+      </section>
 
       <main className="mx-auto mb-10 w-[90%] max-w-6xl md:mb-20">
         {/* Breadcrumb */}
@@ -319,8 +311,6 @@ export default async function DestinationPage({ params }) {
           />
         </section>
       </main>
-
-      <Footer />
     </>
   );
 }
