@@ -1,6 +1,5 @@
 import { notFound } from "next/navigation";
 import Image from "next/image";
-import Link from "next/link";
 import { BreadcrumbUI } from "@/components/local-ui/breadcrumb";
 import { PackageCard } from "@/components/pages/packages/components/PackageCard";
 import { DualCTA } from "@/components/ui/DualCTA";
@@ -71,7 +70,7 @@ export default async function DestinationPage({ params }) {
   return (
     <>
       {/* Hero */}
-      <section className="relative -mt-[88px] flex h-[500px] items-end overflow-hidden sm:h-[550px]">
+      <section className="relative flex h-[420px] items-end overflow-hidden sm:h-[480px]">
         <Image src={heroImage} alt={dest.name} fill className="object-cover" priority />
         <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent" />
         <div className="relative z-10 w-full px-[5%] pb-12 text-white">
