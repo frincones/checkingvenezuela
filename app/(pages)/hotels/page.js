@@ -5,6 +5,14 @@ import { RecentSearches } from "@/components/sections/RecentSearches";
 import { auth } from "@/lib/auth";
 import { getRecentSearches } from "@/lib/services";
 import { PopularHotelDestinations } from "@/components/pages/hotels/sections/PopularHotelDestinations";
+
+export const metadata = {
+  title: "Hoteles | Venezuela Voyages",
+  description:
+    "Encuentra y reserva los mejores hoteles en Venezuela y el mundo. Alojamiento para todos los presupuestos con Venezuela Voyages.",
+  keywords: ["hoteles", "reservar hotel", "hoteles venezuela", "alojamiento", "venezuela voyages"],
+};
+
 export default async function HotelsPage() {
   const session = await auth();
   const isLoggedIn = !!session?.user;

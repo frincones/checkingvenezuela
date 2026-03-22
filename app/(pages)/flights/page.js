@@ -4,6 +4,13 @@ import { auth } from "@/lib/auth";
 import { getRecentSearches } from "@/lib/services";
 import { RecentSearches } from "@/components/sections/RecentSearches";
 
+export const metadata = {
+  title: "Vuelos | Venezuela Voyages",
+  description:
+    "Busca y reserva vuelos nacionales e internacionales con Venezuela Voyages. Encuentra las mejores tarifas y destinos.",
+  keywords: ["vuelos", "vuelos baratos", "vuelos venezuela", "reservar vuelos", "venezuela voyages"],
+};
+
 export default async function Flights() {
   const session = await auth();
   const isLoggedIn = !!session?.user;

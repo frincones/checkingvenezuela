@@ -21,6 +21,21 @@ import {
   Star
 } from "lucide-react";
 
+export async function generateMetadata({ params }) {
+  const pkg = await getPackageBySlug(params.slug);
+  if (!pkg) return { title: "Paquete no encontrado | Venezuela Voyages" };
+  return {
+    title: `${pkg.name} | Venezuela Voyages`,
+    description: pkg.description || `Descubre el paquete ${pkg.name}. Reserva con Venezuela Voyages.`,
+    openGraph: {
+      title: `${pkg.name} | Venezuela Voyages`,
+      description: pkg.description || `Paquete turístico ${pkg.name}`,
+      images: pkg.images?.[0] ? [pkg.images[0]] : [],
+      locale: "es_VE",
+    },
+  };
+}
+
 async function getPackageBySlug(slug) {
   try {
     const adminClient = createAdminClient();
