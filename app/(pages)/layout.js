@@ -1,5 +1,6 @@
 import { Nav } from "@/components/sections/Nav";
 import { Footer } from "@/components/sections/Footer";
+import { BannersSidebar } from "@/components/pages/home/sections/BannersSection";
 
 import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
@@ -31,6 +32,7 @@ export default async function PagesLayout({ children }) {
   return (
     <>
       {isNavAllowed && <Nav session={session} type="default" />}
+      {isNavAllowed && <BannersSidebar />}
       {children}
       {isNavAllowed && <Footer />}
     </>
