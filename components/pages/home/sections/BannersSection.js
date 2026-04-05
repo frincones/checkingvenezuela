@@ -5,21 +5,27 @@ import Image from "next/image";
 async function getActiveBanners() {
   try {
     const admin = createAdminClient();
-    const now = new Date().toISOString();
 
     const { data, error } = await admin
       .from("banners")
       .select("*")
       .eq("is_active", true)
-      .or(`starts_at.is.null,starts_at.lte.${now}`)
-      .or(`ends_at.is.null,ends_at.gte.${now}`)
       .order("display_order", { ascending: true });
 
     if (error) {
       console.error("Error fetching banners:", error.message);
       return [];
     }
-    return data || [];
+
+    // Filter by date range in JS to avoid complex Supabase OR chains
+    const now = new Date();
+    const active = (data || []).filter((b) => {
+      if (b.starts_at && new Date(b.starts_at) > now) return false;
+      if (b.ends_at && new Date(b.ends_at) < now) return false;
+      return true;
+    });
+
+    return active;
   } catch (err) {
     console.error("Error fetching banners:", err);
     return [];
