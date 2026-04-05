@@ -1,5 +1,6 @@
 import { createAdminClient } from "@/lib/db/supabase/server";
 import Link from "next/link";
+import Image from "next/image";
 
 async function getActiveBanners() {
   try {
@@ -44,10 +45,12 @@ export async function BannersSection() {
           >
             {/* Background image */}
             {banner.image_url && (
-              <img
+              <Image
                 src={banner.image_url}
                 alt={banner.title}
-                className="absolute inset-0 h-full w-full object-cover"
+                fill
+                className="object-cover"
+                sizes="(max-width: 768px) 100vw, 90vw"
               />
             )}
 

@@ -166,7 +166,7 @@ export default async function BlogPage({ searchParams }) {
   const recentPosts = allPostsForSidebar.slice(0, 5);
 
   // Collect unique categories from all posts
-  const existingCategories = [...new Set(allPostsForSidebar.map((p) => p.category).filter(Boolean))];
+  const existingCategories = allPostsForSidebar.map((p) => p.category).filter(Boolean).filter((v, i, a) => a.indexOf(v) === i);
 
   return (
     <main className="min-h-screen bg-gray-50/50">

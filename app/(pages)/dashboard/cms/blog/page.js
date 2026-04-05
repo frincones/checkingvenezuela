@@ -31,8 +31,7 @@ export default function BlogListPage() {
   }
 
   const categories = useMemo(() => {
-    const cats = new Set(posts.map((p) => p.category).filter(Boolean));
-    return Array.from(cats).sort();
+    return posts.map((p) => p.category).filter(Boolean).filter((v, i, a) => a.indexOf(v) === i).sort();
   }, [posts]);
 
   const filteredPosts = useMemo(() => {

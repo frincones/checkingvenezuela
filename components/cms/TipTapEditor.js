@@ -4,7 +4,7 @@ import { useEditor, EditorContent } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import Underline from "@tiptap/extension-underline";
 import TextAlign from "@tiptap/extension-text-align";
-import TextStyle from "@tiptap/extension-text-style";
+import { TextStyle } from "@tiptap/extension-text-style";
 import Color from "@tiptap/extension-color";
 import Highlight from "@tiptap/extension-highlight";
 import Link from "@tiptap/extension-link";
@@ -12,7 +12,7 @@ import Image from "@tiptap/extension-image";
 import Placeholder from "@tiptap/extension-placeholder";
 import Superscript from "@tiptap/extension-superscript";
 import Subscript from "@tiptap/extension-subscript";
-import Table from "@tiptap/extension-table";
+import { Table } from "@tiptap/extension-table";
 import TableRow from "@tiptap/extension-table-row";
 import TableCell from "@tiptap/extension-table-cell";
 import TableHeader from "@tiptap/extension-table-header";
@@ -28,9 +28,8 @@ const btnCls = (active) =>
 const sepCls = "w-px h-6 bg-gray-300 mx-1";
 
 function Toolbar({ editor }) {
-  if (!editor) return null;
-
   const addLink = useCallback(() => {
+    if (!editor) return;
     const prev = editor.getAttributes("link").href;
     const url = prompt("URL del enlace:", prev || "https://");
     if (url === null) return;
@@ -42,16 +41,20 @@ function Toolbar({ editor }) {
   }, [editor]);
 
   const addImage = useCallback(() => {
+    if (!editor) return;
     const url = prompt("URL de la imagen:");
     if (url) editor.chain().focus().setImage({ src: url }).run();
   }, [editor]);
 
   const setColor = useCallback(
     (e) => {
+      if (!editor) return;
       editor.chain().focus().setColor(e.target.value).run();
     },
     [editor]
   );
+
+  if (!editor) return null;
 
   return (
     <div className="flex flex-wrap items-center gap-1 border-b border-gray-200 bg-gray-50 px-3 py-2 rounded-t-md">
