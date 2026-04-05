@@ -19,7 +19,7 @@ export default function NewBlogPostPage() {
   const [formData, setFormData] = useState({
     title: "", slug: "", excerpt: "", content: "", cover_image: "",
     category: "general", tags: [], author_name: "", destination_id: "",
-    status: "draft", meta_title: "", meta_description: "",
+    status: "published", meta_title: "", meta_description: "",
   });
 
   useEffect(() => {

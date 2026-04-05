@@ -15,6 +15,7 @@ import { PopularFlightDestinations } from "@/components/pages/home/sections/Popu
 import { PopularHotelDestinations } from "@/components/pages/home/sections/PopularHotelDestinations";
 import { FeaturedPackages } from "@/components/pages/home/sections/FeaturedPackages";
 import { BannersSection } from "@/components/pages/home/sections/BannersSection";
+import { LatestBlogPosts } from "@/components/pages/home/sections/LatestBlogPosts";
 
 // Forzar renderizado dinámico para siempre mostrar datos frescos del CMS
 export const dynamic = "force-dynamic";
@@ -89,6 +90,9 @@ export default async function HomePage() {
 
         {/* HU-003: Catálogo de Servicios */}
         <ServicesSection />
+
+        {/* Blog: Últimos artículos */}
+        <LatestBlogPosts />
 
         {/* Secciones existentes */}
         <Reviews />
