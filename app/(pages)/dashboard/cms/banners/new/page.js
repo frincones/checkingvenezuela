@@ -41,8 +41,8 @@ export default function NewBannerPage() {
     try {
       const payload = {
         ...formData,
-        starts_at: formData.starts_at || null,
-        ends_at: formData.ends_at || null,
+        starts_at: formData.starts_at ? new Date(formData.starts_at).toISOString() : null,
+        ends_at: formData.ends_at ? new Date(formData.ends_at).toISOString() : null,
         badge_text: formData.badge_text || null,
       };
       const res = await fetch("/api/cms/banners", {
@@ -52,7 +52,7 @@ export default function NewBannerPage() {
       });
       const data = await res.json();
       if (data.error) setError(data.error);
-      else router.push(`/dashboard/cms/banners/${data.data.id}`);
+      else router.push("/dashboard/cms/banners");
     } catch (err) { setError("Error al crear banner"); }
     finally { setSaving(false); }
   }
