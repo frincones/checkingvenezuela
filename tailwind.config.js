@@ -122,5 +122,5 @@ module.exports = {
     "bg-yellow-100",
     "bg-red-100",
   ],
-  plugins: [require("tailwindcss-animate")],
+  plugins: [require("tailwindcss-animate"), require("@tailwindcss/typography")],
 };

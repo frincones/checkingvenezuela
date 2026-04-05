@@ -4,7 +4,13 @@ import { FeaturedPackages } from "@/components/pages/packages/sections/FeaturedP
 
 export const metadata = {
   title: "Paquetes Turísticos | Venezuela Voyages",
-  description: "Descubre nuestros paquetes turísticos todo incluido. Vuelo + hotel + actividades con los mejores precios.",
+  description: "Descubre nuestros paquetes turísticos todo incluido. Vuelo + hotel + actividades con los mejores precios. Destinos en Venezuela y el Caribe.",
+  keywords: ["paquetes turísticos", "todo incluido", "venezuela voyages", "viajes venezuela", "vuelo hotel", "vacaciones caribe", "turismo venezuela"],
+  openGraph: {
+    title: "Paquetes Turísticos | Venezuela Voyages",
+    description: "Paquetes turísticos todo incluido con los mejores precios. Vuelo + hotel + actividades.",
+    locale: "es_VE",
+  },
 };
 
 export default async function PackagesPage() {
