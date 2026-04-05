@@ -149,7 +149,8 @@ function MiniPostCard({ post }) {
   );
 }
 
-export default async function BlogPage({ searchParams }) {
+export default async function BlogPage(props) {
+  const searchParams = await props.searchParams;
   const query = searchParams?.q || "";
   const category = searchParams?.category || "todos";
 

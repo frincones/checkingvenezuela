@@ -10,7 +10,7 @@ async function getPost(slug) {
   const admin = createAdminClient();
   const { data, error } = await admin
     .from("blog_posts")
-    .select("*, destination:destinations(id, name, slug, cover_image)")
+    .select("*, destination:destinations(id, name, slug, image_url)")
     .eq("slug", slug)
     .eq("status", "published")
     .single();
@@ -49,7 +49,8 @@ function formatDate(dateStr) {
   });
 }
 
-export async function generateMetadata({ params }) {
+export async function generateMetadata(props) {
+  const params = await props.params;
   const post = await getPost(params.slug);
   if (!post) return { title: "Post no encontrado | Venezuela Voyages" };
 
@@ -86,7 +87,8 @@ export async function generateMetadata({ params }) {
   };
 }
 
-export default async function BlogPostPage({ params }) {
+export default async function BlogPostPage(props) {
+  const params = await props.params;
   const post = await getPost(params.slug);
   if (!post) return notFound();
 
