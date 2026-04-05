@@ -1,14 +1,14 @@
 "use client";
 
-import { useState, useEffect, use } from "react";
-import { useRouter } from "next/navigation";
+import { useState, useEffect } from "react";
+import { useRouter, useParams } from "next/navigation";
 import Link from "next/link";
 import { ImageUpload } from "@/components/cms/ImageUpload";
 
 const inputCls = "mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary text-sm";
 
-export default function EditBannerPage({ params }) {
-  const { id } = use(params);
+export default function EditBannerPage() {
+  const { id } = useParams();
   const router = useRouter();
   const [saving, setSaving] = useState(false);
   const [loading, setLoading] = useState(true);
