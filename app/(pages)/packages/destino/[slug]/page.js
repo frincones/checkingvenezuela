@@ -63,6 +63,13 @@ export async function generateMetadata({ params }) {
     description:
       destination.short_description ||
       `Descubre los mejores paquetes turísticos disponibles en ${destination.name}. Vuelo + hotel + actividades todo incluido.`,
+    keywords: ["paquetes", destination.name, destination.country, "venezuela voyages", "todo incluido"].filter(Boolean),
+    openGraph: {
+      title: `Paquetes en ${destination.name} | Venezuela Voyages`,
+      description: destination.short_description || `Paquetes turísticos en ${destination.name}`,
+      images: destination.image_url ? [destination.image_url] : [],
+      locale: "es_VE",
+    },
   };
 }
 

@@ -41,9 +41,17 @@ export function useLeadCapture() {
    * @param {Object} [config.trackingData] - Data for lead tracking
    */
   const requestCapture = useCallback((config) => {
-    setPendingAction(config);
-    setTrackingData(config.trackingData || {});
-    setModalOpen(true);
+    const { action, whatsappMessage, navigateTo, onComplete } = config;
+
+    if (action === "whatsapp") {
+      const message = whatsappMessage || "Hola, estoy interesado en sus servicios de viajes.";
+      const url = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(message)}`;
+      window.open(url, "_blank", "noopener,noreferrer");
+    } else if (action === "navigate" && navigateTo) {
+      window.location.href = navigateTo;
+    } else if (action === "custom" && onComplete) {
+      onComplete({});
+    }
   }, []);
 
   /**

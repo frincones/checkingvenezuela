@@ -62,6 +62,9 @@ export const metadata = {
     locale: "es_VE",
     type: "website",
   },
+  other: {
+    "yandex-verification": "cdd9a3992d76e5b0",
+  },
 };
 
 export default async function RootLayout({ children }) {

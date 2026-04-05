@@ -14,6 +14,7 @@ import { VenezuelaDestinations } from "@/components/pages/home/sections/Venezuel
 import { PopularFlightDestinations } from "@/components/pages/home/sections/PopularFlightDestinations";
 import { PopularHotelDestinations } from "@/components/pages/home/sections/PopularHotelDestinations";
 import { FeaturedPackages } from "@/components/pages/home/sections/FeaturedPackages";
+import { BannersSection } from "@/components/pages/home/sections/BannersSection";
 
 // Forzar renderizado dinámico para siempre mostrar datos frescos del CMS
 export const dynamic = "force-dynamic";
@@ -71,11 +72,11 @@ export default async function HomePage() {
       </header>
 
       <main className="mx-auto mb-10 w-[90%] space-y-10 pt-10 md:mb-20 md:space-y-20 md:pt-16">
+        {/* Banners promocionales del CMS */}
+        <BannersSection />
+
         {/* Paquetes Turísticos Destacados */}
         <FeaturedPackages />
-
-        {/* HU-003: Catálogo de Servicios */}
-        <ServicesSection />
 
         {/* HU-003: Destinos de Venezuela */}
         <VenezuelaDestinations />
@@ -85,6 +86,9 @@ export default async function HomePage() {
 
         {/* HU-004: Destinos Populares de Hoteles */}
         <PopularHotelDestinations />
+
+        {/* HU-003: Catálogo de Servicios */}
+        <ServicesSection />
 
         {/* Secciones existentes */}
         <Reviews />
