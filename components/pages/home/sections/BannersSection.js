@@ -136,7 +136,7 @@ export async function BannersSidebar() {
   return (
     <>
       {/* Left sidebar */}
-      <div className="fixed left-0 top-1/2 z-30 hidden -translate-y-1/2 xl:block">
+      <div className="fixed left-0 top-1/2 z-30 hidden -translate-y-1/2 lg:block">
         <div className="flex flex-col gap-3 pl-2">
           {left.map((banner) => (
             <SidebarBannerCard key={banner.id} banner={banner} />
@@ -144,7 +144,7 @@ export async function BannersSidebar() {
         </div>
       </div>
       {/* Right sidebar */}
-      <div className="fixed right-0 top-1/2 z-30 hidden -translate-y-1/2 xl:block">
+      <div className="fixed right-0 top-1/2 z-30 hidden -translate-y-1/2 lg:block">
         <div className="flex flex-col gap-3 pr-2">
           {right.map((banner) => (
             <SidebarBannerCard key={banner.id} banner={banner} />
