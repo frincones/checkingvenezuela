@@ -223,6 +223,110 @@ export default function EditPackagePage() {
     }));
   }
 
+  // --- Schedule handlers ---
+  function handleScheduleChange(field, value) {
+    setFormData(prev => ({
+      ...prev,
+      details: {
+        ...prev.details,
+        schedule: {
+          ...(prev.details.schedule || {}),
+          [field]: value,
+        },
+      },
+    }));
+  }
+
+  // --- Itinerary handlers ---
+  function handleItineraryAdd() {
+    setFormData(prev => ({
+      ...prev,
+      details: {
+        ...prev.details,
+        itinerary: [
+          ...(prev.details.itinerary || []),
+          {
+            day: (prev.details.itinerary?.length || 0) + 1,
+            title: "",
+            activities: [],
+            meals: [],
+          },
+        ],
+      },
+    }));
+  }
+
+  function handleItineraryRemove(index) {
+    setFormData(prev => ({
+      ...prev,
+      details: {
+        ...prev.details,
+        itinerary: prev.details.itinerary.filter((_, i) => i !== index),
+      },
+    }));
+  }
+
+  function handleItineraryFieldChange(index, field, value) {
+    setFormData(prev => ({
+      ...prev,
+      details: {
+        ...prev.details,
+        itinerary: prev.details.itinerary.map((d, i) =>
+          i === index
+            ? { ...d, [field]: field === "day" ? parseInt(value) || 0 : value }
+            : d
+        ),
+      },
+    }));
+  }
+
+  function handleDayListAdd(dayIndex, listField) {
+    setFormData(prev => ({
+      ...prev,
+      details: {
+        ...prev.details,
+        itinerary: prev.details.itinerary.map((d, i) =>
+          i === dayIndex
+            ? { ...d, [listField]: [...(d[listField] || []), ""] }
+            : d
+        ),
+      },
+    }));
+  }
+
+  function handleDayListChange(dayIndex, listField, itemIndex, value) {
+    setFormData(prev => ({
+      ...prev,
+      details: {
+        ...prev.details,
+        itinerary: prev.details.itinerary.map((d, i) =>
+          i === dayIndex
+            ? {
+                ...d,
+                [listField]: d[listField].map((item, j) =>
+                  j === itemIndex ? value : item
+                ),
+              }
+            : d
+        ),
+      },
+    }));
+  }
+
+  function handleDayListRemove(dayIndex, listField, itemIndex) {
+    setFormData(prev => ({
+      ...prev,
+      details: {
+        ...prev.details,
+        itinerary: prev.details.itinerary.map((d, i) =>
+          i === dayIndex
+            ? { ...d, [listField]: d[listField].filter((_, j) => j !== itemIndex) }
+            : d
+        ),
+      },
+    }));
+  }
+
   async function handleSubmit(e) {
     e.preventDefault();
     setSaving(true);
@@ -662,6 +766,158 @@ export default function EditPackagePage() {
                 ))}
               </div>
             </div>
+          </div>
+        </div>
+
+        {/* Horarios */}
+        <div className="rounded-lg bg-white p-6 shadow-md">
+          <h2 className="mb-4 text-lg font-semibold text-gray-900">Horarios</h2>
+          <div className="grid gap-6 md:grid-cols-2">
+            <div>
+              <label className="block text-sm font-medium text-gray-700">Salida</label>
+              <input
+                type="text"
+                value={formData.details.schedule?.departure || ""}
+                onChange={(e) => handleScheduleChange("departure", e.target.value)}
+                placeholder="Ej: 9:00 AM desde Caracas o Valencia (sujeto a disponibilidad)"
+                className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700">Retorno</label>
+              <input
+                type="text"
+                value={formData.details.schedule?.return || ""}
+                onChange={(e) => handleScheduleChange("return", e.target.value)}
+                placeholder="Ej: 6:00 PM desde Margarita (sujeto a disponibilidad)"
+                className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
+              />
+            </div>
+          </div>
+        </div>
+
+        {/* Itinerario */}
+        <div className="rounded-lg bg-white p-6 shadow-md">
+          <div className="mb-4 flex items-center justify-between">
+            <h2 className="text-lg font-semibold text-gray-900">Itinerario Día a Día</h2>
+            <button
+              type="button"
+              onClick={handleItineraryAdd}
+              className="flex items-center gap-1 text-sm text-primary hover:text-primary/80"
+            >
+              <Plus className="h-4 w-4" /> Agregar Día
+            </button>
+          </div>
+
+          {(!formData.details.itinerary || formData.details.itinerary.length === 0) && (
+            <p className="text-sm italic text-gray-500">
+              No hay días agregados. Haz clic en &quot;Agregar Día&quot; para añadir.
+            </p>
+          )}
+
+          <div className="space-y-6">
+            {formData.details.itinerary?.map((day, dayIndex) => (
+              <div key={dayIndex} className="rounded-lg border border-gray-200 p-4">
+                <div className="mb-4 flex items-start gap-3">
+                  <div className="w-20">
+                    <label className="block text-xs font-medium text-gray-700">Día #</label>
+                    <input
+                      type="number"
+                      value={day.day || ""}
+                      onChange={(e) => handleItineraryFieldChange(dayIndex, "day", e.target.value)}
+                      min="1"
+                      className="mt-1 block w-full rounded-md border border-gray-300 px-2 py-1 text-sm shadow-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
+                    />
+                  </div>
+                  <div className="flex-1">
+                    <label className="block text-xs font-medium text-gray-700">Título del día</label>
+                    <input
+                      type="text"
+                      value={day.title || ""}
+                      onChange={(e) => handleItineraryFieldChange(dayIndex, "title", e.target.value)}
+                      placeholder="Ej: Llegada a Isla Margarita"
+                      className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
+                    />
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => handleItineraryRemove(dayIndex)}
+                    className="mt-5 text-red-600 hover:text-red-800"
+                    title="Eliminar día"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </button>
+                </div>
+
+                {/* Actividades */}
+                <div className="mb-3">
+                  <div className="mb-1 flex items-center justify-between">
+                    <label className="block text-xs font-medium text-gray-700">Actividades</label>
+                    <button
+                      type="button"
+                      onClick={() => handleDayListAdd(dayIndex, "activities")}
+                      className="flex items-center gap-1 text-xs text-primary hover:text-primary/80"
+                    >
+                      <Plus className="h-3 w-3" /> Agregar actividad
+                    </button>
+                  </div>
+                  <div className="space-y-1">
+                    {day.activities?.map((activity, actIndex) => (
+                      <div key={actIndex} className="flex gap-2">
+                        <input
+                          type="text"
+                          value={activity}
+                          onChange={(e) => handleDayListChange(dayIndex, "activities", actIndex, e.target.value)}
+                          placeholder="Ej: Check-in en hotel VIP"
+                          className="block w-full flex-1 rounded-md border border-gray-300 px-2 py-1 text-sm shadow-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => handleDayListRemove(dayIndex, "activities", actIndex)}
+                          className="text-red-600 hover:text-red-800"
+                        >
+                          <Trash2 className="h-3 w-3" />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Comidas */}
+                <div>
+                  <div className="mb-1 flex items-center justify-between">
+                    <label className="block text-xs font-medium text-gray-700">Comidas Incluidas</label>
+                    <button
+                      type="button"
+                      onClick={() => handleDayListAdd(dayIndex, "meals")}
+                      className="flex items-center gap-1 text-xs text-primary hover:text-primary/80"
+                    >
+                      <Plus className="h-3 w-3" /> Agregar comida
+                    </button>
+                  </div>
+                  <div className="space-y-1">
+                    {day.meals?.map((meal, mealIndex) => (
+                      <div key={mealIndex} className="flex gap-2">
+                        <input
+                          type="text"
+                          value={meal}
+                          onChange={(e) => handleDayListChange(dayIndex, "meals", mealIndex, e.target.value)}
+                          placeholder="Ej: Desayuno buffet"
+                          className="block w-full flex-1 rounded-md border border-gray-300 px-2 py-1 text-sm shadow-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => handleDayListRemove(dayIndex, "meals", mealIndex)}
+                          className="text-red-600 hover:text-red-800"
+                        >
+                          <Trash2 className="h-3 w-3" />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            ))}
           </div>
         </div>
 

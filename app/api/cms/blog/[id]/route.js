@@ -1,6 +1,17 @@
 import { NextResponse } from "next/server";
 import { createClient, createAdminClient } from "@/lib/db/supabase/server";
 
+// Normaliza el slug para evitar tildes, mayúsculas o caracteres especiales
+// que rompen el routing (ej: `/blog/guía-Mérida` → 404 por mismatch de encoding).
+function normalizeSlug(s) {
+  return (s || "")
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/(^-|-$)/g, "");
+}
+
 export async function GET(request, { params }) {
   try {
     const { id } = await params;
@@ -41,6 +52,15 @@ export async function PATCH(request, { params }) {
     const updateData = {};
     for (const field of allowedFields) {
       if (body[field] !== undefined) updateData[field] = body[field];
+    }
+
+    // Normalizar slug si viene en el payload para evitar tildes/mayúsculas
+    if (updateData.slug !== undefined) {
+      const normalized = normalizeSlug(updateData.slug);
+      if (!normalized) {
+        return NextResponse.json({ error: "Slug inválido" }, { status: 400 });
+      }
+      updateData.slug = normalized;
     }
 
     if (body.status === "published" && !body.published_at) {

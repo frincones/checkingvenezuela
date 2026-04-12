@@ -6,16 +6,47 @@ import { Calendar, Tag, ArrowLeft, ChevronRight, Clock } from "lucide-react";
 import ShareButtons from "./ShareButtons";
 import { DualCTA } from "@/components/ui/DualCTA";
 
+// Normaliza un slug removiendo tildes, pasando a minúsculas y dejando solo a-z0-9-
+function normalizeSlug(s) {
+  return (s || "")
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/(^-|-$)/g, "");
+}
+
 async function getPost(slug) {
   const admin = createAdminClient();
-  const { data, error } = await admin
+
+  // 1) Match exacto (ruta rápida para slugs bien formados).
+  const { data: exact } = await admin
     .from("blog_posts")
     .select("*, destination:destinations(id, name, slug, image_url)")
     .eq("slug", slug)
     .eq("status", "published")
-    .single();
-  if (error) return null;
-  return data;
+    .maybeSingle();
+  if (exact) return exact;
+
+  // 2) Fallback: hay posts heredados cuyo slug quedó con tildes/mayúsculas
+  // (ej. "guía-turismo-Mérida-andes-Venezuela"). Comparamos normalizado.
+  const normalizedSlug = normalizeSlug(slug);
+  if (!normalizedSlug) return null;
+
+  const { data: candidates } = await admin
+    .from("blog_posts")
+    .select("id, slug")
+    .eq("status", "published");
+
+  const match = candidates?.find((p) => normalizeSlug(p.slug) === normalizedSlug);
+  if (!match) return null;
+
+  const { data } = await admin
+    .from("blog_posts")
+    .select("*, destination:destinations(id, name, slug, image_url)")
+    .eq("id", match.id)
+    .maybeSingle();
+  return data || null;
 }
 
 async function getRelatedPosts(category, excludeId) {
