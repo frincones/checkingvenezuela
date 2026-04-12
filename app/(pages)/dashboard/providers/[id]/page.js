@@ -24,7 +24,7 @@ export default function EditProviderPage() {
   const [formData, setFormData] = useState({
     name: "",
     code: "",
-    provider_type: "tour_operator",
+    type: "tour_operator",
     contact_name: "",
     contact_email: "",
     contact_phone: "",
@@ -54,7 +54,7 @@ export default function EditProviderPage() {
         setFormData({
           name: p.name || "",
           code: p.code || "",
-          provider_type: p.provider_type || "tour_operator",
+          type: p.type || "tour_operator",
           contact_name: p.contact_name || "",
           contact_email: p.contact_email || "",
           contact_phone: p.contact_phone || "",
@@ -206,8 +206,8 @@ export default function EditProviderPage() {
               Tipo *
             </label>
             <select
-              name="provider_type"
-              value={formData.provider_type}
+              name="type"
+              value={formData.type}
               onChange={handleChange}
               required
               className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
