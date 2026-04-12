@@ -1,6 +1,17 @@
 import { NextResponse } from "next/server";
 import { createClient, createAdminClient } from "@/lib/db/supabase/server";
 
+// Normaliza el slug para evitar tildes, mayúsculas o caracteres especiales
+// que rompen el routing (ej: `/blog/guía-Mérida` → 404 por mismatch de encoding).
+function normalizeSlug(s) {
+  return (s || "")
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/(^-|-$)/g, "");
+}
+
 export async function GET(request) {
   try {
     const supabase = await createClient();
@@ -35,11 +46,18 @@ export async function POST(request) {
     const body = await request.json();
     const admin = createAdminClient();
 
+    // Defensa en profundidad: aunque el form genera slug automáticamente,
+    // aquí nos aseguramos que nunca entren tildes/mayúsculas a la DB.
+    const normalizedSlug = normalizeSlug(body.slug || body.title);
+    if (!normalizedSlug) {
+      return NextResponse.json({ error: "Slug inválido" }, { status: 400 });
+    }
+
     const { data, error } = await admin
       .from("blog_posts")
       .insert({
         title: body.title,
-        slug: body.slug,
+        slug: normalizedSlug,
         excerpt: body.excerpt || null,
         content: body.content || "",
         cover_image: body.cover_image || null,
