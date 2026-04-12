@@ -36,6 +36,10 @@ const nextConfig = {
     return config;
   },
   images: {
+    // Desactiva el Image Optimization API de Vercel (que devuelve 402 al exceder
+    // la cuota del plan). Las imágenes se sirven directo desde sus CDNs de origen
+    // (Supabase Storage, Unsplash, etc.), que ya entregan contenido optimizado.
+    unoptimized: true,
     remotePatterns: [
       {
         protocol: "https",

@@ -69,7 +69,7 @@ export default function ProvidersPage() {
   }
 
   const filteredProviders = providers.filter((p) => {
-    if (filterType && p.provider_type !== filterType) return false;
+    if (filterType && p.type !== filterType) return false;
     if (filterStatus && p.status !== filterStatus) return false;
     return true;
   });
@@ -153,7 +153,7 @@ export default function ProvidersPage() {
                   </td>
                   <td className="px-6 py-4">
                     <span className="rounded-full bg-blue-100 px-2 py-1 text-xs font-medium text-blue-800">
-                      {providerTypeLabels[provider.provider_type] || provider.provider_type}
+                      {providerTypeLabels[provider.type] || provider.type}
                     </span>
                   </td>
                   <td className="px-6 py-4 text-sm text-gray-500">

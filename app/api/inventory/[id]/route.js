@@ -64,13 +64,24 @@ export async function PATCH(request, { params }) {
     ];
 
     const updateData = { updated_by: user.id };
+    // Campos array/objeto que NO deben sobreescribirse si llegan vacíos desde el form.
+    // El frontend envía el estado completo del formulario, por lo que un usuario que
+    // edita solo el precio no está intentando borrar las imágenes/blackout_dates/details.
+    // Para borrar explícitamente, el frontend debe enviar el campo con contenido nuevo.
+    const preserveIfEmpty = new Set(["images", "blackout_dates", "details"]);
+    const isEmptyPreservable = (field, value) => {
+      if (!preserveIfEmpty.has(field)) return false;
+      if (Array.isArray(value)) return value.length === 0;
+      if (value && typeof value === "object") return Object.keys(value).length === 0;
+      return false;
+    };
+
     for (const field of allowedFields) {
       const camelField = field.replace(/_([a-z])/g, (_, letter) => letter.toUpperCase());
-      if (body[field] !== undefined) {
-        updateData[field] = body[field];
-      } else if (body[camelField] !== undefined) {
-        updateData[field] = body[camelField];
-      }
+      const incoming = body[field] !== undefined ? body[field] : body[camelField];
+      if (incoming === undefined) continue;
+      if (isEmptyPreservable(field, incoming)) continue;
+      updateData[field] = incoming;
     }
     // Map stock_quantity alias to quantity_available
     if (body.stock_quantity !== undefined && updateData.quantity_available === undefined) {
