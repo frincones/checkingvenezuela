@@ -1,26 +1,20 @@
 import { NextResponse } from "next/server";
-import { createAdminClient } from "@/lib/db/supabase/server";
+import { findPackageBySlug } from "@/lib/packages/slug";
 
 // GET - Obtener paquete por slug
 export async function GET(request, { params }) {
   try {
-    const adminClient = createAdminClient();
-    const slug = params.slug;
+    const { slug } = await params;
 
-    const { data, error } = await adminClient
-      .from("service_inventory")
-      .select(`
+    const data = await findPackageBySlug(slug, {
+      select: `
         *,
         provider:tourism_providers(id, name, slug, logo_url, contact_email, contact_phone),
         destination:destinations(id, name, slug, image_url, country, city)
-      `)
-      .eq("product_type", "package")
-      .eq("is_published", true)
-      .ilike("name", `%${slug.split('-').join(' ')}%`)
-      .single();
+      `,
+    });
 
-    if (error) {
-      console.error("Error fetching package:", error);
+    if (!data) {
       return NextResponse.json(
         { error: "Paquete no encontrado" },
         { status: 404 }

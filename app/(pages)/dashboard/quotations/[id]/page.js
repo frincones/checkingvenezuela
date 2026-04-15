@@ -21,6 +21,7 @@ export default function QuotationDetailPage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [generatingPdf, setGeneratingPdf] = useState(false);
+  const [relatedVouchers, setRelatedVouchers] = useState([]);
   const [pdfError, setPdfError] = useState(null);
   const [sendingEmail, setSendingEmail] = useState(false);
   const [emailModal, setEmailModal] = useState(false);
@@ -29,7 +30,18 @@ export default function QuotationDetailPage() {
 
   useEffect(() => {
     fetchQuotation();
+    fetchRelatedVouchers();
   }, [params.id]);
+
+  async function fetchRelatedVouchers() {
+    try {
+      const res = await fetch(`/api/vouchers?quotation_id=${params.id}&limit=10`);
+      const json = await res.json();
+      if (json.data) setRelatedVouchers(json.data);
+    } catch {
+      // silent
+    }
+  }
 
   async function fetchQuotation() {
     try {
@@ -466,6 +478,15 @@ export default function QuotationDetailPage() {
                   Marcar como Convertida
                 </button>
               )}
+              <Link
+                href={`/dashboard/vouchers/new?from_quotation=${params.id}`}
+                className="flex w-full items-center gap-2 rounded-md bg-orange-100 px-4 py-2 text-sm font-medium text-orange-700 hover:bg-orange-200"
+              >
+                <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 110 4v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 110-4V7a2 2 0 00-2-2H5z" />
+                </svg>
+                Convertir a Voucher
+              </Link>
             </div>
           </div>
 
@@ -479,6 +500,32 @@ export default function QuotationDetailPage() {
               >
                 Ver Lead →
               </Link>
+            </div>
+          )}
+
+          {/* Related Vouchers */}
+          {relatedVouchers.length > 0 && (
+            <div className="rounded-lg bg-white p-6 shadow-md">
+              <h2 className="mb-4 text-lg font-semibold text-gray-900">Vouchers Emitidos</h2>
+              <div className="space-y-2">
+                {relatedVouchers.map((v) => (
+                  <Link
+                    key={v.id}
+                    href={`/dashboard/vouchers/${v.id}`}
+                    className="flex items-center justify-between rounded-md border p-2 text-sm hover:bg-gray-50"
+                  >
+                    <span className="font-medium text-gray-900">{v.voucher_number}</span>
+                    <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${
+                      v.status === "sent" ? "bg-green-100 text-green-700" :
+                      v.status === "issued" ? "bg-blue-100 text-blue-700" :
+                      v.status === "cancelled" ? "bg-red-100 text-red-700" :
+                      "bg-gray-100 text-gray-700"
+                    }`}>
+                      {v.status}
+                    </span>
+                  </Link>
+                ))}
+              </div>
             </div>
           )}
         </div>

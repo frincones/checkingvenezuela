@@ -12,6 +12,7 @@ import { PackageBottomCTA } from "@/components/pages/packages/components/Package
 import { formatCurrency } from "@/lib/utils";
 import { createClient } from "@/lib/db/supabase/server";
 import { createAdminClient } from "@/lib/db/supabase/server";
+import { findPackageBySlug } from "@/lib/packages/slug";
 import {
   Calendar,
   MapPin,
@@ -44,52 +45,13 @@ export async function generateMetadata({ params }) {
 }
 
 async function getPackageBySlug(slug) {
-  try {
-    const adminClient = createAdminClient();
-
-    // Obtener todos los paquetes publicados
-    const { data: packages, error } = await adminClient
-      .from("service_inventory")
-      .select(`
-        *,
-        provider:tourism_providers(id, name, slug, logo_url),
-        destination:destinations(id, name, slug, image_url, country)
-      `)
-      .eq("product_type", "package")
-      .eq("is_published", true);
-
-    if (error) {
-      console.error("Error fetching packages:", error);
-      return null;
-    }
-
-    // Función helper para generar slug (igual que en PackageCard)
-    const generateSlug = (name) => {
-      return name
-        .toLowerCase()
-        .normalize('NFD')
-        .replace(/[\u0300-\u036f]/g, '')
-        .replace(/\s+-\s+/g, '-')
-        .replace(/\s+/g, '-')
-        .replace(/\/+/g, '-')
-        .replace(/[^a-z0-9-]/g, '')
-        .replace(/-+/g, '-')
-        .replace(/^-|-$/g, '');
-    };
-
-    // Buscar el paquete que coincida con el slug
-    const packageData = packages?.find(pkg => generateSlug(pkg.name) === slug);
-
-    if (!packageData) {
-      console.error("Package not found for slug:", slug);
-      return null;
-    }
-
-    return packageData;
-  } catch (err) {
-    console.error("Error in getPackageBySlug:", err);
-    return null;
-  }
+  return findPackageBySlug(slug, {
+    select: `
+      *,
+      provider:tourism_providers(id, name, slug, logo_url),
+      destination:destinations(id, name, slug, image_url, country)
+    `,
+  });
 }
 
 export default async function PackageDetailPage({ params }) {

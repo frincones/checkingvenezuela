@@ -3,35 +3,17 @@ import { auth } from "@/lib/auth";
 import { BreadcrumbUI } from "@/components/local-ui/breadcrumb";
 import { PackageBookingForm } from "@/components/pages/packages/sections/PackageBookingForm";
 import { PackageBookingSummary } from "@/components/pages/packages/sections/PackageBookingSummary";
-import { createAdminClient } from "@/lib/db/supabase/server";
+import { findPackageBySlug } from "@/lib/packages/slug";
 import routes from "@/data/routes.json";
 
 async function getPackageBySlug(slug) {
-  try {
-    const adminClient = createAdminClient();
-
-    const { data, error } = await adminClient
-      .from("service_inventory")
-      .select(`
-        *,
-        provider:tourism_providers(id, name, slug, contact_email, contact_phone),
-        destination:destinations(id, name, slug, image_url, country)
-      `)
-      .eq("product_type", "package")
-      .eq("is_published", true)
-      .ilike("name", `%${slug.split('-').join(' ')}%`)
-      .single();
-
-    if (error) {
-      console.error("Error fetching package:", error);
-      return null;
-    }
-
-    return data;
-  } catch (err) {
-    console.error("Error in getPackageBySlug:", err);
-    return null;
-  }
+  return findPackageBySlug(slug, {
+    select: `
+      *,
+      provider:tourism_providers(id, name, slug, contact_email, contact_phone),
+      destination:destinations(id, name, slug, image_url, country)
+    `,
+  });
 }
 
 export default async function PackageBookingPage({ params }) {
