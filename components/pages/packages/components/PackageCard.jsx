@@ -2,6 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { formatCurrency } from "@/lib/utils";
+import { generateSlug } from "@/lib/packages/slug";
 import { MapPin, Clock, Users, Star } from "lucide-react";
 
 export function PackageCard({ packageData, featured = false }) {
@@ -10,17 +11,7 @@ export function PackageCard({ packageData, featured = false }) {
   const pricingDetails = packageData.pricing_details || {};
   const details = packageData.details || {};
 
-  // Generar slug desde el nombre de forma más limpia
-  const slug = packageData.name
-    .toLowerCase()
-    .normalize('NFD')           // Normalizar caracteres Unicode
-    .replace(/[\u0300-\u036f]/g, '') // Eliminar diacríticos (acentos: á->a, é->e, etc.)
-    .replace(/\s+-\s+/g, '-')   // Reemplazar " - " con solo "-"
-    .replace(/\s+/g, '-')       // Reemplazar espacios con guiones
-    .replace(/\/+/g, '-')       // Reemplazar "/" con guiones
-    .replace(/[^a-z0-9-]/g, '') // Eliminar caracteres especiales
-    .replace(/-+/g, '-')        // Reemplazar múltiples guiones con uno solo
-    .replace(/^-|-$/g, '');     // Eliminar guiones al inicio y final
+  const slug = generateSlug(packageData.name);
 
   return (
     <article className={`group overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm transition-all hover:shadow-xl ${featured ? 'ring-2 ring-primary ring-offset-2' : ''}`}>
