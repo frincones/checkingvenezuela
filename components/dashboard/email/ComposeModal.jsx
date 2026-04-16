@@ -21,8 +21,10 @@ import Superscript from "@tiptap/extension-superscript";
 import { useDropzone } from "react-dropzone";
 
 /* ── Constants ── */
-const MAX_ATTACHMENT_SIZE = 40 * 1024 * 1024; // 40 MB Resend limit
-const MAX_TOTAL_SIZE = 40 * 1024 * 1024;
+// Resend API limit is 40 MB, but Base64 encoding adds ~33% overhead.
+// A 30 MB binary file becomes ~40 MB in Base64, so we cap at 30 MB.
+const MAX_ATTACHMENT_SIZE = 30 * 1024 * 1024; // 30 MB per file (safe binary limit)
+const MAX_TOTAL_SIZE = 30 * 1024 * 1024; // 30 MB total
 
 const FONTS = [
   { label: "Sans Serif", value: "Arial, sans-serif" },
@@ -298,7 +300,7 @@ function AttachmentItem({ file, onRemove }) {
       <div className="min-w-0 flex-1">
         <p className="truncate text-xs text-gray-700">{file.name}</p>
         <p className={`text-[10px] ${isOversize ? "text-red-500 font-semibold" : "text-gray-400"}`}>
-          {formatSize(file.size)} {isOversize && "— Excede 40 MB"}
+          {formatSize(file.size)} {isOversize && "— Excede 30 MB"}
         </p>
       </div>
       <button type="button" onClick={onRemove} className="text-gray-400 hover:text-red-500 flex-shrink-0">
@@ -743,7 +745,7 @@ export default function ComposeModal({ isOpen, onClose, replyTo, forwardEmail, o
           <div className="border-t border-gray-200 px-3 py-2 bg-gray-50 max-h-32 overflow-y-auto">
             <div className="flex items-center justify-between mb-1">
               <span className="text-xs text-gray-500">{attachments.length} adjunto(s) — {formatSize(totalSize)}</span>
-              {oversized && <span className="text-xs text-red-500 font-semibold">Excede el límite de 40 MB</span>}
+              {oversized && <span className="text-xs text-red-500 font-semibold">Excede el límite de 30 MB</span>}
             </div>
             <div className="flex flex-wrap gap-1.5">
               {attachments.map((f, i) => (
