@@ -7,6 +7,7 @@
 import { createClient, createAdminClient } from "@/lib/db/supabase/server";
 import { NextResponse } from "next/server";
 import { Resend } from "resend";
+import { validateAttachmentSize } from "@/lib/email/attachmentLimits";
 
 function getResend() {
   return new Resend(process.env.RESEND_API_KEY);
@@ -149,6 +150,17 @@ export async function POST(request) {
       return NextResponse.json({ success: true, id: draft.id, isDraft: true });
     }
 
+    // Validate attachment sizes before sending
+    if (attachments?.length) {
+      const sizeCheck = validateAttachmentSize(
+        attachments.map((a) => ({ size: a.content?.length || 0 })),
+        "resend"
+      );
+      if (!sizeCheck.ok) {
+        return NextResponse.json({ error: sizeCheck.error }, { status: 413 });
+      }
+    }
+
     // Send via Resend
     const emailPayload = {
       from: `${senderDisplayName} <${senderAddress}>`,
@@ -165,7 +177,14 @@ export async function POST(request) {
     const { data: emailData, error: emailError } = await getResend().emails.send(emailPayload);
 
     if (emailError) {
-      return NextResponse.json({ error: emailError.message }, { status: 500 });
+      const msg = emailError.message || "";
+      const isSize = /size|too large|payload|limit/i.test(msg);
+      return NextResponse.json(
+        { error: isSize
+            ? "El correo excede el límite de tamaño permitido por el proveedor. Reduce el tamaño de los adjuntos."
+            : `Error al enviar email: ${msg}` },
+        { status: isSize ? 413 : 500 }
+      );
     }
 
     // Save to DB

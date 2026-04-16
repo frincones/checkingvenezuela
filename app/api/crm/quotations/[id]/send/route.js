@@ -6,6 +6,7 @@
 import { createClient, createAdminClient } from "@/lib/db/supabase/server";
 import { NextResponse } from "next/server";
 import { Resend } from "resend";
+import { validateAttachmentSize, formatBytes } from "@/lib/email/attachmentLimits";
 
 function getResend() {
   return new Resend(process.env.RESEND_API_KEY);
@@ -176,6 +177,20 @@ export async function POST(request, { params }) {
       </div>
     </div>`;
 
+    // Validate PDF size before sending
+    const sizeCheck = validateAttachmentSize(
+      [{ size: pdfBuffer.length }],
+      "resend"
+    );
+    if (!sizeCheck.ok) {
+      return NextResponse.json(
+        {
+          error: `El PDF de la cotización (${formatBytes(pdfBuffer.length)}) excede el límite de envío por email. ${sizeCheck.error}`,
+        },
+        { status: 413 }
+      );
+    }
+
     // Enviar con Resend
     const { data: emailData, error: emailError } = await getResend().emails.send({
       from: `Venezuela Voyages <${FROM_EMAIL}>`,
@@ -192,9 +207,15 @@ export async function POST(request, { params }) {
 
     if (emailError) {
       console.error("Resend error:", emailError);
+      const msg = emailError.message || "";
+      const isSize = /size|too large|payload|limit/i.test(msg);
       return NextResponse.json(
-        { error: `Error al enviar email: ${emailError.message}` },
-        { status: 500 }
+        {
+          error: isSize
+            ? "La cotización PDF excede el límite de tamaño para envío por email. Reduce las imágenes o el contenido."
+            : `Error al enviar email: ${msg}`,
+        },
+        { status: isSize ? 413 : 500 }
       );
     }
 

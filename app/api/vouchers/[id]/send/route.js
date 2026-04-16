@@ -22,6 +22,7 @@ import { generateVoucherPDF } from "@/lib/pdf/voucher-generator";
 import { uploadVoucherPDF } from "@/lib/vouchers/storage";
 import { buildVoucherEmailHtml } from "@/lib/email/voucherEmailHtml";
 import sendEmail from "@/lib/email/sendEmail";
+import { validateAttachmentSize, formatBytes } from "@/lib/email/attachmentLimits";
 
 function fmtDateEs(val) {
   if (!val) return "";
@@ -125,6 +126,20 @@ export async function POST(request, { params }) {
       customMessage: parsed.data.custom_message || "",
     });
 
+    // Validate PDF size before sending
+    const sizeCheck = validateAttachmentSize(
+      [{ size: pdfBytes.byteLength || pdfBytes.length }],
+      "mailjet"
+    );
+    if (!sizeCheck.ok) {
+      return NextResponse.json(
+        {
+          error: `El PDF del voucher (${formatBytes(pdfBytes.byteLength || pdfBytes.length)}) excede el límite de envío por email. ${sizeCheck.error}`,
+        },
+        { status: 413 }
+      );
+    }
+
     // Send
     const attachments = [
       {
@@ -159,9 +174,15 @@ export async function POST(request, { params }) {
     });
   } catch (error) {
     console.error("Voucher send error:", error);
+    const msg = error.message || "";
+    const isSize = /size|too large|payload|limit|413/i.test(msg);
     return NextResponse.json(
-      { error: `Error al enviar el voucher: ${error.message}` },
-      { status: 500 },
+      {
+        error: isSize
+          ? "El voucher PDF es demasiado grande para enviarse por email. Intenta reducir las imágenes del voucher."
+          : `Error al enviar el voucher: ${msg}`,
+      },
+      { status: isSize ? 413 : 500 },
     );
   }
 }
