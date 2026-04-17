@@ -76,7 +76,9 @@ export async function POST(request, { params }) {
       : "Venezuela Voyages";
 
     // Generar PDF internamente llamando a la misma API
-    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000";
+    // Derive base URL from the incoming request to avoid port mismatch
+    const requestUrl = new URL(request.url);
+    const baseUrl = `${requestUrl.protocol}//${requestUrl.host}`;
     const pdfResponse = await fetch(`${baseUrl}/api/crm/quotations/${id}/pdf`, {
       headers: {
         Cookie: request.headers.get("cookie") || "",
@@ -84,8 +86,10 @@ export async function POST(request, { params }) {
     });
 
     if (!pdfResponse.ok) {
+      const errBody = await pdfResponse.text().catch(() => "");
+      console.error(`PDF generation failed (${pdfResponse.status}):`, errBody.substring(0, 200));
       return NextResponse.json(
-        { error: "Error al generar el PDF para adjuntar" },
+        { error: "Error al generar el PDF para adjuntar. Verifica que la cotización tenga datos válidos." },
         { status: 500 }
       );
     }
