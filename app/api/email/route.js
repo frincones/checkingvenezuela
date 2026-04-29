@@ -150,10 +150,13 @@ export async function POST(request) {
       return NextResponse.json({ success: true, id: draft.id, isDraft: true });
     }
 
-    // Validate attachment sizes before sending
+    // Validate attachment sizes before sending.
+    // `content` is a base64 string, so the binary size is ~length * 3/4.
     if (attachments?.length) {
       const sizeCheck = validateAttachmentSize(
-        attachments.map((a) => ({ size: a.content?.length || 0 })),
+        attachments.map((a) => ({
+          size: Math.ceil(((a.content?.length || 0) * 3) / 4),
+        })),
         "resend"
       );
       if (!sizeCheck.ok) {
@@ -172,7 +175,14 @@ export async function POST(request) {
     if (cc?.length) emailPayload.cc = cc;
     if (bcc?.length) emailPayload.bcc = bcc;
     if (reply_to) emailPayload.reply_to = reply_to;
-    if (attachments?.length) emailPayload.attachments = attachments;
+    if (attachments?.length) {
+      // Normalize attachment shape: Resend expects { filename, content, content_type? }
+      emailPayload.attachments = attachments.map((a) => ({
+        filename: a.filename,
+        content: a.content,
+        ...(a.type ? { content_type: a.type } : {}),
+      }));
+    }
 
     const { data: emailData, error: emailError } = await getResend().emails.send(emailPayload);
 
