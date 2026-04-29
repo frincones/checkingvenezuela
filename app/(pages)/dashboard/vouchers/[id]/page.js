@@ -106,8 +106,10 @@ export default async function VoucherDetailPage({ params }) {
           ) : (
             <p className="text-sm text-gray-500">Sin lead vinculado</p>
           )}
-          {voucher.advisor && (
-            <p className="text-xs text-gray-400">Asesor: {voucher.advisor.name}</p>
+          {voucher.advisor?.profile && (
+            <p className="text-xs text-gray-400">
+              Asesor: {voucher.advisor.profile.first_name} {voucher.advisor.profile.last_name}
+            </p>
           )}
         </div>
       </div>
