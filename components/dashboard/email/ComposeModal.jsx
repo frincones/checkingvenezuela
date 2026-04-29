@@ -575,11 +575,24 @@ export default function ComposeModal({ isOpen, onClose, replyTo, forwardEmail, o
       const html = editor?.getHTML() || "";
       const text = editor?.getText() || "";
 
-      // Convert attachments to base64
+      // Convert attachments to base64 (FileReader is safe for large files;
+      // String.fromCharCode(...) spread fails on arrays >~65k items)
+      const fileToBase64 = (file) =>
+        new Promise((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onload = () => {
+            // result format: "data:<mime>;base64,<payload>"
+            const result = reader.result;
+            const base64 = typeof result === "string" ? result.split(",")[1] : "";
+            resolve(base64);
+          };
+          reader.onerror = () => reject(reader.error);
+          reader.readAsDataURL(file);
+        });
+
       const attPayload = await Promise.all(
         attachments.map(async (f) => {
-          const buf = await f.arrayBuffer();
-          const base64 = btoa(String.fromCharCode(...new Uint8Array(buf)));
+          const base64 = await fileToBase64(f);
           return { filename: f.name, content: base64, type: f.type };
         })
       );
