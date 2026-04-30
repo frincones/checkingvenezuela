@@ -27,17 +27,19 @@ export async function generateMetadata({ params }) {
   if (!pkg) return { title: "Paquete no encontrado | Venezuela Voyages" };
   const price = pkg.sale_price ? `desde $${pkg.sale_price}` : "";
   const destName = pkg.destination?.name || "";
-  const metaDesc = price
+  const fallbackDesc = price
     ? `${pkg.name} ${price}. ${pkg.description || `Paquete turístico en ${destName}. Reserva con Venezuela Voyages.`}`
     : pkg.description || `Descubre el paquete ${pkg.name}. Reserva con Venezuela Voyages.`;
+  const title = pkg.meta_title || `${pkg.name} | Venezuela Voyages`;
+  const description = (pkg.meta_description || fallbackDesc).slice(0, 160);
   const tags = pkg.details?.tags || pkg.destination?.tags || [];
   return {
-    title: `${pkg.name} | Venezuela Voyages`,
-    description: metaDesc.slice(0, 160),
+    title,
+    description,
     keywords: ["paquete turístico", pkg.name, destName, "venezuela voyages", ...tags].filter(Boolean),
     openGraph: {
-      title: `${pkg.name} | Venezuela Voyages`,
-      description: metaDesc.slice(0, 160),
+      title,
+      description,
       images: pkg.images?.[0] ? [pkg.images[0]] : [],
       locale: "es_VE",
     },

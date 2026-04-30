@@ -137,6 +137,8 @@ export async function POST(request) {
       is_featured: body.isFeatured ?? body.is_featured ?? false,
       is_published: body.isPublished ?? body.is_published ?? true,
       display_order: body.displayOrder ?? body.display_order ?? 0,
+      meta_title: body.metaTitle ?? body.meta_title ?? null,
+      meta_description: body.metaDescription ?? body.meta_description ?? null,
       created_by: user.id,
       updated_by: user.id,
     };

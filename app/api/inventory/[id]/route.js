@@ -60,7 +60,7 @@ export async function PATCH(request, { params }) {
       "description", "product_type", "cost_price", "sale_price", "currency",
       "pricing_details", "status", "quantity_available", "valid_from",
       "valid_until", "blackout_dates", "details", "images", "is_featured",
-      "is_published", "display_order"
+      "is_published", "display_order", "meta_title", "meta_description"
     ];
 
     const updateData = { updated_by: user.id };
