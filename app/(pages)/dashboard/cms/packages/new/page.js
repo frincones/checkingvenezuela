@@ -30,6 +30,8 @@ export default function NewPackagePage() {
     is_featured: false,
     is_published: true,
     display_order: 0,
+    meta_title: "",
+    meta_description: "",
     pricing_details: {
       display_text: "",
       price_type: "per_person",
@@ -857,6 +859,50 @@ export default function NewPackagePage() {
                 </div>
               </div>
             ))}
+          </div>
+        </div>
+
+        {/* SEO */}
+        <div className="rounded-lg bg-white p-6 shadow-md">
+          <h2 className="mb-1 text-lg font-semibold text-gray-900">SEO</h2>
+          <p className="mb-4 text-sm text-gray-500">
+            Meta título y descripción para buscadores
+          </p>
+          <div className="grid gap-4 md:grid-cols-2">
+            <div>
+              <label className="block text-sm font-medium text-gray-700">
+                Meta título
+              </label>
+              <input
+                type="text"
+                name="meta_title"
+                value={formData.meta_title}
+                onChange={handleChange}
+                maxLength={70}
+                placeholder="Ej: Paquete Los Roques 2D/1N | Venezuela Voyages"
+                className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
+              />
+              <p className="mt-1 text-xs text-gray-400">
+                {formData.meta_title.length}/70
+              </p>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700">
+                Meta descripción
+              </label>
+              <input
+                type="text"
+                name="meta_description"
+                value={formData.meta_description}
+                onChange={handleChange}
+                maxLength={160}
+                placeholder="Resumen breve para resultados de búsqueda (máx. 160 caracteres)"
+                className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
+              />
+              <p className="mt-1 text-xs text-gray-400">
+                {formData.meta_description.length}/160
+              </p>
+            </div>
           </div>
         </div>
 
