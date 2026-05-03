@@ -1,5 +1,5 @@
 /**
- * API de Lead Individual - CHECK-IN VENEZUELA CRM
+ * API de Lead Individual - VENEZUELA VOYAGES CRM
  *
  * GET /api/crm/leads/[id] - Obtiene un lead por ID
  * PATCH /api/crm/leads/[id] - Actualiza un lead

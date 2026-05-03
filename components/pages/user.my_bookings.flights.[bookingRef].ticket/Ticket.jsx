@@ -268,11 +268,11 @@ export default function FlightTicket({ ticketData }) {
                       Additional verification may be required for certain
                       transactions. The cardholder may be asked to complete a
                       verification process online, at the airport, or at a
-                      designated CHECK-IN VENEZUELA service center.
+                      designated VENEZUELA VOYAGES service center.
                     </li>
                     <li className="mb-[16px]">
                       If the original payment card cannot be presented at
-                      check-in or ticket collection, CHECK-IN VENEZUELA reserves the right
+                      check-in or ticket collection, VENEZUELA VOYAGES reserves the right
                       to deny boarding or require payment with an alternative
                       method. Stored payment information is managed in a PCI-DSS
                       compliant and secure environment.
@@ -293,7 +293,7 @@ export default function FlightTicket({ ticketData }) {
                     </li>
                     <li className="mb-[16px]">
                       Passengers must comply with all applicable immigration,
-                      customs, and travel regulations. CHECK-IN VENEZUELA is not responsible
+                      customs, and travel regulations. VENEZUELA VOYAGES is not responsible
                       for denied boarding or entry due to incomplete
                       documentation.
                     </li>
@@ -307,7 +307,7 @@ export default function FlightTicket({ ticketData }) {
                       If you have any questions regarding these Terms and
                       Conditions, please contact us at:
                     </p>
-                    <p className="mt-2 font-medium">CHECK-IN VENEZUELA</p>
+                    <p className="mt-2 font-medium">VENEZUELA VOYAGES</p>
                     <p>Caracas, Venezuela</p>
                     <p>WhatsApp: +58 426 4034052</p>
                     <p>
@@ -317,7 +317,7 @@ export default function FlightTicket({ ticketData }) {
                         variant="link"
                         className="h-auto p-0 text-tertiary"
                       >
-                        <Link href="/support">checkinvenezuela.com/support</Link>
+                        <Link href="/support">venezuelavoyages.com/support</Link>
                       </Button>
                     </p>
                   </address>

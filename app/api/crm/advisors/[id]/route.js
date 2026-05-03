@@ -1,5 +1,5 @@
 /**
- * API de Advisor Individual - CHECK-IN VENEZUELA CRM
+ * API de Advisor Individual - VENEZUELA VOYAGES CRM
  *
  * GET /api/crm/advisors/[id] - Obtiene un asesor con estadísticas
  * PATCH /api/crm/advisors/[id] - Actualiza un asesor

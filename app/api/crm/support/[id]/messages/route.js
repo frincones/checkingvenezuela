@@ -1,5 +1,5 @@
 /**
- * API de Ticket Messages - CHECK-IN VENEZUELA CRM
+ * API de Ticket Messages - VENEZUELA VOYAGES CRM
  *
  * GET /api/crm/support/[id]/messages - Lista mensajes de un ticket
  * POST /api/crm/support/[id]/messages - Agrega mensaje a un ticket

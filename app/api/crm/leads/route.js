@@ -1,5 +1,5 @@
 /**
- * API de Leads - CHECK-IN VENEZUELA CRM
+ * API de Leads - VENEZUELA VOYAGES CRM
  *
  * GET /api/crm/leads - Lista leads con filtros y paginación
  * POST /api/crm/leads - Crea un nuevo lead

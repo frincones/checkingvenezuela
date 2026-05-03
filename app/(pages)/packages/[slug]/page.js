@@ -78,7 +78,7 @@ export default async function PackageDetailPage({ params }) {
 
   // Share URL
   const currentUrl = typeof window !== 'undefined' ? window.location.href : '';
-  const shareUrl = currentUrl || `https://checkinvenezuela.com/packages/${params.slug}`;
+  const shareUrl = currentUrl || `https://venezuelavoyages.com/packages/${params.slug}`;
 
   return (
     <main className="mx-auto mb-[90px] mt-10 w-[90%]">

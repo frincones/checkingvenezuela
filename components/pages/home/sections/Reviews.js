@@ -13,7 +13,7 @@ const FEATURED_REVIEWS = [
     reviewer: "María Fernanda González",
     profileImage: "",
     rate: 5,
-    comment: "Reservé mis vacaciones a Margarita con Check-In Venezuela y todo salió perfecto. El equipo me ayudó a encontrar el mejor hotel y los vuelos más económicos. Sin duda volveré a reservar con ellos.",
+    comment: "Reservé mis vacaciones a Margarita con Venezuela Voyages y todo salió perfecto. El equipo me ayudó a encontrar el mejor hotel y los vuelos más económicos. Sin duda volveré a reservar con ellos.",
   },
   {
     id: "featured-2",
@@ -41,7 +41,7 @@ const FEATURED_REVIEWS = [
     reviewer: "Valentina Pérez",
     profileImage: "",
     rate: 5,
-    comment: "Viajé con mi familia a Canaima y fue una experiencia inolvidable. Check-In Venezuela nos consiguió las mejores tarifas y el hotel superó nuestras expectativas. Totalmente recomendado.",
+    comment: "Viajé con mi familia a Canaima y fue una experiencia inolvidable. Venezuela Voyages nos consiguió las mejores tarifas y el hotel superó nuestras expectativas. Totalmente recomendado.",
   },
   {
     id: "featured-6",
@@ -69,7 +69,7 @@ const FEATURED_REVIEWS = [
     reviewer: "Isabela Ramírez",
     profileImage: "",
     rate: 5,
-    comment: "Check-In Venezuela hizo que organizar mis vacaciones fuera facilísimo. Encontré opciones que no aparecían en otras páginas. El equipo de soporte me atendió de maravilla.",
+    comment: "Venezuela Voyages hizo que organizar mis vacaciones fuera facilísimo. Encontré opciones que no aparecían en otras páginas. El equipo de soporte me atendió de maravilla.",
   },
   {
     id: "featured-10",
@@ -83,7 +83,7 @@ const FEATURED_REVIEWS = [
     reviewer: "Daniela Sofía López",
     profileImage: "",
     rate: 5,
-    comment: "Soy clienta frecuente de Check-In Venezuela y nunca me han fallado. Cada viaje que reservo es una experiencia increíble. Los precios siempre son los mejores del mercado.",
+    comment: "Soy clienta frecuente de Venezuela Voyages y nunca me han fallado. Cada viaje que reservo es una experiencia increíble. Los precios siempre son los mejores del mercado.",
   },
   {
     id: "featured-12",
@@ -104,7 +104,7 @@ const FEATURED_REVIEWS = [
     reviewer: "Sebastián Gutiérrez",
     profileImage: "",
     rate: 5,
-    comment: "La mejor agencia de viajes online de Venezuela. He probado varias y ninguna se compara con Check-In Venezuela. Precios bajos, atención rápida y viajes sin complicaciones.",
+    comment: "La mejor agencia de viajes online de Venezuela. He probado varias y ninguna se compara con Venezuela Voyages. Precios bajos, atención rápida y viajes sin complicaciones.",
   },
   {
     id: "featured-15",
@@ -132,7 +132,7 @@ const FEATURED_REVIEWS = [
     reviewer: "Miguel Ángel Flores",
     profileImage: "",
     rate: 5,
-    comment: "Llevo tres viajes reservados con Check-In Venezuela y cada uno ha sido mejor que el anterior. El equipo realmente se preocupa por ofrecer la mejor experiencia posible.",
+    comment: "Llevo tres viajes reservados con Venezuela Voyages y cada uno ha sido mejor que el anterior. El equipo realmente se preocupa por ofrecer la mejor experiencia posible.",
   },
   {
     id: "featured-19",
@@ -188,7 +188,7 @@ export async function Reviews() {
         <div className="mb-16">
           <SectionTitle
             title="Customer Reviews"
-            subTitle="Descubre lo que nuestros clientes dicen sobre su experiencia con CHECK-IN VENEZUELA"
+            subTitle="Descubre lo que nuestros clientes dicen sobre su experiencia con VENEZUELA VOYAGES"
           />
 
           {/* Enhanced Statistics */}

@@ -1,5 +1,5 @@
 /**
- * API de Advisors (Asesores) - CHECK-IN VENEZUELA CRM
+ * API de Advisors (Asesores) - VENEZUELA VOYAGES CRM
  *
  * GET /api/crm/advisors - Lista asesores activos
  * POST /api/crm/advisors - Crea un nuevo asesor

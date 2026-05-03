@@ -1,5 +1,5 @@
 /**
- * CRM Types - CHECK-IN VENEZUELA
+ * CRM Types - VENEZUELA VOYAGES
  *
  * Tipos TypeScript para el sistema CRM:
  * - Leads y pipeline de ventas

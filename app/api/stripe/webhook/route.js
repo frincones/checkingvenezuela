@@ -121,7 +121,7 @@ export async function POST(req) {
           });
           await sendEmail(
             [{ Email: charge.metadata.userEmail }],
-            "Gracias por reservar tu vuelo con CHECK-IN VENEZUELA",
+            "Gracias por reservar tu vuelo con VENEZUELA VOYAGES",
             htmlEmail,
           );
         }

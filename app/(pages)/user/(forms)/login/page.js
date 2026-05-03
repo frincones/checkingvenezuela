@@ -8,7 +8,7 @@ export default async function LoginPage() {
           Login
         </h2>
         <p className="text-[0.875rem] text-secondary/75 xl:text-[1rem]">
-          Inicia sesión para acceder a tu cuenta de CHECK-IN VENEZUELA
+          Inicia sesión para acceder a tu cuenta de VENEZUELA VOYAGES
         </p>
       </div>
       <LoginForm />
