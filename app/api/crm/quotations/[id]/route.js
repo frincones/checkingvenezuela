@@ -1,5 +1,5 @@
 /**
- * API de Quotation Individual - CHECK-IN VENEZUELA CRM
+ * API de Quotation Individual - VENEZUELA VOYAGES CRM
  *
  * GET /api/crm/quotations/[id] - Obtiene una cotización específica
  * PATCH /api/crm/quotations/[id] - Actualiza una cotización

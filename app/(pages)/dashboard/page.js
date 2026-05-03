@@ -99,7 +99,7 @@ export default async function DashboardPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold text-gray-900">Dashboard CRM</h1>
-        <p className="text-sm text-gray-500">CheckIn Venezuela - Panel de Gestion</p>
+        <p className="text-sm text-gray-500">Venezuela Voyages - Panel de Gestion</p>
       </div>
 
       {/* Stats Grid */}

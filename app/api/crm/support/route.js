@@ -1,5 +1,5 @@
 /**
- * API de Support Tickets - CHECK-IN VENEZUELA CRM
+ * API de Support Tickets - VENEZUELA VOYAGES CRM
  *
  * GET /api/crm/support - Lista tickets con filtros
  * POST /api/crm/support - Crea un nuevo ticket

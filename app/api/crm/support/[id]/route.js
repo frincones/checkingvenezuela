@@ -1,5 +1,5 @@
 /**
- * API de Ticket Individual - CHECK-IN VENEZUELA CRM
+ * API de Ticket Individual - VENEZUELA VOYAGES CRM
  *
  * GET /api/crm/support/[id] - Obtiene un ticket específico
  * PATCH /api/crm/support/[id] - Actualiza un ticket

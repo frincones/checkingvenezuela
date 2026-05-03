@@ -1,5 +1,5 @@
 /**
- * API de Quotations (Cotizaciones) - CHECK-IN VENEZUELA CRM
+ * API de Quotations (Cotizaciones) - VENEZUELA VOYAGES CRM
  *
  * GET /api/crm/quotations - Lista cotizaciones con filtros
  * POST /api/crm/quotations - Crea una nueva cotización
