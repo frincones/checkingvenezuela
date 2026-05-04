@@ -42,6 +42,7 @@ try {
     tier,
     forceTool,
     requireTool,
+    intent: "booking", // simular flujo de producción
   });
   console.log("Provider:", providerUsed, "/", modelUsed);
   console.log("---RESPUESTA---\n");

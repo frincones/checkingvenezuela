@@ -62,6 +62,10 @@ function checkRateLimit(sessionId) {
 }
 
 export async function POST(request) {
+  const t0 = Date.now();
+  const tlog = (label) => {
+    console.log(`[chat ${(Date.now() - t0).toString().padStart(5)}ms] ${label}`);
+  };
   try {
     const cookieStore = await cookies();
     const sessionId = cookieStore.get(COOKIE_NAME)?.value;
@@ -85,12 +89,14 @@ export async function POST(request) {
       return NextResponse.json({ error: "messages requerido" }, { status: 400 });
     }
 
+    tlog("body parsed");
     const sb = createAdminClient();
     const { data: conv, error: convErr } = await sb
       .from("chat_conversations")
       .select("id, language, status, contact_captured, consent_accepted, lead_id")
       .eq("session_id", sessionId)
       .maybeSingle();
+    tlog(`conv loaded id=${conv?.id?.slice(0, 8)}`);
     if (convErr) throw convErr;
     if (!conv) {
       return NextResponse.json(
@@ -156,12 +162,48 @@ export async function POST(request) {
     // Persistir el último mensaje del usuario (si no fue persistido aún)
     let intent = null;
     if (lastUser && lastUserText) {
-      // Clasificar intent (no bloquea respuesta — promesa en paralelo)
       intent = await classifyIntent({
         message: lastUserText,
         language,
         conversationId: conv.id,
       });
+
+      // Herencia de intent: si la respuesta es ambigua (other/chitchat) pero
+      // el usuario está confirmando algo, hereda el intent del turno previo.
+      // Ejemplo: "si por favor" tras "¿quieres ver paquetes?" → booking.
+      if (intent === "other" || intent === "chitchat") {
+        const isShortConfirm =
+          lastUserText.trim().length <= 30 &&
+          /^(s[ií]\b|claro|ok|okay|dale|por favor|porfa|perfect|sure|yes|yep|adelante|continúa|continua)/i.test(
+            lastUserText.trim()
+          );
+        if (isShortConfirm) {
+          // Cargar el último mensaje del assistant en esta conversación
+          const { data: prev } = await sb
+            .from("chat_messages")
+            .select("intent, tool_calls")
+            .eq("conversation_id", conv.id)
+            .eq("role", "assistant")
+            .order("created_at", { ascending: false })
+            .limit(1)
+            .maybeSingle();
+          if (prev) {
+            const prevTools = Array.isArray(prev.tool_calls) ? prev.tool_calls : [];
+            const usedSearch = prevTools.some((t) =>
+              ["searchPackages", "searchHotels", "searchFlights", "searchDestinations"].includes(
+                t.toolName || t.name
+              )
+            );
+            if (prev.intent === "booking" || usedSearch) {
+              intent = "booking";
+            } else if (prev.intent === "policy") {
+              intent = "policy";
+            } else if (prev.intent === "human_handoff") {
+              intent = "human_handoff";
+            }
+          }
+        }
+      }
 
       await sb.from("chat_messages").insert({
         conversation_id: conv.id,
@@ -169,6 +211,7 @@ export async function POST(request) {
         content: lastUserText,
         intent,
       });
+      tlog(`intent=${intent} lang=${language}`);
     }
 
     // Interceptor: jailbreak / off-topic → respuesta canned sin pasar por LLM.
@@ -274,6 +317,7 @@ export async function POST(request) {
 
     // Ejecutar agente con fallback chain. Si toda la cadena se rate-limita,
     // devolvemos un mensaje amigable + botón de WhatsApp en lugar de stack trace.
+    tlog(`tier=${tier} forceTool=${forceTool || "-"} requireTool=${requireTool}`);
     let result, providerUsed, modelUsed;
     try {
       ({ result, providerUsed, modelUsed } = await runAgent({
@@ -284,7 +328,9 @@ export async function POST(request) {
         tier,
         forceTool,
         requireTool,
+        intent,
       }));
+      tlog(`runAgent ready (${providerUsed}/${modelUsed})`);
     } catch (err) {
       const msg = String(err?.message || err || "");
       const isRateLimit = /rate.?limit|too.?many|quota|tokens per/i.test(msg);
