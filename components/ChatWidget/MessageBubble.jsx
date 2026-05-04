@@ -29,15 +29,28 @@ export function MessageBubble({ message, language = "es" }) {
       p.output?.leadId
   );
 
-  // Acciones rápidas (botones) generadas por tools como talkToHuman
+  // Acciones rápidas (botones) generadas por tools como talkToHuman.
+  // Filter permisivo: cualquier parte de tipo tool-* o dynamic-tool con
+  // un output que tenga action (independiente del state name exacto).
   const actionOutputs = (message.parts || [])
-    .filter(
-      (p) =>
-        p.type === "tool-talkToHuman" &&
-        p.state === "output-available" &&
-        p.output?.action
-    )
-    .map((p) => p.output);
+    .filter((p) => {
+      const isToolPart =
+        (typeof p.type === "string" && p.type.startsWith("tool-")) ||
+        p.type === "dynamic-tool" ||
+        p.type === "tool-result";
+      const out = p.output || p.result || null;
+      return isToolPart && out && (out.action === "open_whatsapp" || out.url);
+    })
+    .map((p) => p.output || p.result);
+
+  // Debug: en desarrollo, exponer las parts en window.__lastChatParts
+  if (
+    typeof window !== "undefined" &&
+    process.env.NODE_ENV !== "production" &&
+    !isUser
+  ) {
+    window.__lastChatParts = message.parts;
+  }
 
   return (
     <div

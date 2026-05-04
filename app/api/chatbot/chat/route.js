@@ -128,6 +128,10 @@ export async function POST(request) {
       hintsLines.push(
         "- Intent detectado: COMPLAINT. Empatiza brevemente, captura nombre/email/teléfono y crea lead con urgencia ALTA."
       );
+    } else if (intent === "human_handoff") {
+      hintsLines.push(
+        "- Intent detectado: HUMAN_HANDOFF. El sistema YA va a llamar talkToHuman automáticamente. Tu única tarea: responder breve (1 frase) tipo 'Te conecto con un asesor. Toca el botón abajo.' NO escribas el link ni describas el botón en exceso."
+      );
     }
 
     // Si ya tenemos algunos datos pero no todos, indicar siguiente
@@ -150,10 +154,16 @@ export async function POST(request) {
 
     const contextHints = hintsLines.length ? hintsLines.join("\n") : "";
 
-    // Modelo: usa el smart (gpt-oss-120b) cuando haya intent comercial / consulta KB
+    // Modelo: usa el smart (gpt-oss-120b) cuando haya intent comercial / consulta KB / handoff
     const useSmartTier =
-      intent === "booking" || intent === "policy" || intent === "complaint";
+      intent === "booking" ||
+      intent === "policy" ||
+      intent === "complaint" ||
+      intent === "human_handoff";
     const tier = useSmartTier ? "smart" : "fast";
+
+    // Forzar la tool talkToHuman cuando el cliente pide explícitamente un humano
+    const forceTool = intent === "human_handoff" ? "talkToHuman" : undefined;
 
     // Ejecutar agente con fallback chain
     const { result, providerUsed, modelUsed } = await runAgent({
@@ -162,6 +172,7 @@ export async function POST(request) {
       conversationId: conv.id,
       contextHints,
       tier,
+      forceTool,
     });
 
     // Hook onFinish (después de stream): persistir respuesta del assistant
