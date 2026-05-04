@@ -31,6 +31,26 @@ const CANNED = {
   },
 };
 
+/**
+ * Persiste un milestone de timing al log_persistente para diagnóstico server-side
+ * cuando los logs de Vercel runtime no son accesibles. Best-effort.
+ */
+function persistMilestone(sb, conversationId, label, ms, extra = {}) {
+  try {
+    sb.from("kb_usage_log")
+      .insert({
+        provider: "trace",
+        operation: "chat_milestone",
+        model: label,
+        tokens: ms,
+        conversation_id: conversationId || null,
+        metadata: extra,
+      })
+      .then(() => {})
+      .catch(() => {});
+  } catch {}
+}
+
 function streamCannedResponse(text) {
   // Devuelve un UIMessageStreamResponse con un único text-delta
   const stream = createUIMessageStream({
@@ -69,8 +89,16 @@ function checkRateLimit(sessionId) {
 
 export async function POST(request) {
   const t0 = Date.now();
-  const tlog = (label) => {
-    console.log(`[chat ${(Date.now() - t0).toString().padStart(5)}ms] ${label}`);
+  const _trace = []; // milestones para diagnóstico
+  let _convIdForTrace = null;
+  let _sbForTrace = null;
+  const tlog = (label, extra) => {
+    const ms = Date.now() - t0;
+    console.log(`[chat ${ms.toString().padStart(5)}ms] ${label}`);
+    _trace.push({ ms, label, ...(extra || {}) });
+    if (_sbForTrace && _convIdForTrace) {
+      persistMilestone(_sbForTrace, _convIdForTrace, label, ms, extra || {});
+    }
   };
   try {
     const cookieStore = await cookies();
@@ -97,11 +125,13 @@ export async function POST(request) {
 
     tlog("body parsed");
     const sb = createAdminClient();
+    _sbForTrace = sb;
     const { data: conv, error: convErr } = await sb
       .from("chat_conversations")
       .select("id, language, status, contact_captured, consent_accepted, lead_id")
       .eq("session_id", sessionId)
       .maybeSingle();
+    _convIdForTrace = conv?.id || null;
     tlog(`conv loaded id=${conv?.id?.slice(0, 8)}`);
     if (convErr) throw convErr;
     if (!conv) {
@@ -327,7 +357,7 @@ export async function POST(request) {
 
     // Ejecutar agente con fallback chain. Si toda la cadena se rate-limita,
     // devolvemos un mensaje amigable + botón de WhatsApp en lugar de stack trace.
-    tlog(`tier=${tier} forceTool=${forceTool || "-"} requireTool=${requireTool}`);
+    tlog(`tier=${tier} forceTool=${forceTool || "-"} requireTool=${requireTool} intent=${intent} inCapture=${!!inCapture}`);
     let result, providerUsed, modelUsed;
     try {
       // Watchdog: si runAgent no devuelve en 20s (cuelgue por upstream lento,
@@ -359,6 +389,11 @@ export async function POST(request) {
       const msg = String(err?.message || err || "");
       const isRateLimit = /rate.?limit|too.?many|quota|tokens per/i.test(msg);
       const isTimeout = /agent_timeout|timeout/i.test(msg);
+      tlog("runAgent error", {
+        rate_limit: isRateLimit,
+        timeout: isTimeout,
+        msg: msg.slice(0, 300),
+      });
       if (isRateLimit || isTimeout) {
         const fallbackText =
           language === "en"
@@ -384,8 +419,10 @@ export async function POST(request) {
 
     // Hook onFinish (después de stream): persistir respuesta del assistant
     // Lo hacemos vía consumeStream pattern: pasamos un callback en options
+    tlog("returning stream response");
     return result.toUIMessageStreamResponse({
       onFinish: async ({ messages: finalMessages }) => {
+        tlog("stream onFinish triggered");
         // El último mensaje de finalMessages es el del assistant generado
         try {
           const assistantMsg = [...finalMessages].reverse().find((m) => m.role === "assistant");
