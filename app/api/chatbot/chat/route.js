@@ -333,6 +333,7 @@ export async function POST(request) {
         forceTool,
         requireTool,
         intent,
+        inCapture: !!inCapture,
       }));
       tlog(`runAgent ready (${providerUsed}/${modelUsed})`);
     } catch (err) {
