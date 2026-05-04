@@ -4,6 +4,9 @@
  * Re-sincroniza fuentes desde DB o ingesta una URL nueva.
  */
 
+// Sync DB puede demorar (parser + chunker + Jina embeddings + DB inserts).
+export const maxDuration = 60;
+
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/db/supabase/server";
 import { ingestKbAction } from "@/lib/actions/chatbot/ingestKbAction";

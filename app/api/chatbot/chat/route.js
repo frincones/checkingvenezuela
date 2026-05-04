@@ -5,6 +5,12 @@
  * Streamea la respuesta del agente. Persiste mensajes en chat_messages.
  */
 
+// Vercel function config: el plan Hobby corta a los 10s por default. La
+// chain agente + tool + stream puede demorar 5-15s; sin esta línea el
+// cliente ve "..." infinito porque Vercel termina la function antes de
+// que el stream emita su primer chunk. 60s es el máximo permitido en Hobby.
+export const maxDuration = 60;
+
 import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/db/supabase/server";
