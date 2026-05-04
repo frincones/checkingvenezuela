@@ -168,40 +168,44 @@ export async function POST(request) {
         conversationId: conv.id,
       });
 
-      // Herencia de intent: si la respuesta es ambigua (other/chitchat) pero
-      // el usuario está confirmando algo, hereda el intent del turno previo.
-      // Ejemplo: "si por favor" tras "¿quieres ver paquetes?" → booking.
+      // Herencia de intent — caso 1: el cliente ya está en captura (tiene
+      // algún dato guardado y el lead no se ha creado) → booking forzado.
+      const cap = conv.contact_captured || {};
+      const inflightCapture =
+        !conv.lead_id && (cap.name || cap.email || cap.phone);
+      if (inflightCapture && (intent === "other" || intent === "chitchat")) {
+        intent = "booking";
+      }
+
+      // Herencia de intent — caso 2: respuesta ambigua tras un turno donde
+      // el agente usó una tool de búsqueda de productos. Mantenemos booking
+      // hasta que el usuario cambie claramente de tema (ej: pide ayuda, queja).
       if (intent === "other" || intent === "chitchat") {
-        const isShortConfirm =
-          lastUserText.trim().length <= 30 &&
-          /^(s[ií]\b|claro|ok|okay|dale|por favor|porfa|perfect|sure|yes|yep|adelante|continúa|continua)/i.test(
-            lastUserText.trim()
+        const { data: prev } = await sb
+          .from("chat_messages")
+          .select("intent, tool_calls, created_at")
+          .eq("conversation_id", conv.id)
+          .eq("role", "assistant")
+          .order("created_at", { ascending: false })
+          .limit(2);
+        const recent = Array.isArray(prev) ? prev : [];
+        const recentlyUsedSearch = recent.some((m) => {
+          const tools = Array.isArray(m.tool_calls) ? m.tool_calls : [];
+          return tools.some((t) =>
+            [
+              "searchPackages",
+              "searchHotels",
+              "searchFlights",
+              "searchDestinations",
+            ].includes(t.toolName || t.name)
           );
-        if (isShortConfirm) {
-          // Cargar el último mensaje del assistant en esta conversación
-          const { data: prev } = await sb
-            .from("chat_messages")
-            .select("intent, tool_calls")
-            .eq("conversation_id", conv.id)
-            .eq("role", "assistant")
-            .order("created_at", { ascending: false })
-            .limit(1)
-            .maybeSingle();
-          if (prev) {
-            const prevTools = Array.isArray(prev.tool_calls) ? prev.tool_calls : [];
-            const usedSearch = prevTools.some((t) =>
-              ["searchPackages", "searchHotels", "searchFlights", "searchDestinations"].includes(
-                t.toolName || t.name
-              )
-            );
-            if (prev.intent === "booking" || usedSearch) {
-              intent = "booking";
-            } else if (prev.intent === "policy") {
-              intent = "policy";
-            } else if (prev.intent === "human_handoff") {
-              intent = "human_handoff";
-            }
-          }
+        });
+        if (recentlyUsedSearch || recent[0]?.intent === "booking") {
+          intent = "booking";
+        } else if (recent[0]?.intent === "policy") {
+          intent = "policy";
+        } else if (recent[0]?.intent === "human_handoff") {
+          intent = "human_handoff";
         }
       }
 
