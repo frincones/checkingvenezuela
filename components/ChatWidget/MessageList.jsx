@@ -13,6 +13,7 @@ const TOOL_LABELS = {
   captureContactInfo: { es: "Guardando tus datos…", en: "Saving your info…" },
   requestConsent: { es: "Preparando autorización…", en: "Preparing consent…" },
   createLead: { es: "Registrando tu solicitud…", en: "Submitting your request…" },
+  talkToHuman: { es: "Conectando con un asesor…", en: "Connecting to advisor…" },
 };
 
 function getActiveToolLabel(messages, language) {
@@ -64,7 +65,7 @@ export function MessageList({ messages, status, language }) {
   return (
     <div className="flex flex-col gap-3 px-3 py-2">
       {messages.map((m) => (
-        <MessageBubble key={m.id} message={m} />
+        <MessageBubble key={m.id} message={m} language={language} />
       ))}
 
       {/* Indicador de tool en ejecución (durante streaming) */}
