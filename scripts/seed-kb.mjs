@@ -26,9 +26,12 @@ const { parseDocx } = await import(toUrl(aiPath("ingestion/parsers/docx.js")));
 const { upsertKbSource, ingestDocuments } = await import(
   toUrl(aiPath("ingestion/pipeline.js"))
 );
-const { extractDestinations, extractCatalogServices, extractPackages } = await import(
-  toUrl(aiPath("ingestion/parsers/db.js"))
-);
+const {
+  extractDestinations,
+  extractCatalogServices,
+  extractServiceInventory,
+  extractHotels,
+} = await import(toUrl(aiPath("ingestion/parsers/db.js")));
 
 const DOCX_FILES = [
   { file: "Quienes somos..docx", title: "Quiénes somos - Venezuela Voyages", lang: "es" },
@@ -101,37 +104,56 @@ async function seedDestinations() {
 }
 
 async function seedServices() {
-  console.log("\n✈️  Sembrando servicios desde catalog_services ...");
+  console.log("\n✈️  Sembrando categorías de servicios (catalog_services) ...");
   const docs = await extractCatalogServices();
   if (docs.length === 0) {
-    console.log("   ⚠️  No hay servicios (tabla vacía o no existe)");
+    console.log("   ⚠️  No hay categorías de servicios");
     return;
   }
-  console.log(`   📖 ${docs.length} servicios extraídos`);
+  console.log(`   📖 ${docs.length} categorías extraídas`);
 
   const sourceId = await upsertKbSource({
     type: "db_services",
-    name: "Servicios catálogo (sync DB)",
-    description: "Servicios disponibles en el catálogo",
+    name: "Categorías de servicios (sync DB)",
+    description: "Tipos de servicios ofrecidos por la agencia",
     language: "es",
   });
   const result = await ingestDocuments({ sourceId, documents: docs, language: "es" });
   console.log(`   ✅ ${result.totalChunks} chunks, ${result.totalTokens} tokens`);
 }
 
-async function seedPackages() {
-  console.log("\n📦 Sembrando paquetes desde packages ...");
-  const docs = await extractPackages();
+async function seedInventory() {
+  console.log("\n📦 Sembrando inventario de productos (service_inventory) ...");
+  const docs = await extractServiceInventory();
   if (docs.length === 0) {
-    console.log("   ⚠️  No hay paquetes (tabla vacía o no existe)");
+    console.log("   ⚠️  No hay productos publicados");
     return;
   }
-  console.log(`   📖 ${docs.length} paquetes extraídos`);
+  console.log(`   📖 ${docs.length} productos extraídos`);
 
   const sourceId = await upsertKbSource({
     type: "db_packages",
-    name: "Paquetes turísticos (sync DB)",
-    description: "Paquetes turísticos completos",
+    name: "Inventario de productos (sync DB)",
+    description: "Paquetes, tours y productos vendibles",
+    language: "es",
+  });
+  const result = await ingestDocuments({ sourceId, documents: docs, language: "es" });
+  console.log(`   ✅ ${result.totalChunks} chunks, ${result.totalTokens} tokens`);
+}
+
+async function seedHotels() {
+  console.log("\n🏨 Sembrando hoteles ...");
+  const docs = await extractHotels();
+  if (docs.length === 0) {
+    console.log("   ⚠️  No hay hoteles");
+    return;
+  }
+  console.log(`   📖 ${docs.length} hoteles extraídos`);
+
+  const sourceId = await upsertKbSource({
+    type: "manual",
+    name: "Hoteles (sync DB)",
+    description: "Catálogo de hoteles disponibles",
     language: "es",
   });
   const result = await ingestDocuments({ sourceId, documents: docs, language: "es" });
@@ -169,7 +191,8 @@ async function main() {
   await seedDocxFiles();
   await seedDestinations();
   await seedServices();
-  await seedPackages();
+  await seedInventory();
+  await seedHotels();
 
   console.log("\n============================================");
   console.log("✅ Seed completo");
