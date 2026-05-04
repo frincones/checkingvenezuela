@@ -16,10 +16,18 @@ export function MessageBubble({ message, language = "es" }) {
     .map((p) => p.text || "")
     .join("");
 
-  const sources = (message.parts || [])
-    .filter((p) => p.type === "tool-searchKb" && p.state === "output-available")
-    .flatMap((p) => p.output?.results || [])
-    .map((r) => ({ title: r.documentTitle, source: r.source, score: r.score }));
+  // Sources solo de searchKb (no de búsquedas de catálogo). Deduplicamos
+  // por documento y mostramos máx 3 con la relevancia más alta.
+  const sources = dedupeSources(
+    (message.parts || [])
+      .filter((p) => p.type === "tool-searchKb" && p.state === "output-available")
+      .flatMap((p) => p.output?.results || [])
+      .map((r) => ({
+        title: r.documentTitle || r.source || "Documento",
+        sourceType: r.sourceType,
+        score: r.score,
+      }))
+  ).slice(0, 3);
 
   const leadCreated = (message.parts || []).some(
     (p) =>
@@ -106,4 +114,21 @@ export function MessageBubble({ message, language = "es" }) {
       )}
     </div>
   );
+}
+
+/**
+ * Deduplica sources por título (case-insensitive), conservando la mayor
+ * relevancia.
+ */
+function dedupeSources(arr) {
+  const map = new Map();
+  for (const s of arr) {
+    const key = (s.title || "").toLowerCase().trim();
+    if (!key) continue;
+    const existing = map.get(key);
+    if (!existing || (s.score ?? 0) > (existing.score ?? 0)) {
+      map.set(key, s);
+    }
+  }
+  return Array.from(map.values()).sort((a, b) => (b.score ?? 0) - (a.score ?? 0));
 }

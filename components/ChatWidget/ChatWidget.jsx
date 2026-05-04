@@ -3,7 +3,15 @@
 import { useEffect, useRef, useState } from "react";
 import { useChat } from "@ai-sdk/react";
 import { DefaultChatTransport } from "ai";
-import { Bot, Send, X, MessageCircleMore, Languages, Minimize2 } from "lucide-react";
+import {
+  Bot,
+  Send,
+  X,
+  MessageCircleMore,
+  Languages,
+  Minimize2,
+  RefreshCw,
+} from "lucide-react";
 import { MessageList } from "./MessageList";
 import { ConsentDialog } from "./ConsentDialog";
 
@@ -76,6 +84,36 @@ export function ChatWidget() {
     if (typeof window !== "undefined") localStorage.setItem(STORAGE_LANG_KEY, next);
   }
 
+  // Auto-focus el input cuando el widget abre y cuando termina cada turno.
+  // Antes el cursor se perdía después de cada respuesta y había que hacer
+  // click manualmente. Esto re-enfoca cuando status vuelve a "ready".
+  useEffect(() => {
+    if (!open || !bootstrapped) return;
+    if (status === "ready" || status === "idle") {
+      // pequeño delay para esperar el render del último mensaje
+      const t = setTimeout(() => inputRef.current?.focus(), 80);
+      return () => clearTimeout(t);
+    }
+  }, [open, bootstrapped, status]);
+
+  // Reiniciar conversación: borra cookie de sesión y recarga el widget
+  // como cliente nuevo (sin contact_captured residual).
+  async function resetConversation() {
+    try {
+      await fetch("/api/chatbot/session", {
+        method: "DELETE",
+      }).catch(() => {});
+    } catch {}
+    // Limpieza local
+    setBootstrapped(false);
+    setConversationId(null);
+    setConsentAccepted(false);
+    setError(null);
+    setInput("");
+    // El cookie httpOnly se borra mediante DELETE en el endpoint;
+    // el siguiente bootstrap creará nueva session.
+  }
+
   function handleSubmit(e) {
     e.preventDefault();
     const trimmed = input.trim();
@@ -141,6 +179,24 @@ export function ChatWidget() {
               </div>
             </div>
             <div className="flex items-center gap-1">
+              <button
+                onClick={() => {
+                  if (
+                    confirm(
+                      language === "en"
+                        ? "Start a new conversation? Your current chat will be cleared."
+                        : "¿Empezar una nueva conversación? Se limpiará el chat actual."
+                    )
+                  ) {
+                    resetConversation();
+                  }
+                }}
+                title={language === "es" ? "Nueva conversación" : "New conversation"}
+                className="rounded-md p-1.5 hover:bg-white/10"
+                aria-label={language === "en" ? "New conversation" : "Nueva conversación"}
+              >
+                <RefreshCw className="h-4 w-4" />
+              </button>
               <button
                 onClick={() => changeLanguage(language === "es" ? "en" : "es")}
                 title={language === "es" ? "Switch to English" : "Cambiar a español"}

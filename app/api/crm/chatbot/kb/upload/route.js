@@ -5,6 +5,10 @@
  * Sube el archivo a Supabase Storage (bucket chatbot-kb) y dispara la ingesta.
  */
 
+// Ingestion puede demorar (parser + chunker + Jina embeddings + DB inserts).
+// 60s es el máximo permitido en Hobby para evitar el timeout default de 10s.
+export const maxDuration = 60;
+
 import { NextResponse } from "next/server";
 import { createClient, createAdminClient } from "@/lib/db/supabase/server";
 import { ingestKbAction } from "@/lib/actions/chatbot/ingestKbAction";

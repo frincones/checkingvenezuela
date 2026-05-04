@@ -115,6 +115,39 @@ export async function POST(request) {
   }
 }
 
+/**
+ * DELETE /api/chatbot/session
+ * Cierra la conversación actual y borra la cookie. Si hay datos capturados
+ * sin lead creado, los descarta. Útil para "Nueva conversación".
+ */
+export async function DELETE() {
+  try {
+    const cookieStore = await cookies();
+    const sessionId = cookieStore.get(COOKIE_NAME)?.value;
+    if (sessionId) {
+      const sb = createAdminClient();
+      // Marcar la conversación como cerrada (mantenemos el historial)
+      await sb
+        .from("chat_conversations")
+        .update({ status: "closed", closed_at: new Date().toISOString() })
+        .eq("session_id", sessionId);
+    }
+    const res = NextResponse.json({ ok: true });
+    // Borra la cookie en el navegador
+    res.cookies.set(COOKIE_NAME, "", {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax",
+      maxAge: 0,
+      path: "/",
+    });
+    return res;
+  } catch (err) {
+    console.error("[chatbot/session DELETE]", err);
+    return NextResponse.json({ ok: false, error: err.message }, { status: 500 });
+  }
+}
+
 export async function GET() {
   try {
     const cookieStore = await cookies();
