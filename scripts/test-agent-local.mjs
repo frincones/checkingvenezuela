@@ -31,6 +31,7 @@ const messages = [
 
 try {
   const tier = process.argv[3] || "fast"; // pass "smart" as 3rd arg for gpt-oss-120b
+  const forceTool = process.argv[4] || undefined; // optional: tool name to force
   const { result, providerUsed, modelUsed } = await runAgent({
     messages,
     language: "es",
@@ -38,6 +39,7 @@ try {
     contextHints:
       "- Intent detectado: BOOKING. DEBES llamar searchPackages AHORA y luego pedir nombre del cliente.",
     tier,
+    forceTool,
   });
   console.log("Provider:", providerUsed, "/", modelUsed);
   console.log("---RESPUESTA---\n");
