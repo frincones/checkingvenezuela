@@ -37,7 +37,7 @@ export async function GET(request) {
         id, session_id, language, status, message_count, total_tokens,
         consent_accepted, consent_accepted_at, contact_captured,
         lead_id, started_at, last_message_at, created_at,
-        lead:leads(id, contact_name, contact_email, status, interest_type)
+        lead:leads!chat_conversations_lead_id_fkey(id, contact_name, contact_email, status, interest_type)
       `,
         { count: "exact" }
       )

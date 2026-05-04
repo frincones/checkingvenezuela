@@ -32,7 +32,7 @@ export async function GET(_request, { params }) {
       .select(
         `
         *,
-        lead:leads(id, contact_name, contact_email, contact_phone, status, interest_type, advisor_id),
+        lead:leads!chat_conversations_lead_id_fkey(id, contact_name, contact_email, contact_phone, status, interest_type, advisor_id),
         profile:profiles(id, first_name, last_name, email)
       `
       )
