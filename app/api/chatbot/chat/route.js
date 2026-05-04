@@ -1,8 +1,15 @@
 /**
  * POST /api/chatbot/chat
- * Body: { messages: UIMessage[], language?: 'es'|'en' }
+ * Body: {
+ *   messages: UIMessage[],
+ *   visitorToken: string,    // NUEVO: identidad del visitor (localStorage)
+ *   conversationId: string,  // NUEVO: thread elegido del sidebar
+ *   language?: 'es'|'en'
+ * }
  *
  * Streamea la respuesta del agente. Persiste mensajes en chat_messages.
+ * El contact (nombre/email/tel) y consent viven en `chat_visitors` —
+ * persistentes entre threads del mismo visitor.
  */
 
 // Vercel function config: el plan Hobby corta a los 10s por default. La
@@ -11,7 +18,6 @@
 // que el stream emita su primer chunk. 60s es el máximo permitido en Hobby.
 export const maxDuration = 60;
 
-import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/db/supabase/server";
 import { runAgent } from "@/lib/ai/agent";
@@ -68,22 +74,20 @@ function streamCannedResponse(text) {
   return createUIMessageStreamResponse({ stream });
 }
 
-const COOKIE_NAME = "vv_chat_session";
-
-// Rate limiting in-memory (suficiente para MVP — reemplazar con Redis al escalar)
+// Rate limiting in-memory por visitor (suficiente para MVP — reemplazar con Redis al escalar)
 const rateLimits = new Map();
 const RATE_WINDOW_MS = 60 * 1000;
 const RATE_MAX_REQ = 30;
 
-function checkRateLimit(sessionId) {
+function checkRateLimit(key) {
   const now = Date.now();
-  const entry = rateLimits.get(sessionId) || { count: 0, windowStart: now };
+  const entry = rateLimits.get(key) || { count: 0, windowStart: now };
   if (now - entry.windowStart > RATE_WINDOW_MS) {
     entry.count = 0;
     entry.windowStart = now;
   }
   entry.count++;
-  rateLimits.set(sessionId, entry);
+  rateLimits.set(key, entry);
   return entry.count <= RATE_MAX_REQ;
 }
 
@@ -101,47 +105,75 @@ export async function POST(request) {
     }
   };
   try {
-    const cookieStore = await cookies();
-    const sessionId = cookieStore.get(COOKIE_NAME)?.value;
-    if (!sessionId) {
+    const body = await request.json();
+    const messages = body.messages || [];
+    const visitorToken = body.visitorToken;
+    const conversationId = body.conversationId;
+
+    if (!Array.isArray(messages) || messages.length === 0) {
+      return NextResponse.json({ error: "messages requerido" }, { status: 400 });
+    }
+    if (!visitorToken) {
       return NextResponse.json(
-        { error: "Sin sesión activa. Llama primero a /api/chatbot/session" },
+        { error: "visitorToken requerido. Llama a /api/chatbot/visitor primero." },
+        { status: 400 }
+      );
+    }
+    if (!conversationId) {
+      return NextResponse.json(
+        { error: "conversationId requerido. Llama a /api/chatbot/session o crea uno." },
         { status: 400 }
       );
     }
 
-    if (!checkRateLimit(sessionId)) {
+    if (!checkRateLimit(visitorToken)) {
       return NextResponse.json(
         { error: "Demasiadas solicitudes. Espera un momento e intenta de nuevo." },
         { status: 429 }
       );
     }
 
-    const body = await request.json();
-    const messages = body.messages || [];
-    if (!Array.isArray(messages) || messages.length === 0) {
-      return NextResponse.json({ error: "messages requerido" }, { status: 400 });
-    }
-
     tlog("body parsed");
     const sb = createAdminClient();
     _sbForTrace = sb;
-    const { data: conv, error: convErr } = await sb
-      .from("chat_conversations")
-      .select("id, language, status, contact_captured, consent_accepted, lead_id")
-      .eq("session_id", sessionId)
+
+    // Cargar visitor
+    const { data: visitor, error: vErr } = await sb
+      .from("chat_visitors")
+      .select("id, contact_captured, consent_accepted, preferred_language")
+      .eq("visitor_token", visitorToken)
       .maybeSingle();
-    _convIdForTrace = conv?.id || null;
-    tlog(`conv loaded id=${conv?.id?.slice(0, 8)}`);
-    if (convErr) throw convErr;
-    if (!conv) {
+    if (vErr) throw vErr;
+    if (!visitor) {
       return NextResponse.json(
-        { error: "Conversación no encontrada. Llama a /api/chatbot/session primero." },
+        { error: "Visitor no encontrado. Recarga el chat para reinicializar." },
         { status: 404 }
       );
     }
+
+    // Cargar conversación y verificar que pertenezca al visitor
+    const { data: conv, error: convErr } = await sb
+      .from("chat_conversations")
+      .select("id, visitor_id, language, status, lead_id")
+      .eq("id", conversationId)
+      .maybeSingle();
+    _convIdForTrace = conv?.id || null;
+    tlog(`conv loaded id=${conv?.id?.slice(0, 8)} visitor=${visitor.id?.slice(0, 8)}`);
+    if (convErr) throw convErr;
+    if (!conv) {
+      return NextResponse.json({ error: "Conversación no encontrada." }, { status: 404 });
+    }
+    if (conv.visitor_id !== visitor.id) {
+      return NextResponse.json(
+        { error: "Conversación no pertenece a este visitor." },
+        { status: 403 }
+      );
+    }
     if (conv.status === "closed") {
-      return NextResponse.json({ error: "Conversación cerrada" }, { status: 400 });
+      return NextResponse.json(
+        { error: "Conversación cerrada. Crea una nueva." },
+        { status: 400 }
+      );
     }
 
     // Idioma: SIEMPRE re-detectar del último mensaje del usuario.
@@ -164,21 +196,22 @@ export async function POST(request) {
     }
 
     // Pre-captura server-side defensiva: si el último mensaje contiene un
-    // email o teléfono claro, lo persistimos en contact_captured ANTES de
-    // pasar al modelo. Así el dato no se pierde si el LLM no llama la tool.
+    // email o teléfono claro, lo persistimos en VISITOR.contact_captured
+    // ANTES de pasar al modelo. Así el dato no se pierde si el LLM no
+    // llama la tool. Persiste a nivel visitor (NO conversación) — el
+    // dato está disponible en cualquier thread futuro del mismo visitor.
     if (lastUserText && !conv.lead_id) {
       const emailMatch = lastUserText.match(
         /[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}/i
       );
       const phoneMatch = lastUserText.match(/\+?\d[\d\s\-().]{7,}\d/);
-      const captured = { ...(conv.contact_captured || {}) };
+      const captured = { ...(visitor.contact_captured || {}) };
       let dirty = false;
       if (emailMatch && !captured.email) {
         captured.email = emailMatch[0].toLowerCase();
         dirty = true;
       }
       if (phoneMatch && !captured.phone) {
-        // Limpiar a solo dígitos + plus inicial
         const cleaned = phoneMatch[0].replace(/[^\d+]/g, "");
         if (cleaned.length >= 8) {
           captured.phone = cleaned;
@@ -187,11 +220,10 @@ export async function POST(request) {
       }
       if (dirty) {
         await sb
-          .from("chat_conversations")
+          .from("chat_visitors")
           .update({ contact_captured: captured })
-          .eq("id", conv.id);
-        // Refrescar conv para los hints siguientes
-        conv.contact_captured = captured;
+          .eq("id", visitor.id);
+        visitor.contact_captured = captured;
       }
     }
 
@@ -205,8 +237,9 @@ export async function POST(request) {
       });
 
       // Herencia de intent — caso 1: el cliente ya está en captura (tiene
-      // algún dato guardado y el lead no se ha creado) → booking forzado.
-      const cap = conv.contact_captured || {};
+      // algún dato guardado en el visitor y el lead no se ha creado en
+      // ESTA conversación) → booking forzado.
+      const cap = visitor.contact_captured || {};
       const inflightCapture =
         !conv.lead_id && (cap.name || cap.email || cap.phone);
       if (inflightCapture && (intent === "other" || intent === "chitchat")) {
@@ -273,14 +306,14 @@ export async function POST(request) {
       return streamCannedResponse(reply);
     }
 
-    // Hints para el system prompt
-    const captured = conv.contact_captured || {};
+    // Hints para el system prompt — leemos del visitor (no de la conv)
+    const captured = visitor.contact_captured || {};
     const hintsLines = [];
     if (captured.name) hintsLines.push(`- Nombre del cliente: ${captured.name}`);
     if (captured.email) hintsLines.push(`- Email: ${captured.email}`);
     if (captured.phone) hintsLines.push(`- Teléfono: ${captured.phone}`);
-    if (conv.consent_accepted) hintsLines.push("- Consentimiento de datos: ACEPTADO");
-    if (conv.lead_id) hintsLines.push("- Lead ya creado para este cliente. NO crees otro.");
+    if (visitor.consent_accepted) hintsLines.push("- Consentimiento de datos: ACEPTADO");
+    if (conv.lead_id) hintsLines.push("- Lead ya creado para este cliente en ESTA conversación. NO crees otro.");
 
     // Inyectar instrucciones específicas por intent (refuerza tool use + lead push)
     if (intent === "booking") {
@@ -323,7 +356,7 @@ export async function POST(request) {
           `- CAPTURA EN CURSO: ya tienes [${have}]. Próximo dato a pedir: **${nextMissing[1]}**. NO pidas otra cosa, NO saltes pasos, NO repitas opciones de paquetes.`
         );
       }
-      if (!nextMissing && !conv.consent_accepted) {
+      if (!nextMissing && !visitor.consent_accepted) {
         hintsLines.push(
           "- TIENES LOS 3 DATOS COMPLETOS (nombre + email + teléfono). Llama AHORA 'requestConsent' con un reason corto. NO pidas más datos."
         );

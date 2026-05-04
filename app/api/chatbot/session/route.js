@@ -1,69 +1,70 @@
 /**
  * POST /api/chatbot/session
- * Crea (o reutiliza) una conversación. Setea cookie httpOnly con session_id.
+ *   Body: { visitorToken, language? }
+ *   Devuelve la conversación activa del visitor (la más reciente NO closed)
+ *   o crea una nueva si no hay ninguna utilizable.
  *
- * GET /api/chatbot/session
- * Devuelve estado actual de la sesión (consent, lead vinculado, etc.).
+ * GET /api/chatbot/session?visitorToken=...
+ *   Devuelve estado de la conversación activa.
+ *
+ * Nota: ya NO usamos cookie httpOnly. La identidad vive en localStorage
+ * del cliente (visitorToken). Cada conversación es un thread distinto
+ * — el cliente decide cuál abrir vía el sidebar.
  */
 
 import { NextResponse } from "next/server";
-import { cookies, headers } from "next/headers";
-import { createClient, createAdminClient } from "@/lib/db/supabase/server";
-import { generateSessionId, hashIp } from "@/lib/ai/utils";
+import { createAdminClient } from "@/lib/db/supabase/server";
+import { generateSessionId } from "@/lib/ai/utils";
 
-const COOKIE_NAME = "vv_chat_session";
-const COOKIE_MAX_AGE = 60 * 60 * 24 * 30; // 30 días
+const IDLE_TO_CLOSED_MS = 24 * 60 * 60 * 1000; // 24h sin actividad → idle se vuelve closed
 
-// Si la conversación lleva más de este tiempo sin actividad, asumimos que
-// es un cliente "nuevo" volviendo y abrimos sesión fresca (no arrastramos
-// el contact_captured de hace días).
-const IDLE_THRESHOLD_MS = 2 * 60 * 60 * 1000; // 2 horas
+async function findVisitor(sb, visitorToken) {
+  if (!visitorToken) return null;
+  const { data } = await sb
+    .from("chat_visitors")
+    .select("id, preferred_language, contact_captured, consent_accepted")
+    .eq("visitor_token", visitorToken)
+    .maybeSingle();
+  return data;
+}
 
-async function getOrCreateConversation({ sessionId, profileId, userAgent, ipHash, language }) {
-  const sb = createAdminClient();
-
-  // Buscar existente por session_id
+async function getActiveConversation(sb, visitorId, preferredLang) {
+  // Buscar la conversación más reciente del visitor que NO esté closed
   const { data: existing } = await sb
     .from("chat_conversations")
-    .select(
-      "id, session_id, language, consent_accepted, lead_id, status, contact_captured, last_message_at"
-    )
-    .eq("session_id", sessionId)
+    .select("id, session_id, language, status, message_count, lead_id, last_message_at, contact_captured")
+    .eq("visitor_id", visitorId)
+    .neq("status", "closed")
+    .order("last_message_at", { ascending: false })
+    .limit(1)
     .maybeSingle();
 
   if (existing) {
-    // Si está cerrada O lleva mucho idle, descartamos la conversación vieja
-    // y devolvemos null para que se cree una nueva con session_id distinto.
+    // Si llevaba >24h idle, marcarla como closed y crear nueva
     const idleMs = existing.last_message_at
       ? Date.now() - new Date(existing.last_message_at).getTime()
       : 0;
-    const isStale = existing.status === "closed" || idleMs > IDLE_THRESHOLD_MS;
-    if (isStale) {
-      // Cerramos la vieja (mantiene historial para admin) y caemos al insert.
-      if (existing.status !== "closed") {
-        await sb
-          .from("chat_conversations")
-          .update({ status: "closed", closed_at: new Date().toISOString() })
-          .eq("id", existing.id);
-      }
-      // Caer al INSERT abajo con sessionId NUEVO para no chocar con la PK
-      sessionId = `${sessionId}-${Date.now().toString(36)}`;
+    if (idleMs > IDLE_TO_CLOSED_MS) {
+      await sb
+        .from("chat_conversations")
+        .update({ status: "closed", closed_at: new Date().toISOString() })
+        .eq("id", existing.id);
     } else {
       return existing;
     }
   }
 
+  // Crear nueva conversación
+  const sessionId = generateSessionId();
   const { data: created, error } = await sb
     .from("chat_conversations")
     .insert({
       session_id: sessionId,
-      profile_id: profileId || null,
-      language: language || "es",
+      visitor_id: visitorId,
+      language: preferredLang || "es",
       status: "active",
-      user_agent: userAgent || null,
-      ip_hash: ipHash || null,
     })
-    .select("id, session_id, language, consent_accepted, lead_id, status, contact_captured")
+    .select("id, session_id, language, status, message_count, lead_id, contact_captured")
     .single();
   if (error) throw error;
   return created;
@@ -71,129 +72,73 @@ async function getOrCreateConversation({ sessionId, profileId, userAgent, ipHash
 
 export async function POST(request) {
   try {
-    const cookieStore = await cookies();
-    const headerStore = await headers();
-    const supabase = await createClient();
-
-    let sessionId = cookieStore.get(COOKIE_NAME)?.value;
-    if (!sessionId) sessionId = generateSessionId();
-
-    // Auth opcional
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-
-    const ua = headerStore.get("user-agent") || "";
-    const ip =
-      headerStore.get("x-forwarded-for")?.split(",")[0]?.trim() ||
-      headerStore.get("x-real-ip") ||
-      null;
-    const ipHash = await hashIp(ip);
-
-    let body = {};
-    try {
-      body = await request.json();
-    } catch {
-      // body vacío OK
+    const sb = createAdminClient();
+    const body = await request.json().catch(() => ({}));
+    const visitor = await findVisitor(sb, body.visitorToken);
+    if (!visitor) {
+      return NextResponse.json(
+        {
+          ok: false,
+          error: "Visitor no encontrado. Llama a /api/chatbot/visitor primero.",
+        },
+        { status: 400 }
+      );
     }
 
-    const conv = await getOrCreateConversation({
-      sessionId,
-      profileId: user?.id || null,
-      userAgent: ua,
-      ipHash,
-      language: body.language || "es",
-    });
+    const conv = await getActiveConversation(
+      sb,
+      visitor.id,
+      body.language || visitor.preferred_language
+    );
 
-    const res = NextResponse.json({
+    return NextResponse.json({
       ok: true,
       conversationId: conv.id,
-      sessionId: conv.session_id,
       language: conv.language,
-      consentAccepted: conv.consent_accepted,
-      leadId: conv.lead_id,
-      contactCaptured: conv.contact_captured || {},
+      status: conv.status,
+      messageCount: conv.message_count || 0,
+      hasLead: !!conv.lead_id,
+      // Datos del visitor (NO de la conversación) — para el cliente saber
+      // si ya tiene PII guardada (no para mostrarla pero sí para skip
+      // captura repetida)
+      contactCaptured: visitor.contact_captured || {},
+      consentAccepted: !!visitor.consent_accepted,
     });
-
-    // Usar conv.session_id (puede ser distinto al recibido si la conversación
-    // anterior estaba stale y getOrCreateConversation creó una nueva con
-    // session_id refrescado).
-    res.cookies.set(COOKIE_NAME, conv.session_id, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "lax",
-      maxAge: COOKIE_MAX_AGE,
-      path: "/",
-    });
-
-    return res;
   } catch (err) {
     console.error("[chatbot/session POST]", err);
-    return NextResponse.json(
-      { ok: false, error: err.message || "Error creando sesión" },
-      { status: 500 }
-    );
-  }
-}
-
-/**
- * DELETE /api/chatbot/session
- * Cierra la conversación actual y borra la cookie. Si hay datos capturados
- * sin lead creado, los descarta. Útil para "Nueva conversación".
- */
-export async function DELETE() {
-  try {
-    const cookieStore = await cookies();
-    const sessionId = cookieStore.get(COOKIE_NAME)?.value;
-    if (sessionId) {
-      const sb = createAdminClient();
-      // Marcar la conversación como cerrada (mantenemos el historial)
-      await sb
-        .from("chat_conversations")
-        .update({ status: "closed", closed_at: new Date().toISOString() })
-        .eq("session_id", sessionId);
-    }
-    const res = NextResponse.json({ ok: true });
-    // Borra la cookie en el navegador
-    res.cookies.set(COOKIE_NAME, "", {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "lax",
-      maxAge: 0,
-      path: "/",
-    });
-    return res;
-  } catch (err) {
-    console.error("[chatbot/session DELETE]", err);
     return NextResponse.json({ ok: false, error: err.message }, { status: 500 });
   }
 }
 
-export async function GET() {
+export async function GET(request) {
   try {
-    const cookieStore = await cookies();
-    const sessionId = cookieStore.get(COOKIE_NAME)?.value;
-    if (!sessionId) return NextResponse.json({ ok: true, exists: false });
-
     const sb = createAdminClient();
-    const { data, error } = await sb
+    const { searchParams } = new URL(request.url);
+    const visitorToken = searchParams.get("visitorToken");
+    const visitor = await findVisitor(sb, visitorToken);
+    if (!visitor) return NextResponse.json({ ok: true, exists: false });
+
+    const { data: conv } = await sb
       .from("chat_conversations")
-      .select("id, language, consent_accepted, lead_id, status, contact_captured, message_count")
-      .eq("session_id", sessionId)
+      .select("id, language, status, message_count, lead_id")
+      .eq("visitor_id", visitor.id)
+      .neq("status", "closed")
+      .order("last_message_at", { ascending: false })
+      .limit(1)
       .maybeSingle();
-    if (error) throw error;
-    if (!data) return NextResponse.json({ ok: true, exists: false });
+
+    if (!conv) return NextResponse.json({ ok: true, exists: false });
 
     return NextResponse.json({
       ok: true,
       exists: true,
-      conversationId: data.id,
-      language: data.language,
-      consentAccepted: data.consent_accepted,
-      leadId: data.lead_id,
-      status: data.status,
-      contactCaptured: data.contact_captured || {},
-      messageCount: data.message_count,
+      conversationId: conv.id,
+      language: conv.language,
+      status: conv.status,
+      messageCount: conv.message_count,
+      hasLead: !!conv.lead_id,
+      contactCaptured: visitor.contact_captured || {},
+      consentAccepted: !!visitor.consent_accepted,
     });
   } catch (err) {
     console.error("[chatbot/session GET]", err);

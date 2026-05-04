@@ -29,7 +29,13 @@ You can request deletion of your data at any time by writing to privacy@venezuel
   },
 };
 
-export function ConsentDialog({ open, onOpenChange, language = "es", onDecide }) {
+export function ConsentDialog({
+  open,
+  onOpenChange,
+  language = "es",
+  visitorToken,
+  onDecide,
+}) {
   const t = TEXT[language] || TEXT.es;
 
   async function decide(accepted) {
@@ -37,7 +43,7 @@ export function ConsentDialog({ open, onOpenChange, language = "es", onDecide })
       await fetch("/api/chatbot/consent", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ accepted }),
+        body: JSON.stringify({ accepted, visitorToken }),
       });
     } catch (e) {
       console.error("[ConsentDialog]", e);
