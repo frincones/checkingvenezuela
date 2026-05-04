@@ -110,8 +110,50 @@ export async function POST(request) {
     if (captured.phone) hintsLines.push(`- Teléfono: ${captured.phone}`);
     if (conv.consent_accepted) hintsLines.push("- Consentimiento de datos: ACEPTADO");
     if (conv.lead_id) hintsLines.push(`- Lead ya creado (ID: ${conv.lead_id})`);
-    if (intent) hintsLines.push(`- Intent detectado: ${intent}`);
+
+    // Inyectar instrucciones específicas por intent (refuerza tool use + lead push)
+    if (intent === "booking") {
+      hintsLines.push(
+        "- Intent detectado: BOOKING. DEBES llamar searchPackages/searchHotels/searchFlights AHORA y luego empujar al cliente a darte sus datos para conectarlo con un asesor."
+      );
+    } else if (intent === "policy") {
+      hintsLines.push(
+        "- Intent detectado: POLICY. DEBES llamar searchKb AHORA con la pregunta del usuario y citar la fuente."
+      );
+    } else if (intent === "info") {
+      hintsLines.push(
+        "- Intent detectado: INFO. Llama searchKb o searchDestinations según corresponda. Tras responder, pivota: '¿Te gustaría que te muestre paquetes para X?'"
+      );
+    } else if (intent === "complaint") {
+      hintsLines.push(
+        "- Intent detectado: COMPLAINT. Empatiza brevemente, captura nombre/email/teléfono y crea lead con urgencia ALTA."
+      );
+    }
+
+    // Si ya tenemos algunos datos pero no todos, indicar siguiente
+    if (!conv.lead_id) {
+      const missing = [];
+      if (!captured.name) missing.push("nombre");
+      if (!captured.email) missing.push("email");
+      if (!captured.phone) missing.push("teléfono");
+      if (missing.length > 0 && (captured.name || captured.email || captured.phone)) {
+        hintsLines.push(
+          `- AVANZA LA CAPTURA: ya tienes ${Object.keys(captured).filter((k) => captured[k]).join(", ")}. Pide el siguiente dato faltante: ${missing[0]}.`
+        );
+      }
+      if (missing.length === 0 && !conv.consent_accepted) {
+        hintsLines.push(
+          "- TIENES LOS 3 DATOS. Llama AHORA 'requestConsent' para mostrar el dialog al usuario."
+        );
+      }
+    }
+
     const contextHints = hintsLines.length ? hintsLines.join("\n") : "";
+
+    // Modelo: usa el smart (gpt-oss-120b) cuando haya intent comercial / consulta KB
+    const useSmartTier =
+      intent === "booking" || intent === "policy" || intent === "complaint";
+    const tier = useSmartTier ? "smart" : "fast";
 
     // Ejecutar agente con fallback chain
     const { result, providerUsed, modelUsed } = await runAgent({
@@ -119,6 +161,7 @@ export async function POST(request) {
       language,
       conversationId: conv.id,
       contextHints,
+      tier,
     });
 
     // Hook onFinish (después de stream): persistir respuesta del assistant

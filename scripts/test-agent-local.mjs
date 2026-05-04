@@ -30,10 +30,14 @@ const messages = [
 ];
 
 try {
+  const tier = process.argv[3] || "fast"; // pass "smart" as 3rd arg for gpt-oss-120b
   const { result, providerUsed, modelUsed } = await runAgent({
     messages,
     language: "es",
     conversationId: "test-conv-id-no-existe",
+    contextHints:
+      "- Intent detectado: BOOKING. DEBES llamar searchPackages AHORA y luego pedir nombre del cliente.",
+    tier,
   });
   console.log("Provider:", providerUsed, "/", modelUsed);
   console.log("---RESPUESTA---\n");
