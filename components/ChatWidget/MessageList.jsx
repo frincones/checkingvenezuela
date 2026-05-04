@@ -21,10 +21,7 @@ function getActiveToolLabel(messages, language) {
   const last = messages[messages.length - 1];
   if (last.role !== "assistant" || !Array.isArray(last.parts)) return null;
 
-  // Si todavía no hay texto pero hay tool calls "input-available" o "input-streaming"
-  const hasText = last.parts.some(
-    (p) => p.type === "text" && (p.text || "").trim().length > 0
-  );
+  // Tool en ejecución: input completo pero sin output aún
   const activeTool = last.parts.find(
     (p) =>
       p.type?.startsWith("tool-") &&
@@ -33,7 +30,9 @@ function getActiveToolLabel(messages, language) {
         p.state === "output-streaming")
   );
   if (!activeTool) return null;
-  if (hasText) return null; // ya está escribiendo respuesta, no necesita el indicador
+  // Mostramos el indicador SIEMPRE que haya tool corriendo, incluso si ya
+  // hay texto previo — el delay del tool puede ser >1s y el usuario debe
+  // saber que algo está pasando, no creer que el bot se trabó.
   const toolName = activeTool.type.replace(/^tool-/, "");
   const label = TOOL_LABELS[toolName];
   return label ? label[language] || label.es : null;

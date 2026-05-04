@@ -260,6 +260,18 @@ export async function POST(request) {
     // Forzar la tool talkToHuman cuando el cliente pide explícitamente un humano
     const forceTool = intent === "human_handoff" ? "talkToHuman" : undefined;
 
+    // Para booking / policy / complaint: forzar que el primer step llame ALGUNA
+    // tool antes de generar texto. Evita el patrón "preamble + tool + respuesta"
+    // que produce el feo efecto de "responde a medias y se queda pensando".
+    // Solo aplicamos si el cliente NO está aún en captura de datos (esos turnos
+    // son texto puro: el modelo solo agradece y pide el siguiente dato).
+    const inCapture =
+      captured.name || captured.email || captured.phone;
+    const requireTool =
+      !inCapture &&
+      !forceTool &&
+      (intent === "booking" || intent === "policy" || intent === "complaint");
+
     // Ejecutar agente con fallback chain. Si toda la cadena se rate-limita,
     // devolvemos un mensaje amigable + botón de WhatsApp en lugar de stack trace.
     let result, providerUsed, modelUsed;
@@ -271,6 +283,7 @@ export async function POST(request) {
         contextHints,
         tier,
         forceTool,
+        requireTool,
       }));
     } catch (err) {
       const msg = String(err?.message || err || "");
