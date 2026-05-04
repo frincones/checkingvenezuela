@@ -17,14 +17,15 @@ const toUrl = (p) => `file:///${p.replace(/\\/g, "/")}`;
 
 const { runAgent } = await import(toUrl(aiPath("agent.js")));
 
-console.log("🧪 Test agente local: 'hola'\n");
+const userText = process.argv[2] || "quiero cotizar un paquete para margarita que tienen?";
+console.log(`🧪 Test agente local: "${userText}"\n`);
 
 // Mensaje en formato UIMessage v6 (lo que envía useChat)
 const messages = [
   {
     id: "msg-1",
     role: "user",
-    parts: [{ type: "text", text: "hola" }],
+    parts: [{ type: "text", text: userText }],
   },
 ];
 
@@ -35,10 +36,28 @@ try {
     conversationId: "test-conv-id-no-existe",
   });
   console.log("Provider:", providerUsed, "/", modelUsed);
-  console.log("---STREAM---");
+  console.log("---RESPUESTA---\n");
+  let fullText = "";
+  const toolCalls = [];
   for await (const part of result.fullStream) {
-    console.log(part.type, JSON.stringify(part).slice(0, 200));
+    if (part.type === "text-delta") {
+      process.stdout.write(part.text);
+      fullText += part.text;
+    } else if (part.type === "tool-call") {
+      toolCalls.push({ name: part.toolName, input: part.input });
+      console.log(`\n[tool-call ${part.toolName}]`, JSON.stringify(part.input));
+    } else if (part.type === "tool-result") {
+      console.log(
+        `[tool-result ${part.toolName}] count=${(part.output?.results || []).length}`,
+        "ok=", part.output?.ok,
+        "err=", part.output?.error || "-"
+      );
+    }
   }
+  console.log("\n\n---STATS---");
+  console.log("Caracteres:", fullText.length);
+  console.log("Frases (~):", (fullText.match(/[.!?]+/g) || []).length);
+  console.log("Tools llamadas:", toolCalls.map((t) => t.name).join(", ") || "ninguna");
   console.log("\n✅ Stream completo");
 } catch (err) {
   console.error("\n❌ Error en runAgent:");
