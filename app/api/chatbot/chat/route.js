@@ -280,7 +280,7 @@ export async function POST(request) {
     if (captured.email) hintsLines.push(`- Email: ${captured.email}`);
     if (captured.phone) hintsLines.push(`- Teléfono: ${captured.phone}`);
     if (conv.consent_accepted) hintsLines.push("- Consentimiento de datos: ACEPTADO");
-    if (conv.lead_id) hintsLines.push(`- Lead ya creado (ID: ${conv.lead_id})`);
+    if (conv.lead_id) hintsLines.push("- Lead ya creado para este cliente. NO crees otro.");
 
     // Inyectar instrucciones específicas por intent (refuerza tool use + lead push)
     if (intent === "booking") {
