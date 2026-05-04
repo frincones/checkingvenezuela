@@ -324,7 +324,10 @@ export async function POST(request) {
     tlog(`tier=${tier} forceTool=${forceTool || "-"} requireTool=${requireTool}`);
     let result, providerUsed, modelUsed;
     try {
-      ({ result, providerUsed, modelUsed } = await runAgent({
+      // Watchdog: si runAgent no devuelve en 20s (cuelgue por upstream lento,
+      // cold start de Vercel + Jina, etc.), abortamos para no dejar al
+      // usuario con "..." infinito.
+      const runPromise = runAgent({
         messages,
         language,
         conversationId: conv.id,
@@ -334,12 +337,23 @@ export async function POST(request) {
         requireTool,
         intent,
         inCapture: !!inCapture,
-      }));
+      });
+      const timeoutPromise = new Promise((_, reject) =>
+        setTimeout(
+          () => reject(new Error("agent_timeout: runAgent did not return in 20s")),
+          20000
+        )
+      );
+      ({ result, providerUsed, modelUsed } = await Promise.race([
+        runPromise,
+        timeoutPromise,
+      ]));
       tlog(`runAgent ready (${providerUsed}/${modelUsed})`);
     } catch (err) {
       const msg = String(err?.message || err || "");
       const isRateLimit = /rate.?limit|too.?many|quota|tokens per/i.test(msg);
-      if (isRateLimit) {
+      const isTimeout = /agent_timeout|timeout/i.test(msg);
+      if (isRateLimit || isTimeout) {
         const fallbackText =
           language === "en"
             ? "We're experiencing high demand right now. While we recover, please contact a Venezuela Voyages advisor directly on WhatsApp 🌴: https://wa.me/584264034052"
