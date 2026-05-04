@@ -4,11 +4,12 @@ import { Bot, User } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { SourceBadge } from "./SourceBadge";
+import { ActionButton } from "./ActionButton";
 
 /**
- * Renderiza un mensaje del chat (UIMessage AI SDK 6) con markdown.
+ * Renderiza un mensaje del chat (UIMessage AI SDK 6) con markdown + botones de acción.
  */
-export function MessageBubble({ message }) {
+export function MessageBubble({ message, language = "es" }) {
   const isUser = message.role === "user";
   const text = (message.parts || [])
     .filter((p) => p.type === "text")
@@ -27,6 +28,16 @@ export function MessageBubble({ message }) {
       p.output?.ok &&
       p.output?.leadId
   );
+
+  // Acciones rápidas (botones) generadas por tools como talkToHuman
+  const actionOutputs = (message.parts || [])
+    .filter(
+      (p) =>
+        p.type === "tool-talkToHuman" &&
+        p.state === "output-available" &&
+        p.output?.action
+    )
+    .map((p) => p.output);
 
   return (
     <div
@@ -59,6 +70,13 @@ export function MessageBubble({ message }) {
           <div className="mt-2 flex flex-wrap gap-1">
             {sources.slice(0, 3).map((s, i) => (
               <SourceBadge key={i} source={s} />
+            ))}
+          </div>
+        )}
+        {actionOutputs.length > 0 && (
+          <div className="mt-1 flex flex-wrap gap-2">
+            {actionOutputs.map((output, i) => (
+              <ActionButton key={i} output={output} language={language} />
             ))}
           </div>
         )}
