@@ -11,6 +11,36 @@ import { createAdminClient } from "@/lib/db/supabase/server";
 import { runAgent } from "@/lib/ai/agent";
 import { detectLanguage } from "@/lib/ai/utils";
 import { classifyIntent } from "@/lib/ai/prompts/intent";
+import { createUIMessageStreamResponse, createUIMessageStream } from "ai";
+
+// Respuestas canónicas para intents de seguridad — sin pasar por LLM
+const CANNED = {
+  off_topic: {
+    es: "Solo te puedo ayudar con temas de viajes y Venezuela Voyages 🌴. ¿Quieres que te muestre destinos o paquetes?",
+    en: "I can only help with travel topics and Venezuela Voyages 🌴. Want me to show you destinations or packages?",
+  },
+  jailbreak: {
+    es: "Soy Vale, asistente de Venezuela Voyages, y solo puedo ayudarte con temas de viajes 🌴. ¿En qué viaje te ayudo?",
+    en: "I'm Vale, Venezuela Voyages assistant, and I only help with travel topics 🌴. What trip can I help you with?",
+  },
+};
+
+function streamCannedResponse(text) {
+  // Devuelve un UIMessageStreamResponse con un único text-delta
+  const stream = createUIMessageStream({
+    execute: async ({ writer }) => {
+      const id = "txt-canned";
+      writer.write({ type: "start" });
+      writer.write({ type: "start-step" });
+      writer.write({ type: "text-start", id });
+      writer.write({ type: "text-delta", id, delta: text });
+      writer.write({ type: "text-end", id });
+      writer.write({ type: "finish-step" });
+      writer.write({ type: "finish" });
+    },
+  });
+  return createUIMessageStreamResponse({ stream });
+}
 
 const COOKIE_NAME = "vv_chat_session";
 
@@ -72,16 +102,55 @@ export async function POST(request) {
       return NextResponse.json({ error: "Conversación cerrada" }, { status: 400 });
     }
 
-    // Determinar idioma (preferencia: body > conversación > detección del último msg user)
-    let language = body.language || conv.language;
+    // Idioma: SIEMPRE re-detectar del último mensaje del usuario.
+    // Solo si el body lo manda explícito o el mensaje es muy corto, usamos el persistido.
     const lastUser = [...messages].reverse().find((m) => m.role === "user");
     const lastUserText = extractText(lastUser);
-    if (!language && lastUserText) language = detectLanguage(lastUserText);
+    let language;
+    if (body.language) {
+      language = body.language;
+    } else if (lastUserText && lastUserText.trim().length >= 4) {
+      language = detectLanguage(lastUserText);
+    } else {
+      language = conv.language || "es";
+    }
     if (!language) language = "es";
 
-    // Si la conversación tiene otro idioma persistido, actualizar si cambió
+    // Persistir si cambió respecto a la conv (telemetría / siguiente turno)
     if (conv.language !== language) {
       await sb.from("chat_conversations").update({ language }).eq("id", conv.id);
+    }
+
+    // Pre-captura server-side defensiva: si el último mensaje contiene un
+    // email o teléfono claro, lo persistimos en contact_captured ANTES de
+    // pasar al modelo. Así el dato no se pierde si el LLM no llama la tool.
+    if (lastUserText && !conv.lead_id) {
+      const emailMatch = lastUserText.match(
+        /[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}/i
+      );
+      const phoneMatch = lastUserText.match(/\+?\d[\d\s\-().]{7,}\d/);
+      const captured = { ...(conv.contact_captured || {}) };
+      let dirty = false;
+      if (emailMatch && !captured.email) {
+        captured.email = emailMatch[0].toLowerCase();
+        dirty = true;
+      }
+      if (phoneMatch && !captured.phone) {
+        // Limpiar a solo dígitos + plus inicial
+        const cleaned = phoneMatch[0].replace(/[^\d+]/g, "");
+        if (cleaned.length >= 8) {
+          captured.phone = cleaned;
+          dirty = true;
+        }
+      }
+      if (dirty) {
+        await sb
+          .from("chat_conversations")
+          .update({ contact_captured: captured })
+          .eq("id", conv.id);
+        // Refrescar conv para los hints siguientes
+        conv.contact_captured = captured;
+      }
     }
 
     // Persistir el último mensaje del usuario (si no fue persistido aún)
@@ -100,6 +169,25 @@ export async function POST(request) {
         content: lastUserText,
         intent,
       });
+    }
+
+    // Interceptor: jailbreak / off-topic → respuesta canned sin pasar por LLM.
+    // Más rápido (cero latencia LLM) y 100% confiable.
+    if (intent === "jailbreak" || intent === "off_topic") {
+      const reply = (CANNED[intent] && CANNED[intent][language]) || CANNED[intent].es;
+      try {
+        await sb.from("chat_messages").insert({
+          conversation_id: conv.id,
+          role: "assistant",
+          content: reply,
+          intent,
+          provider: "canned",
+          model: "rule",
+        });
+      } catch (e) {
+        console.warn("[chat] persist canned error:", e.message);
+      }
+      return streamCannedResponse(reply);
     }
 
     // Hints para el system prompt
@@ -134,20 +222,27 @@ export async function POST(request) {
       );
     }
 
-    // Si ya tenemos algunos datos pero no todos, indicar siguiente
+    // Captura progresiva — orden ESTRICTO: nombre → email → teléfono → consent
     if (!conv.lead_id) {
-      const missing = [];
-      if (!captured.name) missing.push("nombre");
-      if (!captured.email) missing.push("email");
-      if (!captured.phone) missing.push("teléfono");
-      if (missing.length > 0 && (captured.name || captured.email || captured.phone)) {
+      const ORDER = [
+        ["name", "nombre"],
+        ["email", "email"],
+        ["phone", "teléfono"],
+      ];
+      const nextMissing = ORDER.find(([k]) => !captured[k]);
+      const haveSome = ORDER.some(([k]) => captured[k]);
+
+      if (nextMissing && haveSome) {
+        const have = ORDER.filter(([k]) => captured[k])
+          .map(([, label]) => label)
+          .join(", ");
         hintsLines.push(
-          `- AVANZA LA CAPTURA: ya tienes ${Object.keys(captured).filter((k) => captured[k]).join(", ")}. Pide el siguiente dato faltante: ${missing[0]}.`
+          `- CAPTURA EN CURSO: ya tienes [${have}]. Próximo dato a pedir: **${nextMissing[1]}**. NO pidas otra cosa, NO saltes pasos, NO repitas opciones de paquetes.`
         );
       }
-      if (missing.length === 0 && !conv.consent_accepted) {
+      if (!nextMissing && !conv.consent_accepted) {
         hintsLines.push(
-          "- TIENES LOS 3 DATOS. Llama AHORA 'requestConsent' para mostrar el dialog al usuario."
+          "- TIENES LOS 3 DATOS COMPLETOS (nombre + email + teléfono). Llama AHORA 'requestConsent' con un reason corto. NO pidas más datos."
         );
       }
     }
