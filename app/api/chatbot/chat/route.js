@@ -249,26 +249,54 @@ export async function POST(request) {
 
     const contextHints = hintsLines.length ? hintsLines.join("\n") : "";
 
-    // Modelo: usa el smart (gpt-oss-120b) cuando haya intent comercial / consulta KB / handoff
-    const useSmartTier =
-      intent === "booking" ||
-      intent === "policy" ||
-      intent === "complaint" ||
-      intent === "human_handoff";
+    // Modelo: por default usamos el FAST tier (llama-3.1-8b-instant: 14,400 req/día).
+    // El SMART tier (gpt-oss-120b) tiene cuota muchísimo más chica (200K tok/día)
+    // así que lo reservamos SOLO para human_handoff donde forceTool requiere
+    // reliability extra. Si Llama 8B se rate-limita, la cadena de fallback baja
+    // a Cerebras / Gemini cuando se configuren.
+    const useSmartTier = intent === "human_handoff";
     const tier = useSmartTier ? "smart" : "fast";
 
     // Forzar la tool talkToHuman cuando el cliente pide explícitamente un humano
     const forceTool = intent === "human_handoff" ? "talkToHuman" : undefined;
 
-    // Ejecutar agente con fallback chain
-    const { result, providerUsed, modelUsed } = await runAgent({
-      messages,
-      language,
-      conversationId: conv.id,
-      contextHints,
-      tier,
-      forceTool,
-    });
+    // Ejecutar agente con fallback chain. Si toda la cadena se rate-limita,
+    // devolvemos un mensaje amigable + botón de WhatsApp en lugar de stack trace.
+    let result, providerUsed, modelUsed;
+    try {
+      ({ result, providerUsed, modelUsed } = await runAgent({
+        messages,
+        language,
+        conversationId: conv.id,
+        contextHints,
+        tier,
+        forceTool,
+      }));
+    } catch (err) {
+      const msg = String(err?.message || err || "");
+      const isRateLimit = /rate.?limit|too.?many|quota|tokens per/i.test(msg);
+      if (isRateLimit) {
+        const fallbackText =
+          language === "en"
+            ? "We're experiencing high demand right now. While we recover, please contact a Venezuela Voyages advisor directly on WhatsApp 🌴: https://wa.me/584264034052"
+            : "Estamos con alta demanda en este momento. Mientras nos recuperamos, contacta directamente a un asesor de Venezuela Voyages por WhatsApp 🌴: https://wa.me/584264034052";
+        try {
+          await sb.from("chat_messages").insert({
+            conversation_id: conv.id,
+            role: "assistant",
+            content: fallbackText,
+            intent,
+            provider: "fallback",
+            model: "rate-limited",
+            error: msg.slice(0, 300),
+          });
+        } catch (e) {
+          console.warn("[chat] persist fallback error:", e.message);
+        }
+        return streamCannedResponse(fallbackText);
+      }
+      throw err;
+    }
 
     // Hook onFinish (después de stream): persistir respuesta del assistant
     // Lo hacemos vía consumeStream pattern: pasamos un callback en options
