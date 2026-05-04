@@ -12,7 +12,6 @@ import openGraph from "./opengraph-image.jpg";
 import MaintenancePage from "./MaintenancePage";
 import { MaintenanceNotice } from "./MaintenanceNotice";
 import SetNecessaryCookies from "./SetNecessaryCookies";
-import { WhatsAppButton } from "@/components/WhatsAppButton";
 import { BannersSidebar } from "@/components/pages/home/sections/BannersSection";
 import { ChatWidget } from "@/components/ChatWidget/ChatWidget";
 import { getOneDoc } from "@/lib/db/getOperationDB";
@@ -129,7 +128,6 @@ export default async function RootLayout({ children }) {
         <Toaster richColors closeButton expand position="top-right" />
         <SetNecessaryCookies />
         {!currentPathname?.startsWith("/dashboard") && <BannersSidebar />}
-        <WhatsAppButton />
         {!currentPathname?.startsWith("/dashboard") && <ChatWidget />}
         <Analytics />
       </body>
