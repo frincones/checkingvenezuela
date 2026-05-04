@@ -14,25 +14,43 @@ import { generateSessionId, hashIp } from "@/lib/ai/utils";
 const COOKIE_NAME = "vv_chat_session";
 const COOKIE_MAX_AGE = 60 * 60 * 24 * 30; // 30 días
 
+// Si la conversación lleva más de este tiempo sin actividad, asumimos que
+// es un cliente "nuevo" volviendo y abrimos sesión fresca (no arrastramos
+// el contact_captured de hace días).
+const IDLE_THRESHOLD_MS = 2 * 60 * 60 * 1000; // 2 horas
+
 async function getOrCreateConversation({ sessionId, profileId, userAgent, ipHash, language }) {
   const sb = createAdminClient();
 
   // Buscar existente por session_id
   const { data: existing } = await sb
     .from("chat_conversations")
-    .select("id, session_id, language, consent_accepted, lead_id, status, contact_captured")
+    .select(
+      "id, session_id, language, consent_accepted, lead_id, status, contact_captured, last_message_at"
+    )
     .eq("session_id", sessionId)
     .maybeSingle();
 
   if (existing) {
-    // Si está closed, reactivar
-    if (existing.status === "closed") {
-      await sb
-        .from("chat_conversations")
-        .update({ status: "active", last_message_at: new Date().toISOString() })
-        .eq("id", existing.id);
+    // Si está cerrada O lleva mucho idle, descartamos la conversación vieja
+    // y devolvemos null para que se cree una nueva con session_id distinto.
+    const idleMs = existing.last_message_at
+      ? Date.now() - new Date(existing.last_message_at).getTime()
+      : 0;
+    const isStale = existing.status === "closed" || idleMs > IDLE_THRESHOLD_MS;
+    if (isStale) {
+      // Cerramos la vieja (mantiene historial para admin) y caemos al insert.
+      if (existing.status !== "closed") {
+        await sb
+          .from("chat_conversations")
+          .update({ status: "closed", closed_at: new Date().toISOString() })
+          .eq("id", existing.id);
+      }
+      // Caer al INSERT abajo con sessionId NUEVO para no chocar con la PK
+      sessionId = `${sessionId}-${Date.now().toString(36)}`;
+    } else {
+      return existing;
     }
-    return existing;
   }
 
   const { data: created, error } = await sb
@@ -97,7 +115,10 @@ export async function POST(request) {
       contactCaptured: conv.contact_captured || {},
     });
 
-    res.cookies.set(COOKIE_NAME, sessionId, {
+    // Usar conv.session_id (puede ser distinto al recibido si la conversación
+    // anterior estaba stale y getOrCreateConversation creó una nueva con
+    // session_id refrescado).
+    res.cookies.set(COOKIE_NAME, conv.session_id, {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
       sameSite: "lax",
