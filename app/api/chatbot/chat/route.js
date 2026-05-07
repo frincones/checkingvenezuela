@@ -22,7 +22,7 @@ import { NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/db/supabase/server";
 import { runAgent } from "@/lib/ai/agent";
 import { detectLanguage } from "@/lib/ai/utils";
-import { classifyIntent } from "@/lib/ai/prompts/intent";
+import { classifySafetyIntent } from "@/lib/ai/prompts/intent";
 import { createUIMessageStreamResponse, createUIMessageStream } from "ai";
 
 // Respuestas canónicas para intents de seguridad — sin pasar por LLM
@@ -227,56 +227,12 @@ export async function POST(request) {
       }
     }
 
-    // Persistir el último mensaje del usuario (si no fue persistido aún)
+    // Safety guards (regex, sin LLM): solo detectamos jailbreak/off_topic/
+    // human_handoff. El resto del routing lo decide el modelo a partir de
+    // las tool descriptions + el bloque FACTS.
     let intent = null;
     if (lastUser && lastUserText) {
-      intent = await classifyIntent({
-        message: lastUserText,
-        language,
-        conversationId: conv.id,
-      });
-
-      // Herencia de intent — caso 1: el cliente ya está en captura (tiene
-      // algún dato guardado en el visitor y el lead no se ha creado en
-      // ESTA conversación) → booking forzado.
-      const cap = visitor.contact_captured || {};
-      const inflightCapture =
-        !conv.lead_id && (cap.name || cap.email || cap.phone);
-      if (inflightCapture && (intent === "other" || intent === "chitchat")) {
-        intent = "booking";
-      }
-
-      // Herencia de intent — caso 2: respuesta ambigua tras un turno donde
-      // el agente usó una tool de búsqueda de productos. Mantenemos booking
-      // hasta que el usuario cambie claramente de tema (ej: pide ayuda, queja).
-      if (intent === "other" || intent === "chitchat") {
-        const { data: prev } = await sb
-          .from("chat_messages")
-          .select("intent, tool_calls, created_at")
-          .eq("conversation_id", conv.id)
-          .eq("role", "assistant")
-          .order("created_at", { ascending: false })
-          .limit(2);
-        const recent = Array.isArray(prev) ? prev : [];
-        const recentlyUsedSearch = recent.some((m) => {
-          const tools = Array.isArray(m.tool_calls) ? m.tool_calls : [];
-          return tools.some((t) =>
-            [
-              "searchPackages",
-              "searchHotels",
-              "searchFlights",
-              "searchDestinations",
-            ].includes(t.toolName || t.name)
-          );
-        });
-        if (recentlyUsedSearch || recent[0]?.intent === "booking") {
-          intent = "booking";
-        } else if (recent[0]?.intent === "policy") {
-          intent = "policy";
-        } else if (recent[0]?.intent === "human_handoff") {
-          intent = "human_handoff";
-        }
-      }
+      intent = classifySafetyIntent(lastUserText);
 
       await sb.from("chat_messages").insert({
         conversation_id: conv.id,
@@ -284,7 +240,7 @@ export async function POST(request) {
         content: lastUserText,
         intent,
       });
-      tlog(`intent=${intent} lang=${language}`);
+      tlog(`safety_intent=${intent || "none"} lang=${language}`);
     }
 
     // Interceptor: jailbreak / off-topic → respuesta canned sin pasar por LLM.
@@ -321,12 +277,6 @@ export async function POST(request) {
       "conversation.lead_created": !!conv.lead_id,
       "conversation.language": language,
     };
-    // intent_hint: insumo NO vinculante del clasificador. El modelo puede
-    // ignorarlo si la conversación va por otro lado.
-    if (intent && intent !== "other") {
-      facts["intent_hint"] = intent;
-    }
-
     const factsBlock = [
       "FACTS (estado verificable de la conversación):",
       ...Object.entries(facts).map(
