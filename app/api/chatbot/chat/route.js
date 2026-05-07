@@ -306,64 +306,35 @@ export async function POST(request) {
       return streamCannedResponse(reply);
     }
 
-    // Hints para el system prompt — leemos del visitor (no de la conv)
+    // FACTS block — estado verificable que el modelo lee como contexto
+    // estructurado, NO como prosa imperativa. El modelo razona qué tool
+    // llamar a partir de los facts + las descripciones de tools.
+    //
+    // Intencionalmente NO incluimos "DEBES llamar X AHORA" — eso lo decide
+    // el modelo. Los facts son data, no instrucciones.
     const captured = visitor.contact_captured || {};
-    const hintsLines = [];
-    if (captured.name) hintsLines.push(`- Nombre del cliente: ${captured.name}`);
-    if (captured.email) hintsLines.push(`- Email: ${captured.email}`);
-    if (captured.phone) hintsLines.push(`- Teléfono: ${captured.phone}`);
-    if (visitor.consent_accepted) hintsLines.push("- Consentimiento de datos: ACEPTADO");
-    if (conv.lead_id) hintsLines.push("- Lead ya creado para este cliente en ESTA conversación. NO crees otro.");
-
-    // Inyectar instrucciones específicas por intent (refuerza tool use + lead push)
-    if (intent === "booking") {
-      hintsLines.push(
-        "- Intent detectado: BOOKING. DEBES llamar searchPackages/searchHotels/searchFlights AHORA y luego empujar al cliente a darte sus datos para conectarlo con un asesor."
-      );
-    } else if (intent === "policy") {
-      hintsLines.push(
-        "- Intent detectado: POLICY. DEBES llamar searchKb AHORA con la pregunta del usuario y citar la fuente."
-      );
-    } else if (intent === "info") {
-      hintsLines.push(
-        "- Intent detectado: INFO. Llama searchKb o searchDestinations según corresponda. Tras responder, pivota: '¿Te gustaría que te muestre paquetes para X?'"
-      );
-    } else if (intent === "complaint") {
-      hintsLines.push(
-        "- Intent detectado: COMPLAINT. Empatiza brevemente, captura nombre/email/teléfono y crea lead con urgencia ALTA."
-      );
-    } else if (intent === "human_handoff") {
-      hintsLines.push(
-        "- Intent detectado: HUMAN_HANDOFF. El sistema YA va a llamar talkToHuman automáticamente. Tu única tarea: responder breve (1 frase) tipo 'Te conecto con un asesor. Toca el botón abajo.' NO escribas el link ni describas el botón en exceso."
-      );
+    const facts = {
+      "visitor.name": captured.name || null,
+      "visitor.email": captured.email || null,
+      "visitor.phone": captured.phone || null,
+      "visitor.consent_accepted": !!visitor.consent_accepted,
+      "conversation.lead_created": !!conv.lead_id,
+      "conversation.language": language,
+    };
+    // intent_hint: insumo NO vinculante del clasificador. El modelo puede
+    // ignorarlo si la conversación va por otro lado.
+    if (intent && intent !== "other") {
+      facts["intent_hint"] = intent;
     }
 
-    // Captura progresiva — orden ESTRICTO: nombre → email → teléfono → consent
-    if (!conv.lead_id) {
-      const ORDER = [
-        ["name", "nombre"],
-        ["email", "email"],
-        ["phone", "teléfono"],
-      ];
-      const nextMissing = ORDER.find(([k]) => !captured[k]);
-      const haveSome = ORDER.some(([k]) => captured[k]);
+    const factsBlock = [
+      "FACTS (estado verificable de la conversación):",
+      ...Object.entries(facts).map(
+        ([k, v]) => `  ${k}: ${typeof v === "string" ? JSON.stringify(v) : v}`
+      ),
+    ].join("\n");
 
-      if (nextMissing && haveSome) {
-        const have = ORDER.filter(([k]) => captured[k])
-          .map(([, label]) => label)
-          .join(", ");
-        hintsLines.push(
-          `- CAPTURA EN CURSO: ya tienes [${have}]. Próximo dato a pedir: **${nextMissing[1]}**. NO pidas otra cosa, NO saltes pasos, NO repitas opciones de paquetes.`
-        );
-      }
-      if (!nextMissing && !visitor.consent_accepted) {
-        hintsLines.push(
-          "- TIENES LOS 3 DATOS COMPLETOS (nombre + email + teléfono). Llama AHORA 'requestConsent' con un reason corto. NO pidas más datos."
-        );
-      }
-    }
-
-    const contextHints = hintsLines.length ? hintsLines.join("\n") : "";
+    const contextHints = factsBlock;
 
     // Modelo: por default usamos el FAST tier (llama-3.1-8b-instant: 14,400 req/día).
     // El SMART tier (gpt-oss-120b) tiene cuota muchísimo más chica (200K tok/día)
