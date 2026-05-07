@@ -336,32 +336,17 @@ export async function POST(request) {
 
     const contextHints = factsBlock;
 
-    // Modelo: por default usamos el FAST tier (llama-3.1-8b-instant: 14,400 req/día).
-    // El SMART tier (gpt-oss-120b) tiene cuota muchísimo más chica (200K tok/día)
-    // así que lo reservamos SOLO para human_handoff donde forceTool requiere
-    // reliability extra. Si Llama 8B se rate-limita, la cadena de fallback baja
-    // a Cerebras / Gemini cuando se configuren.
-    const useSmartTier = intent === "human_handoff";
-    const tier = useSmartTier ? "smart" : "fast";
+    // Tier: 'primary' usa Gemini 2.5 Flash (reasoning + tools nativo).
+    // 'smart' usa gpt-oss-120b para handoff explícito (caso edge donde
+    // necesitamos forzar la tool talkToHuman con max reliability).
+    const tier = intent === "human_handoff" ? "smart" : "primary";
 
-    // Forzar la tool talkToHuman cuando el cliente pide explícitamente un humano
+    // forceTool solo en human_handoff explícito — el modelo no tiene
+    // ambigüedad ahí (cliente pidió humano). En el resto de casos,
+    // confiamos en el modelo: razona con FACTS + tool descriptions.
     const forceTool = intent === "human_handoff" ? "talkToHuman" : undefined;
 
-    // Para booking / policy / complaint: forzar que el primer step llame ALGUNA
-    // tool antes de generar texto. Evita el patrón "preamble + tool + respuesta"
-    // que produce el feo efecto de "responde a medias y se queda pensando".
-    // Solo aplicamos si el cliente NO está aún en captura de datos (esos turnos
-    // son texto puro: el modelo solo agradece y pide el siguiente dato).
-    const inCapture =
-      captured.name || captured.email || captured.phone;
-    const requireTool =
-      !inCapture &&
-      !forceTool &&
-      (intent === "booking" || intent === "policy" || intent === "complaint");
-
-    // Ejecutar agente con fallback chain. Si toda la cadena se rate-limita,
-    // devolvemos un mensaje amigable + botón de WhatsApp en lugar de stack trace.
-    tlog(`tier=${tier} forceTool=${forceTool || "-"} requireTool=${requireTool} intent=${intent} inCapture=${!!inCapture}`);
+    tlog(`tier=${tier} forceTool=${forceTool || "-"} intent=${intent}`);
     let result, providerUsed, modelUsed;
     try {
       // Watchdog: si runAgent no devuelve en 20s (cuelgue por upstream lento,
@@ -374,9 +359,7 @@ export async function POST(request) {
         contextHints,
         tier,
         forceTool,
-        requireTool,
         intent,
-        inCapture: !!inCapture,
       });
       const timeoutPromise = new Promise((_, reject) =>
         setTimeout(
