@@ -181,25 +181,50 @@ export default function EmailView({ email, onReply, onForward, onDelete, onArchi
                 Adjuntos ({email.attachments.length})
               </h4>
               <div className="flex flex-wrap gap-2">
-                {email.attachments.map((att, i) => (
-                  <a
-                    key={i}
-                    href={att.url || "#"}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex items-center gap-2 border rounded-lg px-3 py-2 text-sm hover:bg-gray-50 transition"
-                  >
-                    <svg className="h-4 w-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" />
-                    </svg>
-                    <span className="text-gray-700">{att.filename}</span>
-                    {att.size && (
-                      <span className="text-xs text-gray-400">
-                        ({(att.size / 1024).toFixed(0)} KB)
+                {email.attachments.map((att, i) => {
+                  // New attachments (post fix/email-attachments-storage) have
+                  // storage_path → download via our proxy route that issues a
+                  // signed URL. Legacy rows still have only `url` pointing to
+                  // cdn.resend.app which is auth-only and unreachable from the
+                  // browser — show them as disabled with a hint.
+                  const isAvailable = !!att.storage_path;
+                  const href = isAvailable
+                    ? `/api/email/${email.id}/attachments/${i}`
+                    : undefined;
+                  const Tag = isAvailable ? "a" : "span";
+                  const tagProps = isAvailable
+                    ? {
+                        href,
+                        target: "_blank",
+                        rel: "noopener noreferrer",
+                        className:
+                          "flex items-center gap-2 border rounded-lg px-3 py-2 text-sm hover:bg-gray-50 transition",
+                        title: att.filename,
+                      }
+                    : {
+                        className:
+                          "flex items-center gap-2 border rounded-lg px-3 py-2 text-sm bg-gray-50 text-gray-400 cursor-not-allowed",
+                        title:
+                          att.ingest_error ||
+                          "Adjunto recibido antes de la migración de almacenamiento — no disponible para descarga.",
+                        "aria-disabled": true,
+                      };
+                  return (
+                    <Tag key={i} {...tagProps}>
+                      <svg className="h-4 w-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" />
+                      </svg>
+                      <span className={isAvailable ? "text-gray-700" : "text-gray-400"}>
+                        {att.filename}
                       </span>
-                    )}
-                  </a>
-                ))}
+                      {att.size && (
+                        <span className="text-xs text-gray-400">
+                          ({(att.size / 1024).toFixed(0)} KB)
+                        </span>
+                      )}
+                    </Tag>
+                  );
+                })}
               </div>
             </div>
           )}
