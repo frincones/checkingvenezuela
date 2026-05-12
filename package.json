@@ -14,6 +14,7 @@
     "test": "vitest --testNamePattern Testing"
   },
   "dependencies": {
+    "@ai-sdk/google": "^3.0.68",
     "@ai-sdk/groq": "^3.0.38",
     "@ai-sdk/react": "^3.0.176",
     "@emoji-mart/data": "^1.2.1",

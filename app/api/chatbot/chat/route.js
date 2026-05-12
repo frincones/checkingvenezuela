@@ -22,7 +22,7 @@ import { NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/db/supabase/server";
 import { runAgent } from "@/lib/ai/agent";
 import { detectLanguage } from "@/lib/ai/utils";
-import { classifyIntent } from "@/lib/ai/prompts/intent";
+import { classifySafetyIntent } from "@/lib/ai/prompts/intent";
 import { createUIMessageStreamResponse, createUIMessageStream } from "ai";
 
 // Respuestas canónicas para intents de seguridad — sin pasar por LLM
@@ -227,56 +227,12 @@ export async function POST(request) {
       }
     }
 
-    // Persistir el último mensaje del usuario (si no fue persistido aún)
+    // Safety guards (regex, sin LLM): solo detectamos jailbreak/off_topic/
+    // human_handoff. El resto del routing lo decide el modelo a partir de
+    // las tool descriptions + el bloque FACTS.
     let intent = null;
     if (lastUser && lastUserText) {
-      intent = await classifyIntent({
-        message: lastUserText,
-        language,
-        conversationId: conv.id,
-      });
-
-      // Herencia de intent — caso 1: el cliente ya está en captura (tiene
-      // algún dato guardado en el visitor y el lead no se ha creado en
-      // ESTA conversación) → booking forzado.
-      const cap = visitor.contact_captured || {};
-      const inflightCapture =
-        !conv.lead_id && (cap.name || cap.email || cap.phone);
-      if (inflightCapture && (intent === "other" || intent === "chitchat")) {
-        intent = "booking";
-      }
-
-      // Herencia de intent — caso 2: respuesta ambigua tras un turno donde
-      // el agente usó una tool de búsqueda de productos. Mantenemos booking
-      // hasta que el usuario cambie claramente de tema (ej: pide ayuda, queja).
-      if (intent === "other" || intent === "chitchat") {
-        const { data: prev } = await sb
-          .from("chat_messages")
-          .select("intent, tool_calls, created_at")
-          .eq("conversation_id", conv.id)
-          .eq("role", "assistant")
-          .order("created_at", { ascending: false })
-          .limit(2);
-        const recent = Array.isArray(prev) ? prev : [];
-        const recentlyUsedSearch = recent.some((m) => {
-          const tools = Array.isArray(m.tool_calls) ? m.tool_calls : [];
-          return tools.some((t) =>
-            [
-              "searchPackages",
-              "searchHotels",
-              "searchFlights",
-              "searchDestinations",
-            ].includes(t.toolName || t.name)
-          );
-        });
-        if (recentlyUsedSearch || recent[0]?.intent === "booking") {
-          intent = "booking";
-        } else if (recent[0]?.intent === "policy") {
-          intent = "policy";
-        } else if (recent[0]?.intent === "human_handoff") {
-          intent = "human_handoff";
-        }
-      }
+      intent = classifySafetyIntent(lastUserText);
 
       await sb.from("chat_messages").insert({
         conversation_id: conv.id,
@@ -284,7 +240,7 @@ export async function POST(request) {
         content: lastUserText,
         intent,
       });
-      tlog(`intent=${intent} lang=${language}`);
+      tlog(`safety_intent=${intent || "none"} lang=${language}`);
     }
 
     // Interceptor: jailbreak / off-topic → respuesta canned sin pasar por LLM.
@@ -306,91 +262,41 @@ export async function POST(request) {
       return streamCannedResponse(reply);
     }
 
-    // Hints para el system prompt — leemos del visitor (no de la conv)
+    // FACTS block — estado verificable que el modelo lee como contexto
+    // estructurado, NO como prosa imperativa. El modelo razona qué tool
+    // llamar a partir de los facts + las descripciones de tools.
+    //
+    // Intencionalmente NO incluimos "DEBES llamar X AHORA" — eso lo decide
+    // el modelo. Los facts son data, no instrucciones.
     const captured = visitor.contact_captured || {};
-    const hintsLines = [];
-    if (captured.name) hintsLines.push(`- Nombre del cliente: ${captured.name}`);
-    if (captured.email) hintsLines.push(`- Email: ${captured.email}`);
-    if (captured.phone) hintsLines.push(`- Teléfono: ${captured.phone}`);
-    if (visitor.consent_accepted) hintsLines.push("- Consentimiento de datos: ACEPTADO");
-    if (conv.lead_id) hintsLines.push("- Lead ya creado para este cliente en ESTA conversación. NO crees otro.");
+    const facts = {
+      "visitor.name": captured.name || null,
+      "visitor.email": captured.email || null,
+      "visitor.phone": captured.phone || null,
+      "visitor.consent_accepted": !!visitor.consent_accepted,
+      "conversation.lead_created": !!conv.lead_id,
+      "conversation.language": language,
+    };
+    const factsBlock = [
+      "FACTS (estado verificable de la conversación):",
+      ...Object.entries(facts).map(
+        ([k, v]) => `  ${k}: ${typeof v === "string" ? JSON.stringify(v) : v}`
+      ),
+    ].join("\n");
 
-    // Inyectar instrucciones específicas por intent (refuerza tool use + lead push)
-    if (intent === "booking") {
-      hintsLines.push(
-        "- Intent detectado: BOOKING. DEBES llamar searchPackages/searchHotels/searchFlights AHORA y luego empujar al cliente a darte sus datos para conectarlo con un asesor."
-      );
-    } else if (intent === "policy") {
-      hintsLines.push(
-        "- Intent detectado: POLICY. DEBES llamar searchKb AHORA con la pregunta del usuario y citar la fuente."
-      );
-    } else if (intent === "info") {
-      hintsLines.push(
-        "- Intent detectado: INFO. Llama searchKb o searchDestinations según corresponda. Tras responder, pivota: '¿Te gustaría que te muestre paquetes para X?'"
-      );
-    } else if (intent === "complaint") {
-      hintsLines.push(
-        "- Intent detectado: COMPLAINT. Empatiza brevemente, captura nombre/email/teléfono y crea lead con urgencia ALTA."
-      );
-    } else if (intent === "human_handoff") {
-      hintsLines.push(
-        "- Intent detectado: HUMAN_HANDOFF. El sistema YA va a llamar talkToHuman automáticamente. Tu única tarea: responder breve (1 frase) tipo 'Te conecto con un asesor. Toca el botón abajo.' NO escribas el link ni describas el botón en exceso."
-      );
-    }
+    const contextHints = factsBlock;
 
-    // Captura progresiva — orden ESTRICTO: nombre → email → teléfono → consent
-    if (!conv.lead_id) {
-      const ORDER = [
-        ["name", "nombre"],
-        ["email", "email"],
-        ["phone", "teléfono"],
-      ];
-      const nextMissing = ORDER.find(([k]) => !captured[k]);
-      const haveSome = ORDER.some(([k]) => captured[k]);
+    // Tier: 'primary' usa Gemini 2.5 Flash (reasoning + tools nativo).
+    // 'smart' usa gpt-oss-120b para handoff explícito (caso edge donde
+    // necesitamos forzar la tool talkToHuman con max reliability).
+    const tier = intent === "human_handoff" ? "smart" : "primary";
 
-      if (nextMissing && haveSome) {
-        const have = ORDER.filter(([k]) => captured[k])
-          .map(([, label]) => label)
-          .join(", ");
-        hintsLines.push(
-          `- CAPTURA EN CURSO: ya tienes [${have}]. Próximo dato a pedir: **${nextMissing[1]}**. NO pidas otra cosa, NO saltes pasos, NO repitas opciones de paquetes.`
-        );
-      }
-      if (!nextMissing && !visitor.consent_accepted) {
-        hintsLines.push(
-          "- TIENES LOS 3 DATOS COMPLETOS (nombre + email + teléfono). Llama AHORA 'requestConsent' con un reason corto. NO pidas más datos."
-        );
-      }
-    }
-
-    const contextHints = hintsLines.length ? hintsLines.join("\n") : "";
-
-    // Modelo: por default usamos el FAST tier (llama-3.1-8b-instant: 14,400 req/día).
-    // El SMART tier (gpt-oss-120b) tiene cuota muchísimo más chica (200K tok/día)
-    // así que lo reservamos SOLO para human_handoff donde forceTool requiere
-    // reliability extra. Si Llama 8B se rate-limita, la cadena de fallback baja
-    // a Cerebras / Gemini cuando se configuren.
-    const useSmartTier = intent === "human_handoff";
-    const tier = useSmartTier ? "smart" : "fast";
-
-    // Forzar la tool talkToHuman cuando el cliente pide explícitamente un humano
+    // forceTool solo en human_handoff explícito — el modelo no tiene
+    // ambigüedad ahí (cliente pidió humano). En el resto de casos,
+    // confiamos en el modelo: razona con FACTS + tool descriptions.
     const forceTool = intent === "human_handoff" ? "talkToHuman" : undefined;
 
-    // Para booking / policy / complaint: forzar que el primer step llame ALGUNA
-    // tool antes de generar texto. Evita el patrón "preamble + tool + respuesta"
-    // que produce el feo efecto de "responde a medias y se queda pensando".
-    // Solo aplicamos si el cliente NO está aún en captura de datos (esos turnos
-    // son texto puro: el modelo solo agradece y pide el siguiente dato).
-    const inCapture =
-      captured.name || captured.email || captured.phone;
-    const requireTool =
-      !inCapture &&
-      !forceTool &&
-      (intent === "booking" || intent === "policy" || intent === "complaint");
-
-    // Ejecutar agente con fallback chain. Si toda la cadena se rate-limita,
-    // devolvemos un mensaje amigable + botón de WhatsApp en lugar de stack trace.
-    tlog(`tier=${tier} forceTool=${forceTool || "-"} requireTool=${requireTool} intent=${intent} inCapture=${!!inCapture}`);
+    tlog(`tier=${tier} forceTool=${forceTool || "-"} intent=${intent}`);
     let result, providerUsed, modelUsed;
     try {
       // Watchdog: si runAgent no devuelve en 20s (cuelgue por upstream lento,
@@ -403,9 +309,7 @@ export async function POST(request) {
         contextHints,
         tier,
         forceTool,
-        requireTool,
         intent,
-        inCapture: !!inCapture,
       });
       const timeoutPromise = new Promise((_, reject) =>
         setTimeout(
