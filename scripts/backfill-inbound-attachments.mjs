@@ -85,7 +85,28 @@ async function fetchEmailsWithLegacyAttachments() {
   return candidates;
 }
 
-async function processOneAttachment({ emailRowId, createdAt, att, index }) {
+/**
+ * Pide a la API de Resend la lista FRESCA de adjuntos del email.
+ * Las URLs `cdn.resend.app` son signed con TTL corto — la URL vieja guardada
+ * en la DB ya expiró. La API renueva la firma cada vez que se llama.
+ *
+ * Devuelve null si la API ya no conoce el email (genuinamente purgado).
+ */
+async function fetchFreshAttachments(resendEmailId) {
+  if (!resendEmailId) return null;
+  const r = await fetch(
+    `https://api.resend.com/emails/receiving/${resendEmailId}/attachments`,
+    { headers: { Authorization: `Bearer ${RESEND_API_KEY}` } }
+  );
+  if (r.status === 404 || r.status === 410) return null;
+  if (!r.ok) {
+    throw new Error(`Resend API ${r.status}: ${(await r.text()).slice(0, 200)}`);
+  }
+  const json = await r.json();
+  return Array.isArray(json.data) ? json.data : [];
+}
+
+async function processOneAttachment({ emailRowId, createdAt, att, index, freshUrl }) {
   if (!isLegacy(att)) {
     return { status: "skip", reason: "already_processed" };
   }
@@ -94,13 +115,18 @@ async function processOneAttachment({ emailRowId, createdAt, att, index }) {
     return { status: "would_process", filename: att.filename };
   }
 
-  // 1. Descargar de Resend (auth-only)
+  if (!freshUrl) {
+    // No vino en la respuesta fresca de Resend (purgado).
+    return { status: "expired", resendStatus: 404 };
+  }
+
+  // 1. Descargar usando la signed URL fresca. La firma viaja en el query
+  //    string — NO mandamos Authorization Bearer porque algunos backends S3
+  //    rechazan la combinación signed+Bearer.
   let resendStatus = 0;
   let buf;
   try {
-    const r = await fetch(att.url, {
-      headers: { Authorization: `Bearer ${RESEND_API_KEY}` },
-    });
+    const r = await fetch(freshUrl);
     resendStatus = r.status;
     if (r.status === 404 || r.status === 410) {
       return { status: "expired", resendStatus };
@@ -131,6 +157,28 @@ async function processOneAttachment({ emailRowId, createdAt, att, index }) {
   }
 
   return { status: "ok", storage_path, bytes: buf.byteLength };
+}
+
+/** Match fresh Resend attachments to DB attachments by filename+size, falling
+ *  back to position when there are duplicates. Returns array aligned with
+ *  the DB order, each entry either the fresh API record or null. */
+function matchFreshToDb(dbAtts, freshAtts) {
+  if (!Array.isArray(freshAtts)) return dbAtts.map(() => null);
+  // Index fresh by (filename|size). Allow multiple per filename via array.
+  const byKey = new Map();
+  for (const f of freshAtts) {
+    const k = `${f.filename || ""}|${f.size ?? ""}`;
+    if (!byKey.has(k)) byKey.set(k, []);
+    byKey.get(k).push(f);
+  }
+  return dbAtts.map((db, i) => {
+    if (!isLegacy(db)) return null;
+    const k = `${db.filename || ""}|${db.size ?? ""}`;
+    const bucket = byKey.get(k);
+    if (bucket && bucket.length) return bucket.shift();
+    // Last resort: same index if it still exists
+    return freshAtts[i] || null;
+  });
 }
 
 async function updateEmailRow(emailRowId, newAttachments) {
@@ -164,6 +212,20 @@ async function main() {
     const newAtts = [];
     let dirty = false;
 
+    // Pedir URLs frescas a Resend (las viejas guardadas en la DB ya expiraron)
+    let freshList = null;
+    if (!DRY_RUN && e.resend_id) {
+      try {
+        freshList = await fetchFreshAttachments(e.resend_id);
+        if (freshList === null) {
+          console.log("   ⚠️  Resend devolvió 404/410 para el email completo — todos los adjuntos quedan expirados.");
+        }
+      } catch (err) {
+        console.log(`   ⚠️  Error pidiendo URLs frescas: ${err.message}`);
+      }
+    }
+    const matched = matchFreshToDb(e.attachments, freshList || []);
+
     for (let i = 0; i < e.attachments.length; i++) {
       const att = e.attachments[i];
 
@@ -174,11 +236,15 @@ async function main() {
         continue;
       }
 
+      const fresh = matched[i];
+      const freshUrl = fresh?.download_url;
+
       const res = await processOneAttachment({
         emailRowId: e.id,
         createdAt: e.created_at,
         att,
         index: i,
+        freshUrl,
       });
 
       const tag = `   [${i}] ${(att.filename || "?").slice(0, 60)} → ${res.status}`;
