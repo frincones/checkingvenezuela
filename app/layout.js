@@ -13,6 +13,7 @@ import MaintenancePage from "./MaintenancePage";
 import { MaintenanceNotice } from "./MaintenanceNotice";
 import SetNecessaryCookies from "./SetNecessaryCookies";
 import { BannersSidebar } from "@/components/pages/home/sections/BannersSection";
+import { AnnouncementBar } from "@/components/sections/AnnouncementBar";
 import { ChatWidget } from "@/components/ChatWidget/ChatWidget";
 import { getOneDoc } from "@/lib/db/getOperationDB";
 import { headers } from "next/headers";
@@ -30,28 +31,28 @@ const tradegothic = localFont({
 });
 
 export const metadata = {
-  title: "VENEZUELA VOYAGES | Explore Now - Tu Agencia de Viajes",
+  title: "VENEZUELA VOYAGES | Signature Travel Experiences",
   description:
-    "VENEZUELA VOYAGES es tu agencia de viajes en Venezuela. Reserva vuelos, hoteles y paquetes turísticos con atención 24/7. Explore Now - Tu aventura comienza aquí.",
+    "Signature travel experiences in Venezuela. We design exclusive itineraries to the country's most extraordinary destinations — flights, hotels and curated packages with 24/7 personalized service.",
   keywords: [
-    "viajes",
-    "agencia de viajes",
+    "signature travel",
+    "exclusive experiences",
+    "luxury travel venezuela",
     "venezuela voyages",
-    "explore now",
-    "vuelos",
-    "hoteles",
+    "exclusive destinations",
+    "private itineraries",
+    "venezuela travel agency",
+    "flights",
+    "hotels",
     "venezuela",
-    "turismo",
-    "reservas",
-    "paquetes turísticos",
-    "travel agency",
+    "tourism",
     "24/7",
   ],
   metadataBase: new URL("https://venezuelavoyages.com"),
   openGraph: {
-    title: "VENEZUELA VOYAGES | Explore Now - Tu Agencia de Viajes",
+    title: "VENEZUELA VOYAGES | Signature Travel Experiences",
     description:
-      "Tu agencia de viajes en Venezuela. Reserva vuelos, hoteles y paquetes turísticos con atención personalizada 24/7. Explore Now.",
+      "Signature travel experiences in Venezuela. We design exclusive itineraries to the country's most extraordinary destinations. Available 24/7.",
     siteName: "VENEZUELA VOYAGES",
     images: [
       {
@@ -60,7 +61,7 @@ export const metadata = {
         height: openGraph.height,
       },
     ],
-    locale: "es_VE",
+    locale: "en_VE",
     type: "website",
   },
   other: {
@@ -118,6 +119,7 @@ export default async function RootLayout({ children }) {
         ) : (
           <StoreProvider>
             <div className="mx-auto max-w-[1440px]">
+              <AnnouncementBar />
               <Notice />
               <MaintenanceNotice maintenanceMode={maintenanceMode} />
               {children}
