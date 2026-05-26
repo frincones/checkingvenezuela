@@ -16,7 +16,7 @@ export const heroConfig = {
   variants: {
     "caribbean-secret": {
       headline: "Venezuela The Last Best Kept Secret in the Caribbean.",
-      subtitle: null, // TBD en HU-003
+      subtitle: "We design signature itineraries in the most exclusive destinations in Venezuela",
       cta: null, // TBD en HU-004
       language: "en",
       targetAudience: "international",
