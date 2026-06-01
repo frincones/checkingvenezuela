@@ -54,7 +54,8 @@ export async function PATCH(request, { params }) {
       "short_description", "country", "city", "airport_code", "hotel_type",
       "image_url", "gallery", "tags", "highlights", "coordinates", "pricing",
       "has_online_search", "has_quote_request", "search_href", "display_order",
-      "is_featured", "is_active", "metadata", "meta_title", "meta_description"
+      "is_featured", "is_active", "metadata", "meta_title", "meta_description",
+      "language"
     ];
 
     const updateData = {};
