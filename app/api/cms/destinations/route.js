@@ -73,15 +73,26 @@ export async function POST(request) {
     const body = await request.json();
     const adminClient = createAdminClient();
 
-    if (!body.name || !body.slug || !body.destinationType) {
+    // Accept both snake_case (what the form actually sends) and camelCase
+    // (legacy convention) for destination_type. The original validation only
+    // checked camelCase and rejected every valid submission — see the
+    // matching alias-tolerant logic below in destinationData.
+    const destinationType = body.destination_type || body.destinationType;
+
+    if (!body.name || !body.slug || !destinationType) {
       return NextResponse.json({
         error: "Nombre, slug y tipo de destino son requeridos"
       }, { status: 400 });
     }
 
+    // Language whitelist — DB has a CHECK(language IN ('es','en')); we keep
+    // it tight here so a malformed payload never reaches Postgres.
+    const language = body.language === "en" ? "en" : "es";
+
     const destinationData = {
       category_id: body.categoryId || body.category_id || null,
-      destination_type: body.destinationType || body.destination_type,
+      destination_type: destinationType,
+      language,
       name: body.name,
       slug: body.slug,
       description: body.description || null,

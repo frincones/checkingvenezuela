@@ -39,7 +39,8 @@ export default function NewDestinationPage() {
 
   const [formData, setFormData] = useState({
     name: "", slug: "", country: "Venezuela", description: "", short_description: "",
-    image_url: "", category_id: "", destination_type: "city", display_order: 0,
+    image_url: "", category_id: "", destination_type: "venezuela", language: "es",
+    display_order: 0,
     is_featured: false, is_active: true, meta_title: "", meta_description: "",
     gallery: [], coordinates: { lat: "", lng: "" },
     metadata: {
@@ -156,13 +157,22 @@ export default function NewDestinationPage() {
               </select>
             </div>
             <div>
-              <label className={labelCls}>Tipo de destino</label>
-              <select name="destination_type" value={formData.destination_type} onChange={handleChange} className={inputCls}>
-                <option value="city">Ciudad</option>
-                <option value="region">Región</option>
-                <option value="country">País</option>
-                <option value="attraction">Atracción</option>
+              <label className={labelCls}>Tipo de destino *</label>
+              <select name="destination_type" value={formData.destination_type} onChange={handleChange} required className={inputCls}>
+                <option value="venezuela">Destino Venezuela</option>
+                <option value="flight">Vuelo internacional</option>
+                <option value="hotel">Hotel</option>
               </select>
+            </div>
+            <div>
+              <label className={labelCls}>Idioma del contenido *</label>
+              <select name="language" value={formData.language} onChange={handleChange} required className={inputCls}>
+                <option value="es">Español</option>
+                <option value="en">English</option>
+              </select>
+              <p className="mt-1 text-xs text-gray-500">
+                Idioma en que está escrito el nombre, descripción y demás textos.
+              </p>
             </div>
             <div>
               <label className={labelCls}>Orden</label>
