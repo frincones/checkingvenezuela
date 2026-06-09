@@ -430,14 +430,56 @@ function TemplateSelector({ onLoad, editorContent, subject }) {
   );
 }
 
+/* ── Reply helpers ── */
+// Given an email + the active mailbox, returns who should receive the reply.
+// - Inbound mail → reply to the sender (from_email).
+// - Outbound mail → reply to the original recipient (to_emails[0]).
+//   (Otherwise the user would reply to themselves.)
+function defaultReplyTo(email, ownAddress) {
+  if (!email) return "";
+  if (email.direction === "outbound") {
+    const first = Array.isArray(email.to_emails) && email.to_emails[0];
+    return (typeof first === "string" ? first : first?.email) || "";
+  }
+  return email.from_email || "";
+}
+
+// Collect every other participant of the original email for Reply All.
+// Excludes (a) the person we already replied to, (b) ourselves, and
+// dedups case-insensitively.
+function replyAllCcList(email, primaryRecipient, ownAddress) {
+  if (!email) return [];
+  const normalize = (e) => (typeof e === "string" ? e : e?.email || "").toLowerCase().trim();
+  const exclude = new Set(
+    [primaryRecipient, ownAddress].filter(Boolean).map((s) => s.toLowerCase().trim())
+  );
+  const candidates = [
+    ...(Array.isArray(email.to_emails) ? email.to_emails : []),
+    ...(Array.isArray(email.cc) ? email.cc : []),
+  ];
+  const seen = new Set();
+  const result = [];
+  for (const c of candidates) {
+    const addr = normalize(c);
+    if (!addr || exclude.has(addr) || seen.has(addr)) continue;
+    seen.add(addr);
+    result.push(addr);
+  }
+  return result;
+}
+
 /* ── Main ComposeModal ── */
 export default function ComposeModal({ isOpen, onClose, replyTo, forwardEmail, onSent, mailboxes, defaultFromAddress }) {
-  const [to, setTo] = useState(replyTo?.from_email || "");
-  const [cc, setCc] = useState("");
+  const ownAddress = defaultFromAddress || "ventas@venezuelavoyages.com";
+  const initialTo = defaultReplyTo(replyTo, ownAddress);
+  const initialCcArr = replyTo?.replyAll ? replyAllCcList(replyTo, initialTo, ownAddress) : [];
+
+  const [to, setTo] = useState(initialTo);
+  const [cc, setCc] = useState(initialCcArr.join(", "));
   const [bcc, setBcc] = useState("");
-  const [showCc, setShowCc] = useState(false);
+  const [showCc, setShowCc] = useState(initialCcArr.length > 0);
   const [showBcc, setShowBcc] = useState(false);
-  const [fromAddress, setFromAddress] = useState(defaultFromAddress || "ventas@venezuelavoyages.com");
+  const [fromAddress, setFromAddress] = useState(ownAddress);
   const [subject, setSubject] = useState(() => {
     if (replyTo) return replyTo.subject?.startsWith("Re: ") ? replyTo.subject : `Re: ${replyTo.subject || ""}`;
     if (forwardEmail) return `Fwd: ${forwardEmail.subject || ""}`;
@@ -607,10 +649,25 @@ export default function ComposeModal({ isOpen, onClose, replyTo, forwardEmail, o
       }
 
       const endpoint = replyTo ? `/api/email/${replyTo.id}/reply` : "/api/email";
+      // For replies, send the FULL edited payload (the user may have changed
+      // recipients, added CC/BCC, attached files). The backend uses these
+      // verbatim instead of regenerating from the original.
+      const replyBody = replyTo
+        ? {
+            html,
+            text,
+            replyAll: !!replyTo.replyAll,
+            to: toEmails,
+            cc: ccEmails.length ? ccEmails : undefined,
+            bcc: bccEmails.length ? bccEmails : undefined,
+            attachments: attPayload.length ? attPayload : undefined,
+            from_address: fromAddress,
+          }
+        : payload;
       const res = await fetch(endpoint, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(replyTo ? { html, text, replyAll: false } : payload),
+        body: JSON.stringify(replyBody),
       });
 
       if (!res.ok) {
