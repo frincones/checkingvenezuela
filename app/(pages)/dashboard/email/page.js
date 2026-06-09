@@ -228,8 +228,12 @@ export default function EmailPage() {
 
   const totalUnread = Object.values(unread).reduce((a, b) => a + b, 0);
 
+  // The email module is a 3-pane interface that should use the entire
+  // viewport (minus the global header). The negative -m-4 cancels the
+  // padding that <main> in dashboard/layout.js applies for simpler pages
+  // so we can fill every pixel.
   return (
-    <div className="flex flex-col h-[calc(100vh-6rem)]">
+    <div className="flex flex-col h-[calc(100vh-5rem)] -m-4 mt-0">
       {/* Header */}
       <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 bg-white flex-shrink-0">
         <div className="flex items-center gap-3">
