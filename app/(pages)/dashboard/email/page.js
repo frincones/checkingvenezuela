@@ -25,6 +25,9 @@ export default function EmailPage() {
   const [mailboxes, setMailboxes] = useState([]);
   const [activeMailbox, setActiveMailbox] = useState(null); // null = all
 
+  // Labels
+  const [activeLabel, setActiveLabel] = useState(null);
+
   // Compose state
   const [composeOpen, setComposeOpen] = useState(false);
   const [replyTo, setReplyTo] = useState(null);
@@ -44,6 +47,7 @@ export default function EmailPage() {
       const params = new URLSearchParams({ folder });
       if (search) params.set("search", search);
       if (activeMailbox) params.set("mailbox_id", activeMailbox);
+      if (activeLabel) params.set("label_id", activeLabel);
       const res = await fetch(`/api/email?${params}`);
       const data = await res.json();
       setEmails(data.emails || []);
@@ -55,7 +59,7 @@ export default function EmailPage() {
     } finally {
       setLoading(false);
     }
-  }, [folder, search, activeMailbox]);
+  }, [folder, search, activeMailbox, activeLabel]);
 
   useEffect(() => {
     fetchEmails();
@@ -286,6 +290,8 @@ export default function EmailPage() {
             activeMailbox={activeMailbox}
             onMailboxChange={handleMailboxChange}
             hasUnassigned={hasUnassigned}
+            activeLabel={activeLabel}
+            onLabelChange={setActiveLabel}
           />
         </div>
 

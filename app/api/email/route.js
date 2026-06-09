@@ -28,6 +28,7 @@ export async function GET(request) {
     const search = searchParams.get("search") || "";
     const starred = searchParams.get("starred");
     const mailboxId = searchParams.get("mailbox_id");
+    const labelId = searchParams.get("label_id");
     const page = parseInt(searchParams.get("page") || "1");
     const limit = parseInt(searchParams.get("limit") || "50");
     const offset = (page - 1) * limit;
@@ -44,6 +45,19 @@ export async function GET(request) {
       query = query.is("mailbox_id", null);
     } else if (mailboxId) {
       query = query.eq("mailbox_id", mailboxId);
+    }
+
+    // Filter by label (looks at the join table)
+    if (labelId) {
+      const { data: linkedRows } = await adminClient
+        .from("email_label_links")
+        .select("email_id")
+        .eq("label_id", labelId);
+      const allowedIds = (linkedRows || []).map((r) => r.email_id);
+      if (allowedIds.length === 0) {
+        return NextResponse.json({ emails: [], total: 0, page, limit, unread: {}, hasUnassigned: false });
+      }
+      query = query.in("id", allowedIds);
     }
 
     if (starred === "true") {

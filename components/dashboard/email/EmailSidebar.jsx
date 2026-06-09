@@ -1,5 +1,8 @@
 "use client";
 
+import { useEffect, useState } from "react";
+import LabelsManager from "@/components/dashboard/email/LabelsManager";
+
 const FOLDERS = [
   { key: "inbox", label: "Bandeja de entrada", icon: "M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" },
   { key: "sent", label: "Enviados", icon: "M12 19l9 2-9-18-9 18 9-2zm0 0v-8" },
@@ -8,7 +11,23 @@ const FOLDERS = [
   { key: "trash", label: "Papelera", icon: "M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" },
 ];
 
-export default function EmailSidebar({ activeFolder, onFolderChange, unread, onCompose, mailboxes, activeMailbox, onMailboxChange, hasUnassigned }) {
+export default function EmailSidebar({ activeFolder, onFolderChange, unread, onCompose, mailboxes, activeMailbox, onMailboxChange, hasUnassigned, activeLabel, onLabelChange }) {
+  const [labels, setLabels] = useState([]);
+
+  async function refreshLabels() {
+    try {
+      const res = await fetch("/api/email/labels");
+      const data = await res.json();
+      setLabels(data.labels || []);
+    } catch {
+      setLabels([]);
+    }
+  }
+
+  useEffect(() => {
+    refreshLabels();
+  }, []);
+
   return (
     <div className="w-52 border-r border-gray-200 bg-white flex flex-col h-full">
       {/* Mailbox selector */}
@@ -74,6 +93,16 @@ export default function EmailSidebar({ activeFolder, onFolderChange, unread, onC
           );
         })}
       </nav>
+
+      {/* Custom labels */}
+      <div className="px-1 flex-shrink-0 overflow-y-auto max-h-64">
+        <LabelsManager
+          labels={labels}
+          onChange={refreshLabels}
+          activeLabel={activeLabel}
+          onSelectLabel={onLabelChange}
+        />
+      </div>
 
       {/* Signatures link */}
       <div className="px-2 pb-4 pt-2 border-t border-gray-100 mt-2">
