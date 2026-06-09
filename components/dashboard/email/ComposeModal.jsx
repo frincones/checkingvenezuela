@@ -502,6 +502,40 @@ export default function ComposeModal({ isOpen, onClose, replyTo, forwardEmail, o
     if (isOpen) setTouched(false);
   }, [isOpen, replyTo?.id, forwardEmail?.id]);
 
+  // Defensive sync: every time the composer opens with a NEW replyTo /
+  // forwardEmail, force the To / CC / Subject inputs to reflect that target.
+  // useState's lazy initializer only runs on mount; if the component happens
+  // to be reused between two reply targets (or replyTo arrives milliseconds
+  // after isOpen flipped, due to React batching across components), the
+  // fields would otherwise show the stale value (or the empty placeholder
+  // as the user reported on 2026-06-09).
+  useEffect(() => {
+    if (!isOpen) return;
+    if (replyTo) {
+      const own = defaultFromAddress || "ventas@venezuelavoyages.com";
+      const primary = defaultReplyTo(replyTo, own);
+      setTo(primary);
+      const ccArr = replyTo.replyAll ? replyAllCcList(replyTo, primary, own) : [];
+      setCc(ccArr.join(", "));
+      setShowCc(ccArr.length > 0);
+      setSubject(
+        replyTo.subject?.startsWith("Re: ")
+          ? replyTo.subject
+          : `Re: ${replyTo.subject || ""}`
+      );
+    } else if (forwardEmail) {
+      setTo("");
+      setCc("");
+      setShowCc(false);
+      setSubject(`Fwd: ${forwardEmail.subject || ""}`);
+    } else {
+      // Brand-new compose — leave whatever the user has typed alone.
+    }
+    // Only depend on the identifying fields so unrelated re-renders of the
+    // parent don't wipe out user edits mid-compose.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isOpen, replyTo?.id, forwardEmail?.id, defaultFromAddress]);
+
   const initialContent = forwardEmail
     ? `<br/><br/><blockquote style="border-left:2px solid #ccc;padding-left:12px;color:#666;">
         <p><small>---------- Mensaje reenviado ----------</small></p>
