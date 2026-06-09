@@ -490,6 +490,16 @@ export default function ComposeModal({ isOpen, onClose, replyTo, forwardEmail, o
   const [showEmoji, setShowEmoji] = useState(false);
   const autoSaveTimer = useRef(null);
   const draftIdRef = useRef(null);
+  // Track whether the user has actually typed something, to decide whether
+  // closing the composer should ask for confirmation. Pre-filled values
+  // from a reply do NOT count as touched; only user edits do.
+  const [touched, setTouched] = useState(false);
+
+  // Reset touched when the composer is freshly opened (replyTo / forward
+  // transitions, or a brand-new compose).
+  useEffect(() => {
+    if (isOpen) setTouched(false);
+  }, [isOpen, replyTo?.id, forwardEmail?.id]);
 
   const initialContent = forwardEmail
     ? `<br/><br/><blockquote style="border-left:2px solid #ccc;padding-left:12px;color:#666;">
@@ -529,6 +539,7 @@ export default function ComposeModal({ isOpen, onClose, replyTo, forwardEmail, o
         class: "prose prose-sm max-w-none focus:outline-none min-h-[200px] px-4 py-3",
       },
     },
+    onUpdate: () => setTouched(true),
   });
 
   /* ── Dropzone ── */
@@ -537,6 +548,7 @@ export default function ComposeModal({ isOpen, onClose, replyTo, forwardEmail, o
       Object.assign(f, { preview: f.type.startsWith("image/") ? URL.createObjectURL(f) : null })
     );
     setAttachments((prev) => [...prev, ...newFiles]);
+    setTouched(true);
   }, []);
 
   const { getRootProps, getInputProps, isDragActive, open: openFileDialog } = useDropzone({
@@ -705,6 +717,23 @@ export default function ComposeModal({ isOpen, onClose, replyTo, forwardEmail, o
     } catch {}
   }, [to, subject, editor, onClose]);
 
+  /* ── Close with unsaved-changes guard ── */
+  const handleClose = useCallback(() => {
+    const hasText = !!editor && editor.getText().trim().length > 0;
+    const hasRecipient = !!(to || cc || bcc);
+    const hasSubject = !!subject;
+    const hasAttachments = attachments.length > 0;
+    const isDirty = touched && (hasText || hasRecipient || hasSubject || hasAttachments);
+    if (isDirty) {
+      const confirmClose = window.confirm(
+        "Tienes cambios sin guardar. ¿Deseas descartar este mensaje?"
+      );
+      if (!confirmClose) return;
+    }
+    attachments.forEach((f) => f.preview && URL.revokeObjectURL(f.preview));
+    onClose();
+  }, [touched, editor, to, cc, bcc, subject, attachments, onClose]);
+
   if (!isOpen) return null;
 
   return (
@@ -735,7 +764,7 @@ export default function ComposeModal({ isOpen, onClose, replyTo, forwardEmail, o
             <button onClick={handleDraft} className="text-white/70 hover:text-white text-xs px-2 py-1">
               Borrador
             </button>
-            <button onClick={onClose} className="text-white/70 hover:text-white">
+            <button onClick={handleClose} className="text-white/70 hover:text-white" title="Cerrar">
               <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
               </svg>
@@ -764,7 +793,7 @@ export default function ComposeModal({ isOpen, onClose, replyTo, forwardEmail, o
           )}
           <div className="flex items-center px-4 py-1.5 border-b border-gray-100">
             <span className="text-gray-500 w-12">Para:</span>
-            <input type="text" value={to} onChange={(e) => setTo(e.target.value)} placeholder="email@ejemplo.com" className="flex-1 outline-none text-sm" />
+            <input type="text" value={to} onChange={(e) => { setTo(e.target.value); setTouched(true); }} placeholder="email@ejemplo.com" className="flex-1 outline-none text-sm" />
             <div className="flex gap-1">
               {!showCc && <button type="button" onClick={() => setShowCc(true)} className="text-xs text-gray-400 hover:text-gray-600">CC</button>}
               {!showBcc && <button type="button" onClick={() => setShowBcc(true)} className="text-xs text-gray-400 hover:text-gray-600">BCC</button>}
@@ -773,18 +802,18 @@ export default function ComposeModal({ isOpen, onClose, replyTo, forwardEmail, o
           {showCc && (
             <div className="flex items-center px-4 py-1.5 border-b border-gray-100">
               <span className="text-gray-500 w-12">CC:</span>
-              <input type="text" value={cc} onChange={(e) => setCc(e.target.value)} placeholder="email@ejemplo.com" className="flex-1 outline-none text-sm" />
+              <input type="text" value={cc} onChange={(e) => { setCc(e.target.value); setTouched(true); }} placeholder="email@ejemplo.com" className="flex-1 outline-none text-sm" />
             </div>
           )}
           {showBcc && (
             <div className="flex items-center px-4 py-1.5 border-b border-gray-100">
               <span className="text-gray-500 w-12">BCC:</span>
-              <input type="text" value={bcc} onChange={(e) => setBcc(e.target.value)} placeholder="email@ejemplo.com" className="flex-1 outline-none text-sm" />
+              <input type="text" value={bcc} onChange={(e) => { setBcc(e.target.value); setTouched(true); }} placeholder="email@ejemplo.com" className="flex-1 outline-none text-sm" />
             </div>
           )}
           <div className="flex items-center px-4 py-1.5">
             <span className="text-gray-500 w-12">Asunto:</span>
-            <input type="text" value={subject} onChange={(e) => setSubject(e.target.value)} placeholder="Asunto del correo" className="flex-1 outline-none text-sm" />
+            <input type="text" value={subject} onChange={(e) => { setSubject(e.target.value); setTouched(true); }} placeholder="Asunto del correo" className="flex-1 outline-none text-sm" />
           </div>
         </div>
 
