@@ -39,9 +39,10 @@ function groupByThread(emails) {
   );
 }
 
-function ThreadRow({ thread, selectedId, onSelect, onToggleStar, folder }) {
+function ThreadRow({ thread, selectedId, onSelect, onToggleStar, folder, selectedSet, onToggleSelect }) {
   const [expanded, setExpanded] = useState(false);
   const head = thread[0];
+  const isChecked = selectedSet?.has(head.id) || false;
   const count = thread.length;
   const hasMultiple = count > 1;
   const headSelected = head.id === selectedId;
@@ -61,6 +62,21 @@ function ThreadRow({ thread, selectedId, onSelect, onToggleStar, folder }) {
             : "hover:bg-gray-50"
         } ${anyUnread ? "bg-blue-50/30" : ""}`}
       >
+        {/* Checkbox for bulk selection (shows on hover or when any selected) */}
+        {onToggleSelect && (
+          <input
+            type="checkbox"
+            checked={isChecked}
+            onChange={(e) => {
+              e.stopPropagation();
+              onToggleSelect(head.id);
+            }}
+            onClick={(e) => e.stopPropagation()}
+            className="mt-1 flex-shrink-0 accent-[#0A1A44] cursor-pointer"
+            aria-label="Seleccionar correo"
+          />
+        )}
+
         {/* Star (acts on head) */}
         <button
           onClick={(e) => {
@@ -211,7 +227,17 @@ function ThreadRow({ thread, selectedId, onSelect, onToggleStar, folder }) {
   );
 }
 
-export default function EmailList({ emails, selectedId, onSelect, onToggleStar, loading, folder, groupByConversation = true }) {
+export default function EmailList({
+  emails,
+  selectedId,
+  onSelect,
+  onToggleStar,
+  loading,
+  folder,
+  groupByConversation = true,
+  selectedSet,
+  onToggleSelect,
+}) {
   const threads = useMemo(
     () => (groupByConversation ? groupByThread(emails || []) : (emails || []).map((e) => [e])),
     [emails, groupByConversation]
@@ -250,6 +276,8 @@ export default function EmailList({ emails, selectedId, onSelect, onToggleStar, 
           onSelect={onSelect}
           onToggleStar={onToggleStar}
           folder={folder}
+          selectedSet={selectedSet}
+          onToggleSelect={onToggleSelect}
         />
       ))}
     </div>

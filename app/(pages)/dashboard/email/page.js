@@ -5,6 +5,7 @@ import EmailSidebar from "@/components/dashboard/email/EmailSidebar";
 import EmailList from "@/components/dashboard/email/EmailList";
 import EmailView from "@/components/dashboard/email/EmailView";
 import ComposeModal from "@/components/dashboard/email/ComposeModal";
+import BulkActionsBar from "@/components/dashboard/email/BulkActionsBar";
 
 export default function EmailPage() {
   const [folder, setFolder] = useState("inbox");
@@ -16,6 +17,9 @@ export default function EmailPage() {
   const [search, setSearch] = useState("");
   const [total, setTotal] = useState(0);
   const [hasUnassigned, setHasUnassigned] = useState(false);
+
+  // Bulk selection state — keys into the threads' head ids.
+  const [bulkSelected, setBulkSelected] = useState(() => new Set());
 
   // Mailboxes
   const [mailboxes, setMailboxes] = useState([]);
@@ -107,6 +111,55 @@ export default function EmailPage() {
     setSelectedId(null);
     fetchEmails();
   }, [selectedId, fetchEmails]);
+
+  const handleToggleSelect = useCallback((id) => {
+    setBulkSelected((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  }, []);
+
+  const handleClearSelection = useCallback(() => {
+    setBulkSelected(new Set());
+  }, []);
+
+  const handleBulkAction = useCallback(
+    async (action, extra = {}) => {
+      const ids = Array.from(bulkSelected);
+      if (!ids.length) return;
+      if (action === "delete" || action === "trash") {
+        const confirmMsg =
+          action === "delete"
+            ? `¿Eliminar permanentemente ${ids.length} correo(s)?`
+            : `¿Mover ${ids.length} correo(s) a la papelera?`;
+        if (!window.confirm(confirmMsg)) return;
+      }
+      try {
+        const res = await fetch("/api/email/bulk", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ ids, action, ...extra }),
+        });
+        if (!res.ok) {
+          const err = await res.json().catch(() => ({}));
+          alert(err.error || "Error al aplicar la acción");
+          return;
+        }
+        // If the currently-open email was in the bulk, deselect it.
+        if (selectedId && bulkSelected.has(selectedId)) {
+          setSelectedId(null);
+          setSelectedEmail(null);
+        }
+        setBulkSelected(new Set());
+        fetchEmails();
+      } catch (err) {
+        alert("Error al aplicar la acción");
+      }
+    },
+    [bulkSelected, fetchEmails, selectedId]
+  );
 
   const handleReply = useCallback(
     (replyAll) => {
@@ -255,6 +308,12 @@ export default function EmailPage() {
               {total > 0 && ` (${total})`}
             </span>
           </div>
+          <BulkActionsBar
+            count={bulkSelected.size}
+            onAction={handleBulkAction}
+            onClear={handleClearSelection}
+            currentFolder={folder}
+          />
           <EmailList
             emails={emails}
             selectedId={selectedId}
@@ -262,6 +321,8 @@ export default function EmailPage() {
             onToggleStar={handleToggleStar}
             loading={loading}
             folder={folder}
+            selectedSet={bulkSelected}
+            onToggleSelect={handleToggleSelect}
           />
         </div>
 
