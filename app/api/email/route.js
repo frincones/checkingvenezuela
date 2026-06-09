@@ -8,6 +8,7 @@ import { createClient, createAdminClient } from "@/lib/db/supabase/server";
 import { NextResponse } from "next/server";
 import { Resend } from "resend";
 import { validateAttachmentSize } from "@/lib/email/attachmentLimits";
+import { parseSearchQuery, applyFiltersToQuery } from "@/lib/email/searchQuery";
 
 function getResend() {
   return new Resend(process.env.RESEND_API_KEY);
@@ -27,6 +28,7 @@ export async function GET(request) {
     const search = searchParams.get("search") || "";
     const starred = searchParams.get("starred");
     const mailboxId = searchParams.get("mailbox_id");
+    const labelId = searchParams.get("label_id");
     const page = parseInt(searchParams.get("page") || "1");
     const limit = parseInt(searchParams.get("limit") || "50");
     const offset = (page - 1) * limit;
@@ -39,8 +41,23 @@ export async function GET(request) {
       .order("created_at", { ascending: false })
       .range(offset, offset + limit - 1);
 
-    if (mailboxId) {
+    if (mailboxId === "unassigned") {
+      query = query.is("mailbox_id", null);
+    } else if (mailboxId) {
       query = query.eq("mailbox_id", mailboxId);
+    }
+
+    // Filter by label (looks at the join table)
+    if (labelId) {
+      const { data: linkedRows } = await adminClient
+        .from("email_label_links")
+        .select("email_id")
+        .eq("label_id", labelId);
+      const allowedIds = (linkedRows || []).map((r) => r.email_id);
+      if (allowedIds.length === 0) {
+        return NextResponse.json({ emails: [], total: 0, page, limit, unread: {}, hasUnassigned: false });
+      }
+      query = query.in("id", allowedIds);
     }
 
     if (starred === "true") {
@@ -48,7 +65,11 @@ export async function GET(request) {
     }
 
     if (search) {
-      query = query.or(`subject.ilike.%${search}%,from_email.ilike.%${search}%,body_text.ilike.%${search}%`);
+      // Gmail-style operators: from:foo to:bar subject:"hello world"
+      // has:attachment is:unread is:starred before:YYYY-MM-DD after:YYYY-MM-DD
+      // Anything else is free-text and OR'd across subject/from_email/body_text.
+      const filters = parseSearchQuery(search);
+      query = applyFiltersToQuery(query, filters);
     }
 
     const { data: emails, error, count } = await query;
@@ -64,7 +85,9 @@ export async function GET(request) {
       .eq("is_read", false)
       .not("folder", "eq", "trash");
 
-    if (mailboxId) {
+    if (mailboxId === "unassigned") {
+      unreadQuery = unreadQuery.is("mailbox_id", null);
+    } else if (mailboxId) {
       unreadQuery = unreadQuery.eq("mailbox_id", mailboxId);
     }
 
@@ -75,12 +98,21 @@ export async function GET(request) {
       unreadByFolder[e.folder] = (unreadByFolder[e.folder] || 0) + 1;
     });
 
+    // Does the user have any inbound row without a mailbox? Used to surface
+    // the "Sin asignar" option in the dropdown only when relevant.
+    const { count: unassignedCount } = await adminClient
+      .from("emails")
+      .select("id", { count: "exact", head: true })
+      .eq("direction", "inbound")
+      .is("mailbox_id", null);
+
     return NextResponse.json({
       emails: emails || [],
       total: count || 0,
       page,
       limit,
       unread: unreadByFolder,
+      hasUnassigned: (unassignedCount || 0) > 0,
     });
   } catch (error) {
     console.error("GET /api/email error:", error);

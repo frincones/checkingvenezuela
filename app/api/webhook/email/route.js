@@ -150,19 +150,40 @@ export async function POST(request) {
           }
         }
 
-        // Resolve mailbox by matching recipient address
+        // Resolve mailbox by matching recipient address. We try (a) exact
+        // case-insensitive match against `mailboxes.address`, then (b) a
+        // dot/dash-insensitive variant so msanchez@ → m.sanchez@ etc.
         let mailboxId = null;
         const allRecipients = toEmails
           .map((e) => e.email?.toLowerCase())
           .filter(Boolean);
         if (allRecipients.length > 0) {
-          const { data: mailbox } = await supabase
+          const { data: exact } = await supabase
             .from("mailboxes")
             .select("id")
             .in("address", allRecipients)
             .limit(1)
             .maybeSingle();
-          if (mailbox) mailboxId = mailbox.id;
+          if (exact) {
+            mailboxId = exact.id;
+          } else {
+            // Permissive fallback: load all active mailboxes and compare
+            // local-parts after stripping '.' and '-'.
+            const { data: all } = await supabase
+              .from("mailboxes")
+              .select("id, address")
+              .eq("is_active", true);
+            const stripped = (addr) =>
+              (addr || "").toLowerCase().split("@")[0].replace(/[.\-]/g, "");
+            for (const r of allRecipients) {
+              const key = stripped(r);
+              const found = (all || []).find((m) => stripped(m.address) === key);
+              if (found) {
+                mailboxId = found.id;
+                break;
+              }
+            }
+          }
         }
 
         // Pre-generate the row id so we can use it as the storage path

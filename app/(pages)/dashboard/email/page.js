@@ -5,6 +5,7 @@ import EmailSidebar from "@/components/dashboard/email/EmailSidebar";
 import EmailList from "@/components/dashboard/email/EmailList";
 import EmailView from "@/components/dashboard/email/EmailView";
 import ComposeModal from "@/components/dashboard/email/ComposeModal";
+import BulkActionsBar from "@/components/dashboard/email/BulkActionsBar";
 
 export default function EmailPage() {
   const [folder, setFolder] = useState("inbox");
@@ -15,10 +16,36 @@ export default function EmailPage() {
   const [unread, setUnread] = useState({});
   const [search, setSearch] = useState("");
   const [total, setTotal] = useState(0);
+  const [hasUnassigned, setHasUnassigned] = useState(false);
+
+  // Bulk selection state — keys into the threads' head ids.
+  const [bulkSelected, setBulkSelected] = useState(() => new Set());
 
   // Mailboxes
   const [mailboxes, setMailboxes] = useState([]);
   const [activeMailbox, setActiveMailbox] = useState(null); // null = all
+
+  // Labels
+  const [activeLabel, setActiveLabel] = useState(null);
+
+  // Reading pane layout — persisted in localStorage
+  const [readingPane, setReadingPane] = useState("right"); // 'right' | 'bottom' | 'off'
+
+  useEffect(() => {
+    try {
+      const stored = localStorage.getItem("emailReadingPane");
+      if (stored === "right" || stored === "bottom" || stored === "off") {
+        setReadingPane(stored);
+      }
+    } catch {}
+  }, []);
+
+  function changeReadingPane(mode) {
+    setReadingPane(mode);
+    try {
+      localStorage.setItem("emailReadingPane", mode);
+    } catch {}
+  }
 
   // Compose state
   const [composeOpen, setComposeOpen] = useState(false);
@@ -39,17 +66,19 @@ export default function EmailPage() {
       const params = new URLSearchParams({ folder });
       if (search) params.set("search", search);
       if (activeMailbox) params.set("mailbox_id", activeMailbox);
+      if (activeLabel) params.set("label_id", activeLabel);
       const res = await fetch(`/api/email?${params}`);
       const data = await res.json();
       setEmails(data.emails || []);
       setTotal(data.total || 0);
       setUnread(data.unread || {});
+      setHasUnassigned(!!data.hasUnassigned);
     } catch (err) {
       console.error("Error fetching emails:", err);
     } finally {
       setLoading(false);
     }
-  }, [folder, search, activeMailbox]);
+  }, [folder, search, activeMailbox, activeLabel]);
 
   useEffect(() => {
     fetchEmails();
@@ -105,6 +134,55 @@ export default function EmailPage() {
     setSelectedId(null);
     fetchEmails();
   }, [selectedId, fetchEmails]);
+
+  const handleToggleSelect = useCallback((id) => {
+    setBulkSelected((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  }, []);
+
+  const handleClearSelection = useCallback(() => {
+    setBulkSelected(new Set());
+  }, []);
+
+  const handleBulkAction = useCallback(
+    async (action, extra = {}) => {
+      const ids = Array.from(bulkSelected);
+      if (!ids.length) return;
+      if (action === "delete" || action === "trash") {
+        const confirmMsg =
+          action === "delete"
+            ? `¿Eliminar permanentemente ${ids.length} correo(s)?`
+            : `¿Mover ${ids.length} correo(s) a la papelera?`;
+        if (!window.confirm(confirmMsg)) return;
+      }
+      try {
+        const res = await fetch("/api/email/bulk", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ ids, action, ...extra }),
+        });
+        if (!res.ok) {
+          const err = await res.json().catch(() => ({}));
+          alert(err.error || "Error al aplicar la acción");
+          return;
+        }
+        // If the currently-open email was in the bulk, deselect it.
+        if (selectedId && bulkSelected.has(selectedId)) {
+          setSelectedId(null);
+          setSelectedEmail(null);
+        }
+        setBulkSelected(new Set());
+        fetchEmails();
+      } catch (err) {
+        alert("Error al aplicar la acción");
+      }
+    },
+    [bulkSelected, fetchEmails, selectedId]
+  );
 
   const handleReply = useCallback(
     (replyAll) => {
@@ -181,7 +259,8 @@ export default function EmailPage() {
               type="text"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              placeholder="Buscar correos..."
+              placeholder='Buscar… (ej: from:juan has:attachment is:unread before:2026-06-01)'
+              title="Operadores: from: to: subject: has:attachment is:unread is:starred before: after:"
               className="rounded-lg border border-gray-300 pl-9 pr-4 py-2 text-sm focus:outline-none focus:border-[#0A1A44] w-64"
             />
           </div>
@@ -200,59 +279,146 @@ export default function EmailPage() {
               />
             </svg>
           </button>
+
+          {/* Reading-pane layout selector */}
+          <div className="hidden md:flex items-center gap-0.5 ml-1 border border-gray-200 rounded-lg p-0.5">
+            {[
+              {
+                key: "right",
+                label: "Panel a la derecha",
+                d: "M3 4h7v16H3zM14 4h7v16h-7z",
+              },
+              {
+                key: "bottom",
+                label: "Panel abajo",
+                d: "M3 3h18v8H3zM3 13h18v8H3z",
+              },
+              {
+                key: "off",
+                label: "Sin panel de lectura",
+                d: "M3 3h18v18H3z",
+              },
+            ].map((opt) => (
+              <button
+                key={opt.key}
+                type="button"
+                onClick={() => changeReadingPane(opt.key)}
+                title={opt.label}
+                className={`p-1.5 rounded text-gray-500 hover:bg-gray-100 ${
+                  readingPane === opt.key ? "bg-[#0A1A44]/10 text-[#0A1A44]" : ""
+                }`}
+              >
+                <svg className="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d={opt.d} />
+                </svg>
+              </button>
+            ))}
+          </div>
         </form>
       </div>
 
-      {/* Main layout */}
+      {/* Main layout — three reading-pane modes:
+       *   right  (default):   sidebar | list | viewer
+       *   bottom:             sidebar | (list on top / viewer below)
+       *   off:                sidebar | list ; viewer takes over when selected
+       */}
       <div className="flex flex-1 overflow-hidden">
-        <EmailSidebar
-          activeFolder={folder}
-          onFolderChange={(f) => {
-            setFolder(f);
-            setSelectedId(null);
-            setSelectedEmail(null);
-          }}
-          unread={unread}
-          onCompose={openCompose}
-          mailboxes={mailboxes}
-          activeMailbox={activeMailbox}
-          onMailboxChange={handleMailboxChange}
-        />
-
-        {/* Email list */}
-        <div className="w-80 border-r border-gray-200 flex flex-col bg-white">
-          <div className="px-4 py-2 border-b border-gray-100 bg-gray-50">
-            <span className="text-xs font-semibold text-gray-500 uppercase">
-              {folder === "inbox" ? "Bandeja de entrada" :
-               folder === "sent" ? "Enviados" :
-               folder === "drafts" ? "Borradores" :
-               folder === "archive" ? "Archivo" :
-               "Papelera"}
-              {total > 0 && ` (${total})`}
-            </span>
-          </div>
-          <EmailList
-            emails={emails}
-            selectedId={selectedId}
-            onSelect={handleSelect}
-            onToggleStar={handleToggleStar}
-            loading={loading}
-            folder={folder}
+        {/* Sidebar */}
+        <div className={`${selectedId && readingPane === "off" ? "hidden md:flex" : "flex"}`}>
+          <EmailSidebar
+            activeFolder={folder}
+            onFolderChange={(f) => {
+              setFolder(f);
+              setSelectedId(null);
+              setSelectedEmail(null);
+            }}
+            unread={unread}
+            onCompose={openCompose}
+            mailboxes={mailboxes}
+            activeMailbox={activeMailbox}
+            onMailboxChange={handleMailboxChange}
+            hasUnassigned={hasUnassigned}
+            activeLabel={activeLabel}
+            onLabelChange={setActiveLabel}
           />
         </div>
 
-        {/* Email viewer */}
-        <EmailView
-          email={selectedEmail}
-          onReply={handleReply}
-          onForward={handleForward}
-          onDelete={handleDelete}
-          onArchive={handleArchive}
-          onBack={() => {
-            setSelectedId(null);
-            setSelectedEmail(null);
-          }}
-        />
+        {/* Right column = either list+viewer side-by-side ('right'),
+            stacked ('bottom'), or just the list ('off') swapping with viewer. */}
+        <div className={`flex-1 flex overflow-hidden ${readingPane === "bottom" ? "flex-col" : "flex-row"}`}>
+          {/* List */}
+          <div
+            className={`${
+              readingPane === "right"
+                ? "w-full md:w-96 border-r border-gray-200"
+                : readingPane === "bottom"
+                ? "h-1/2 border-b border-gray-200"
+                : "flex-1"
+            } flex-col bg-white ${
+              selectedId && (readingPane === "off") ? "hidden md:flex" : "flex"
+            } ${selectedId && readingPane !== "off" && readingPane !== "right" ? "" : ""}`}
+          >
+            <div className="px-4 py-2 border-b border-gray-100 bg-gray-50">
+              <span className="text-xs font-semibold text-gray-500 uppercase">
+                {folder === "inbox"
+                  ? "Bandeja de entrada"
+                  : folder === "sent"
+                  ? "Enviados"
+                  : folder === "drafts"
+                  ? "Borradores"
+                  : folder === "archive"
+                  ? "Archivo"
+                  : "Papelera"}
+                {total > 0 && ` (${total})`}
+              </span>
+            </div>
+            <BulkActionsBar
+              count={bulkSelected.size}
+              onAction={handleBulkAction}
+              onClear={handleClearSelection}
+              currentFolder={folder}
+            />
+            <EmailList
+              emails={emails}
+              selectedId={selectedId}
+              onSelect={handleSelect}
+              onToggleStar={handleToggleStar}
+              loading={loading}
+              folder={folder}
+              selectedSet={bulkSelected}
+              onToggleSelect={handleToggleSelect}
+            />
+          </div>
+
+          {/* Viewer */}
+          <div
+            className={`${
+              readingPane === "right"
+                ? "flex-1"
+                : readingPane === "bottom"
+                ? "h-1/2"
+                : "flex-1"
+            } ${
+              readingPane === "off" && !selectedId
+                ? "hidden"
+                : selectedId
+                ? "flex"
+                : "hidden md:flex"
+            }`}
+          >
+            <EmailView
+              email={selectedEmail}
+              onReply={handleReply}
+              onForward={handleForward}
+              onDelete={handleDelete}
+              onArchive={handleArchive}
+              onBack={() => {
+                setSelectedId(null);
+                setSelectedEmail(null);
+              }}
+            />
+          </div>
+        </div>
       </div>
 
       {/* Compose modal */}

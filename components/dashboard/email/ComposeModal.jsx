@@ -19,6 +19,7 @@ import { TableHeader } from "@tiptap/extension-table-header";
 import Subscript from "@tiptap/extension-subscript";
 import Superscript from "@tiptap/extension-superscript";
 import { useDropzone } from "react-dropzone";
+import RecipientInput from "@/components/dashboard/email/RecipientInput";
 
 /* ── Constants ── */
 // Resend API limit is 40 MB, but Base64 encoding adds ~33% overhead.
@@ -430,14 +431,56 @@ function TemplateSelector({ onLoad, editorContent, subject }) {
   );
 }
 
+/* ── Reply helpers ── */
+// Given an email + the active mailbox, returns who should receive the reply.
+// - Inbound mail → reply to the sender (from_email).
+// - Outbound mail → reply to the original recipient (to_emails[0]).
+//   (Otherwise the user would reply to themselves.)
+function defaultReplyTo(email, ownAddress) {
+  if (!email) return "";
+  if (email.direction === "outbound") {
+    const first = Array.isArray(email.to_emails) && email.to_emails[0];
+    return (typeof first === "string" ? first : first?.email) || "";
+  }
+  return email.from_email || "";
+}
+
+// Collect every other participant of the original email for Reply All.
+// Excludes (a) the person we already replied to, (b) ourselves, and
+// dedups case-insensitively.
+function replyAllCcList(email, primaryRecipient, ownAddress) {
+  if (!email) return [];
+  const normalize = (e) => (typeof e === "string" ? e : e?.email || "").toLowerCase().trim();
+  const exclude = new Set(
+    [primaryRecipient, ownAddress].filter(Boolean).map((s) => s.toLowerCase().trim())
+  );
+  const candidates = [
+    ...(Array.isArray(email.to_emails) ? email.to_emails : []),
+    ...(Array.isArray(email.cc) ? email.cc : []),
+  ];
+  const seen = new Set();
+  const result = [];
+  for (const c of candidates) {
+    const addr = normalize(c);
+    if (!addr || exclude.has(addr) || seen.has(addr)) continue;
+    seen.add(addr);
+    result.push(addr);
+  }
+  return result;
+}
+
 /* ── Main ComposeModal ── */
 export default function ComposeModal({ isOpen, onClose, replyTo, forwardEmail, onSent, mailboxes, defaultFromAddress }) {
-  const [to, setTo] = useState(replyTo?.from_email || "");
-  const [cc, setCc] = useState("");
+  const ownAddress = defaultFromAddress || "ventas@venezuelavoyages.com";
+  const initialTo = defaultReplyTo(replyTo, ownAddress);
+  const initialCcArr = replyTo?.replyAll ? replyAllCcList(replyTo, initialTo, ownAddress) : [];
+
+  const [to, setTo] = useState(initialTo);
+  const [cc, setCc] = useState(initialCcArr.join(", "));
   const [bcc, setBcc] = useState("");
-  const [showCc, setShowCc] = useState(false);
+  const [showCc, setShowCc] = useState(initialCcArr.length > 0);
   const [showBcc, setShowBcc] = useState(false);
-  const [fromAddress, setFromAddress] = useState(defaultFromAddress || "ventas@venezuelavoyages.com");
+  const [fromAddress, setFromAddress] = useState(ownAddress);
   const [subject, setSubject] = useState(() => {
     if (replyTo) return replyTo.subject?.startsWith("Re: ") ? replyTo.subject : `Re: ${replyTo.subject || ""}`;
     if (forwardEmail) return `Fwd: ${forwardEmail.subject || ""}`;
@@ -448,6 +491,16 @@ export default function ComposeModal({ isOpen, onClose, replyTo, forwardEmail, o
   const [showEmoji, setShowEmoji] = useState(false);
   const autoSaveTimer = useRef(null);
   const draftIdRef = useRef(null);
+  // Track whether the user has actually typed something, to decide whether
+  // closing the composer should ask for confirmation. Pre-filled values
+  // from a reply do NOT count as touched; only user edits do.
+  const [touched, setTouched] = useState(false);
+
+  // Reset touched when the composer is freshly opened (replyTo / forward
+  // transitions, or a brand-new compose).
+  useEffect(() => {
+    if (isOpen) setTouched(false);
+  }, [isOpen, replyTo?.id, forwardEmail?.id]);
 
   const initialContent = forwardEmail
     ? `<br/><br/><blockquote style="border-left:2px solid #ccc;padding-left:12px;color:#666;">
@@ -487,6 +540,7 @@ export default function ComposeModal({ isOpen, onClose, replyTo, forwardEmail, o
         class: "prose prose-sm max-w-none focus:outline-none min-h-[200px] px-4 py-3",
       },
     },
+    onUpdate: () => setTouched(true),
   });
 
   /* ── Dropzone ── */
@@ -495,6 +549,7 @@ export default function ComposeModal({ isOpen, onClose, replyTo, forwardEmail, o
       Object.assign(f, { preview: f.type.startsWith("image/") ? URL.createObjectURL(f) : null })
     );
     setAttachments((prev) => [...prev, ...newFiles]);
+    setTouched(true);
   }, []);
 
   const { getRootProps, getInputProps, isDragActive, open: openFileDialog } = useDropzone({
@@ -545,24 +600,72 @@ export default function ComposeModal({ isOpen, onClose, replyTo, forwardEmail, o
     }
   }, [editor]);
 
-  /* ── Draft auto-save (every 30s) ── */
+  /* ── Draft auto-save (every 30s) ──
+   *  Saves to the drafts folder including reply context (thread_id +
+   *  in_reply_to + the parent email id) so the user can resume an
+   *  unsent reply later. The first save creates the draft row; subsequent
+   *  saves PATCH the same id so we don't pollute the drafts folder. */
   useEffect(() => {
-    if (!isOpen || replyTo) return;
+    if (!isOpen) return;
     autoSaveTimer.current = setInterval(async () => {
       const html = editor?.getHTML() || "";
       const text = editor?.getText() || "";
-      if (!html || html === "<p></p>") return;
+      // Trivial bodies aren't worth a draft row
+      if (!html || html === "<p></p>" || text.trim().length < 2) return;
+      if (!touched) return;
       try {
         const toEmails = to.split(",").map((e) => e.trim()).filter(Boolean);
-        await fetch("/api/email", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ to: toEmails, subject, html, text, isDraft: true }),
-        });
+        const ccEmails = cc.split(",").map((e) => e.trim()).filter(Boolean);
+        const bccEmails = bcc.split(",").map((e) => e.trim()).filter(Boolean);
+        const payload = {
+          to: toEmails,
+          cc: ccEmails.length ? ccEmails : undefined,
+          bcc: bccEmails.length ? bccEmails : undefined,
+          subject,
+          html,
+          text,
+          isDraft: true,
+          from_address: fromAddress,
+          in_reply_to: replyTo?.message_id || replyTo?.id || null,
+          thread_id: replyTo?.thread_id || replyTo?.id || null,
+          parent_email_id: replyTo?.id || forwardEmail?.id || null,
+        };
+        if (draftIdRef.current) {
+          // Update existing draft
+          await fetch(`/api/email/${draftIdRef.current}`, {
+            method: "PATCH",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              subject,
+              body_html: html,
+              body_text: text,
+              to_emails: toEmails.map((e) => ({ email: e })),
+              cc: ccEmails.map((e) => ({ email: e })),
+              bcc: bccEmails.map((e) => ({ email: e })),
+            }),
+          });
+        } else {
+          const res = await fetch("/api/email", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload),
+          });
+          if (res.ok) {
+            const j = await res.json().catch(() => ({}));
+            if (j?.id) draftIdRef.current = j.id;
+          }
+        }
       } catch {}
     }, 30000);
     return () => clearInterval(autoSaveTimer.current);
-  }, [isOpen, to, subject, editor, replyTo]);
+  }, [isOpen, to, cc, bcc, subject, editor, replyTo, forwardEmail, fromAddress, touched]);
+
+  /* Reset draft id when the composer transitions between targets */
+  useEffect(() => {
+    if (!isOpen) {
+      draftIdRef.current = null;
+    }
+  }, [isOpen, replyTo?.id, forwardEmail?.id]);
 
   /* ── Send ── */
   const handleSend = useCallback(async () => {
@@ -607,10 +710,25 @@ export default function ComposeModal({ isOpen, onClose, replyTo, forwardEmail, o
       }
 
       const endpoint = replyTo ? `/api/email/${replyTo.id}/reply` : "/api/email";
+      // For replies, send the FULL edited payload (the user may have changed
+      // recipients, added CC/BCC, attached files). The backend uses these
+      // verbatim instead of regenerating from the original.
+      const replyBody = replyTo
+        ? {
+            html,
+            text,
+            replyAll: !!replyTo.replyAll,
+            to: toEmails,
+            cc: ccEmails.length ? ccEmails : undefined,
+            bcc: bccEmails.length ? bccEmails : undefined,
+            attachments: attPayload.length ? attPayload : undefined,
+            from_address: fromAddress,
+          }
+        : payload;
       const res = await fetch(endpoint, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(replyTo ? { html, text, replyAll: false } : payload),
+        body: JSON.stringify(replyBody),
       });
 
       if (!res.ok) {
@@ -648,6 +766,23 @@ export default function ComposeModal({ isOpen, onClose, replyTo, forwardEmail, o
     } catch {}
   }, [to, subject, editor, onClose]);
 
+  /* ── Close with unsaved-changes guard ── */
+  const handleClose = useCallback(() => {
+    const hasText = !!editor && editor.getText().trim().length > 0;
+    const hasRecipient = !!(to || cc || bcc);
+    const hasSubject = !!subject;
+    const hasAttachments = attachments.length > 0;
+    const isDirty = touched && (hasText || hasRecipient || hasSubject || hasAttachments);
+    if (isDirty) {
+      const confirmClose = window.confirm(
+        "Tienes cambios sin guardar. ¿Deseas descartar este mensaje?"
+      );
+      if (!confirmClose) return;
+    }
+    attachments.forEach((f) => f.preview && URL.revokeObjectURL(f.preview));
+    onClose();
+  }, [touched, editor, to, cc, bcc, subject, attachments, onClose]);
+
   if (!isOpen) return null;
 
   return (
@@ -678,7 +813,7 @@ export default function ComposeModal({ isOpen, onClose, replyTo, forwardEmail, o
             <button onClick={handleDraft} className="text-white/70 hover:text-white text-xs px-2 py-1">
               Borrador
             </button>
-            <button onClick={onClose} className="text-white/70 hover:text-white">
+            <button onClick={handleClose} className="text-white/70 hover:text-white" title="Cerrar">
               <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
               </svg>
@@ -707,7 +842,7 @@ export default function ComposeModal({ isOpen, onClose, replyTo, forwardEmail, o
           )}
           <div className="flex items-center px-4 py-1.5 border-b border-gray-100">
             <span className="text-gray-500 w-12">Para:</span>
-            <input type="text" value={to} onChange={(e) => setTo(e.target.value)} placeholder="email@ejemplo.com" className="flex-1 outline-none text-sm" />
+            <RecipientInput value={to} onChange={(v) => { setTo(v); setTouched(true); }} placeholder="email@ejemplo.com" />
             <div className="flex gap-1">
               {!showCc && <button type="button" onClick={() => setShowCc(true)} className="text-xs text-gray-400 hover:text-gray-600">CC</button>}
               {!showBcc && <button type="button" onClick={() => setShowBcc(true)} className="text-xs text-gray-400 hover:text-gray-600">BCC</button>}
@@ -716,18 +851,18 @@ export default function ComposeModal({ isOpen, onClose, replyTo, forwardEmail, o
           {showCc && (
             <div className="flex items-center px-4 py-1.5 border-b border-gray-100">
               <span className="text-gray-500 w-12">CC:</span>
-              <input type="text" value={cc} onChange={(e) => setCc(e.target.value)} placeholder="email@ejemplo.com" className="flex-1 outline-none text-sm" />
+              <RecipientInput value={cc} onChange={(v) => { setCc(v); setTouched(true); }} placeholder="email@ejemplo.com" />
             </div>
           )}
           {showBcc && (
             <div className="flex items-center px-4 py-1.5 border-b border-gray-100">
               <span className="text-gray-500 w-12">BCC:</span>
-              <input type="text" value={bcc} onChange={(e) => setBcc(e.target.value)} placeholder="email@ejemplo.com" className="flex-1 outline-none text-sm" />
+              <RecipientInput value={bcc} onChange={(v) => { setBcc(v); setTouched(true); }} placeholder="email@ejemplo.com" />
             </div>
           )}
           <div className="flex items-center px-4 py-1.5">
             <span className="text-gray-500 w-12">Asunto:</span>
-            <input type="text" value={subject} onChange={(e) => setSubject(e.target.value)} placeholder="Asunto del correo" className="flex-1 outline-none text-sm" />
+            <input type="text" value={subject} onChange={(e) => { setSubject(e.target.value); setTouched(true); }} placeholder="Asunto del correo" className="flex-1 outline-none text-sm" />
           </div>
         </div>
 
