@@ -205,32 +205,53 @@ export default function EmailPage() {
         </form>
       </div>
 
-      {/* Main layout */}
+      {/* Main layout
+       * Responsive strategy:
+       *  - md+ : sidebar | list | viewer (3 panes)
+       *  - <md : only the relevant pane is visible.
+       *      * Without selection: sidebar (when no list yet) → list (when an
+       *        email may be picked).
+       *      * With selection: viewer (the back button on the toolbar returns
+       *        to the list).
+       *  This is the same pattern Outlook Mobile uses.
+       */}
       <div className="flex flex-1 overflow-hidden">
-        <EmailSidebar
-          activeFolder={folder}
-          onFolderChange={(f) => {
-            setFolder(f);
-            setSelectedId(null);
-            setSelectedEmail(null);
-          }}
-          unread={unread}
-          onCompose={openCompose}
-          mailboxes={mailboxes}
-          activeMailbox={activeMailbox}
-          onMailboxChange={handleMailboxChange}
-          hasUnassigned={hasUnassigned}
-        />
+        {/* Sidebar: hidden on mobile when any email is selected to keep the
+            viewer full-width; shown otherwise. md+ always visible. */}
+        <div className={`${selectedId ? "hidden md:flex" : "flex"}`}>
+          <EmailSidebar
+            activeFolder={folder}
+            onFolderChange={(f) => {
+              setFolder(f);
+              setSelectedId(null);
+              setSelectedEmail(null);
+            }}
+            unread={unread}
+            onCompose={openCompose}
+            mailboxes={mailboxes}
+            activeMailbox={activeMailbox}
+            onMailboxChange={handleMailboxChange}
+            hasUnassigned={hasUnassigned}
+          />
+        </div>
 
-        {/* Email list */}
-        <div className="w-96 border-r border-gray-200 flex flex-col bg-white hidden md:flex">
+        {/* Email list. On mobile, only visible when nothing is selected. */}
+        <div
+          className={`w-full md:w-96 border-r border-gray-200 flex-col bg-white ${
+            selectedId ? "hidden md:flex" : "flex"
+          }`}
+        >
           <div className="px-4 py-2 border-b border-gray-100 bg-gray-50">
             <span className="text-xs font-semibold text-gray-500 uppercase">
-              {folder === "inbox" ? "Bandeja de entrada" :
-               folder === "sent" ? "Enviados" :
-               folder === "drafts" ? "Borradores" :
-               folder === "archive" ? "Archivo" :
-               "Papelera"}
+              {folder === "inbox"
+                ? "Bandeja de entrada"
+                : folder === "sent"
+                ? "Enviados"
+                : folder === "drafts"
+                ? "Borradores"
+                : folder === "archive"
+                ? "Archivo"
+                : "Papelera"}
               {total > 0 && ` (${total})`}
             </span>
           </div>
@@ -244,18 +265,22 @@ export default function EmailPage() {
           />
         </div>
 
-        {/* Email viewer */}
-        <EmailView
-          email={selectedEmail}
-          onReply={handleReply}
-          onForward={handleForward}
-          onDelete={handleDelete}
-          onArchive={handleArchive}
-          onBack={() => {
-            setSelectedId(null);
-            setSelectedEmail(null);
-          }}
-        />
+        {/* Email viewer. On mobile, only visible when an email is selected. */}
+        <div
+          className={`flex-1 ${selectedId ? "flex" : "hidden md:flex"}`}
+        >
+          <EmailView
+            email={selectedEmail}
+            onReply={handleReply}
+            onForward={handleForward}
+            onDelete={handleDelete}
+            onArchive={handleArchive}
+            onBack={() => {
+              setSelectedId(null);
+              setSelectedEmail(null);
+            }}
+          />
+        </div>
       </div>
 
       {/* Compose modal */}
