@@ -8,6 +8,7 @@ import { createClient, createAdminClient } from "@/lib/db/supabase/server";
 import { NextResponse } from "next/server";
 import { Resend } from "resend";
 import { validateAttachmentSize } from "@/lib/email/attachmentLimits";
+import { parseSearchQuery, applyFiltersToQuery } from "@/lib/email/searchQuery";
 
 function getResend() {
   return new Resend(process.env.RESEND_API_KEY);
@@ -50,7 +51,11 @@ export async function GET(request) {
     }
 
     if (search) {
-      query = query.or(`subject.ilike.%${search}%,from_email.ilike.%${search}%,body_text.ilike.%${search}%`);
+      // Gmail-style operators: from:foo to:bar subject:"hello world"
+      // has:attachment is:unread is:starred before:YYYY-MM-DD after:YYYY-MM-DD
+      // Anything else is free-text and OR'd across subject/from_email/body_text.
+      const filters = parseSearchQuery(search);
+      query = applyFiltersToQuery(query, filters);
     }
 
     const { data: emails, error, count } = await query;
