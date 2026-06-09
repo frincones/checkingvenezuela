@@ -600,24 +600,72 @@ export default function ComposeModal({ isOpen, onClose, replyTo, forwardEmail, o
     }
   }, [editor]);
 
-  /* ── Draft auto-save (every 30s) ── */
+  /* ── Draft auto-save (every 30s) ──
+   *  Saves to the drafts folder including reply context (thread_id +
+   *  in_reply_to + the parent email id) so the user can resume an
+   *  unsent reply later. The first save creates the draft row; subsequent
+   *  saves PATCH the same id so we don't pollute the drafts folder. */
   useEffect(() => {
-    if (!isOpen || replyTo) return;
+    if (!isOpen) return;
     autoSaveTimer.current = setInterval(async () => {
       const html = editor?.getHTML() || "";
       const text = editor?.getText() || "";
-      if (!html || html === "<p></p>") return;
+      // Trivial bodies aren't worth a draft row
+      if (!html || html === "<p></p>" || text.trim().length < 2) return;
+      if (!touched) return;
       try {
         const toEmails = to.split(",").map((e) => e.trim()).filter(Boolean);
-        await fetch("/api/email", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ to: toEmails, subject, html, text, isDraft: true }),
-        });
+        const ccEmails = cc.split(",").map((e) => e.trim()).filter(Boolean);
+        const bccEmails = bcc.split(",").map((e) => e.trim()).filter(Boolean);
+        const payload = {
+          to: toEmails,
+          cc: ccEmails.length ? ccEmails : undefined,
+          bcc: bccEmails.length ? bccEmails : undefined,
+          subject,
+          html,
+          text,
+          isDraft: true,
+          from_address: fromAddress,
+          in_reply_to: replyTo?.message_id || replyTo?.id || null,
+          thread_id: replyTo?.thread_id || replyTo?.id || null,
+          parent_email_id: replyTo?.id || forwardEmail?.id || null,
+        };
+        if (draftIdRef.current) {
+          // Update existing draft
+          await fetch(`/api/email/${draftIdRef.current}`, {
+            method: "PATCH",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              subject,
+              body_html: html,
+              body_text: text,
+              to_emails: toEmails.map((e) => ({ email: e })),
+              cc: ccEmails.map((e) => ({ email: e })),
+              bcc: bccEmails.map((e) => ({ email: e })),
+            }),
+          });
+        } else {
+          const res = await fetch("/api/email", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload),
+          });
+          if (res.ok) {
+            const j = await res.json().catch(() => ({}));
+            if (j?.id) draftIdRef.current = j.id;
+          }
+        }
       } catch {}
     }, 30000);
     return () => clearInterval(autoSaveTimer.current);
-  }, [isOpen, to, subject, editor, replyTo]);
+  }, [isOpen, to, cc, bcc, subject, editor, replyTo, forwardEmail, fromAddress, touched]);
+
+  /* Reset draft id when the composer transitions between targets */
+  useEffect(() => {
+    if (!isOpen) {
+      draftIdRef.current = null;
+    }
+  }, [isOpen, replyTo?.id, forwardEmail?.id]);
 
   /* ── Send ── */
   const handleSend = useCallback(async () => {
