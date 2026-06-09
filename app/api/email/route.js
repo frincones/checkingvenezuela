@@ -39,7 +39,9 @@ export async function GET(request) {
       .order("created_at", { ascending: false })
       .range(offset, offset + limit - 1);
 
-    if (mailboxId) {
+    if (mailboxId === "unassigned") {
+      query = query.is("mailbox_id", null);
+    } else if (mailboxId) {
       query = query.eq("mailbox_id", mailboxId);
     }
 
@@ -64,7 +66,9 @@ export async function GET(request) {
       .eq("is_read", false)
       .not("folder", "eq", "trash");
 
-    if (mailboxId) {
+    if (mailboxId === "unassigned") {
+      unreadQuery = unreadQuery.is("mailbox_id", null);
+    } else if (mailboxId) {
       unreadQuery = unreadQuery.eq("mailbox_id", mailboxId);
     }
 
@@ -75,12 +79,21 @@ export async function GET(request) {
       unreadByFolder[e.folder] = (unreadByFolder[e.folder] || 0) + 1;
     });
 
+    // Does the user have any inbound row without a mailbox? Used to surface
+    // the "Sin asignar" option in the dropdown only when relevant.
+    const { count: unassignedCount } = await adminClient
+      .from("emails")
+      .select("id", { count: "exact", head: true })
+      .eq("direction", "inbound")
+      .is("mailbox_id", null);
+
     return NextResponse.json({
       emails: emails || [],
       total: count || 0,
       page,
       limit,
       unread: unreadByFolder,
+      hasUnassigned: (unassignedCount || 0) > 0,
     });
   } catch (error) {
     console.error("GET /api/email error:", error);

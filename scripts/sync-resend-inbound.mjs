@@ -190,13 +190,30 @@ async function resolveMailboxId(toEmails) {
     .filter(Boolean)
     .map((a) => a.toLowerCase());
   if (!addrs.length) return null;
-  const { data } = await sb
+
+  // Exact match first
+  const { data: exact } = await sb
     .from("mailboxes")
     .select("id")
     .in("address", addrs)
     .limit(1)
     .maybeSingle();
-  return data?.id || null;
+  if (exact) return exact.id;
+
+  // Permissive fallback: dot/dash-insensitive local-part match.
+  // msanchez@... → matches m.sanchez@..., sales@... → s-a-l-e-s@..., etc.
+  const { data: all } = await sb
+    .from("mailboxes")
+    .select("id, address")
+    .eq("is_active", true);
+  const stripped = (a) =>
+    (a || "").toLowerCase().split("@")[0].replace(/[.\-]/g, "");
+  for (const r of addrs) {
+    const key = stripped(r);
+    const found = (all || []).find((m) => stripped(m.address) === key);
+    if (found) return found.id;
+  }
+  return null;
 }
 
 async function resolveThreadId(inReplyTo) {

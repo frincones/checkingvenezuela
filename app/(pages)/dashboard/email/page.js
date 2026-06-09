@@ -15,6 +15,7 @@ export default function EmailPage() {
   const [unread, setUnread] = useState({});
   const [search, setSearch] = useState("");
   const [total, setTotal] = useState(0);
+  const [hasUnassigned, setHasUnassigned] = useState(false);
 
   // Mailboxes
   const [mailboxes, setMailboxes] = useState([]);
@@ -44,6 +45,7 @@ export default function EmailPage() {
       setEmails(data.emails || []);
       setTotal(data.total || 0);
       setUnread(data.unread || {});
+      setHasUnassigned(!!data.hasUnassigned);
     } catch (err) {
       console.error("Error fetching emails:", err);
     } finally {
@@ -217,6 +219,7 @@ export default function EmailPage() {
           mailboxes={mailboxes}
           activeMailbox={activeMailbox}
           onMailboxChange={handleMailboxChange}
+          hasUnassigned={hasUnassigned}
         />
 
         {/* Email list */}

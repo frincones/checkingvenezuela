@@ -8,15 +8,18 @@ const FOLDERS = [
   { key: "trash", label: "Papelera", icon: "M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" },
 ];
 
-export default function EmailSidebar({ activeFolder, onFolderChange, unread, onCompose, mailboxes, activeMailbox, onMailboxChange }) {
+export default function EmailSidebar({ activeFolder, onFolderChange, unread, onCompose, mailboxes, activeMailbox, onMailboxChange, hasUnassigned }) {
   return (
-    <div className="w-60 border-r border-gray-200 bg-white flex flex-col h-full">
+    <div className="w-52 border-r border-gray-200 bg-white flex flex-col h-full">
       {/* Mailbox selector */}
       {mailboxes?.length > 0 && (
         <div className="px-4 pt-4 pb-2">
           <select
             value={activeMailbox || "all"}
-            onChange={(e) => onMailboxChange(e.target.value === "all" ? null : e.target.value)}
+            onChange={(e) => {
+              const v = e.target.value;
+              onMailboxChange(v === "all" ? null : v);
+            }}
             className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm bg-white focus:outline-none focus:border-[#0A1A44] font-medium text-gray-700"
           >
             <option value="all">Todos los buzones</option>
@@ -25,6 +28,9 @@ export default function EmailSidebar({ activeFolder, onFolderChange, unread, onC
                 {mb.name} — {mb.address.split("@")[0]}
               </option>
             ))}
+            {hasUnassigned && (
+              <option value="unassigned">Sin asignar a buzón</option>
+            )}
           </select>
         </div>
       )}
