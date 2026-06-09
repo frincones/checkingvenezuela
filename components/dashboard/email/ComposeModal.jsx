@@ -19,6 +19,7 @@ import { TableHeader } from "@tiptap/extension-table-header";
 import Subscript from "@tiptap/extension-subscript";
 import Superscript from "@tiptap/extension-superscript";
 import { useDropzone } from "react-dropzone";
+import RecipientInput from "@/components/dashboard/email/RecipientInput";
 
 /* ── Constants ── */
 // Resend API limit is 40 MB, but Base64 encoding adds ~33% overhead.
@@ -793,7 +794,7 @@ export default function ComposeModal({ isOpen, onClose, replyTo, forwardEmail, o
           )}
           <div className="flex items-center px-4 py-1.5 border-b border-gray-100">
             <span className="text-gray-500 w-12">Para:</span>
-            <input type="text" value={to} onChange={(e) => { setTo(e.target.value); setTouched(true); }} placeholder="email@ejemplo.com" className="flex-1 outline-none text-sm" />
+            <RecipientInput value={to} onChange={(v) => { setTo(v); setTouched(true); }} placeholder="email@ejemplo.com" />
             <div className="flex gap-1">
               {!showCc && <button type="button" onClick={() => setShowCc(true)} className="text-xs text-gray-400 hover:text-gray-600">CC</button>}
               {!showBcc && <button type="button" onClick={() => setShowBcc(true)} className="text-xs text-gray-400 hover:text-gray-600">BCC</button>}
@@ -802,13 +803,13 @@ export default function ComposeModal({ isOpen, onClose, replyTo, forwardEmail, o
           {showCc && (
             <div className="flex items-center px-4 py-1.5 border-b border-gray-100">
               <span className="text-gray-500 w-12">CC:</span>
-              <input type="text" value={cc} onChange={(e) => { setCc(e.target.value); setTouched(true); }} placeholder="email@ejemplo.com" className="flex-1 outline-none text-sm" />
+              <RecipientInput value={cc} onChange={(v) => { setCc(v); setTouched(true); }} placeholder="email@ejemplo.com" />
             </div>
           )}
           {showBcc && (
             <div className="flex items-center px-4 py-1.5 border-b border-gray-100">
               <span className="text-gray-500 w-12">BCC:</span>
-              <input type="text" value={bcc} onChange={(e) => { setBcc(e.target.value); setTouched(true); }} placeholder="email@ejemplo.com" className="flex-1 outline-none text-sm" />
+              <RecipientInput value={bcc} onChange={(v) => { setBcc(v); setTouched(true); }} placeholder="email@ejemplo.com" />
             </div>
           )}
           <div className="flex items-center px-4 py-1.5">
