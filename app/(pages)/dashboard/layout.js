@@ -225,8 +225,19 @@ export default async function DashboardLayout({ children }) {
     redirect("/user/login?callbackPath=/dashboard");
   }
 
+  // Full-bleed: the root layout (app/layout.js) wraps everything in
+  // `mx-auto max-w-[1440px]`, which leaves wasted space on viewports wider
+  // than 1440px. For the dashboard we want the whole screen, so this
+  // wrapper uses negative-margin trick to "break out" of any max-width
+  // container above it without touching the root layout. The default
+  // padding inside <main> stays so that simple dashboards (Dashboard CRM,
+  // Leads, etc.) don't look glued to the sidebar — pages that need to
+  // fill every pixel (e.g. /dashboard/email) cancel it with -mx-4 -mb-4.
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div
+      className="min-h-screen bg-gray-50 w-screen relative"
+      style={{ marginLeft: "calc(50% - 50vw)", marginRight: "calc(50% - 50vw)" }}
+    >
       <Sidebar />
       <main className="ml-64 p-4 pt-20">
         {children}
