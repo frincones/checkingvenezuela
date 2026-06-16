@@ -60,8 +60,9 @@ async function drawHero(doc, page, item, fonts, logoImage) {
   const logoW = logoImage.width * logoScale;
   page.drawImage(logoImage, { x: PAD, y: PAGE_H - logoH - 16, width: logoW, height: logoH });
 
-  // Large destination name at bottom
-  const name = item.destination_data?.name || item.description || "";
+  // Large destination name at bottom — coerce to string in case the inventory
+  // row stores a non-string (e.g. number) in destination_data.name.
+  const name = String(item.destination_data?.name || item.description || "");
   safe(page, name.substring(0, 28), { x: PAD, y: heroY + 48, size: 28, font: fonts.bold, color: C.white });
 
   // Subtitle
@@ -85,7 +86,7 @@ function drawQuoteBar(page, y, q, fonts) {
   safe(page, `Cotizacion ${q.quotation_number || "N/A"}`, {
     x: PAD, y: t1, size: 10, font: fonts.bold, color: C.textPrimary,
   });
-  const cn = q.lead?.contact_name || q.metadata?.customer_name || "Cliente";
+  const cn = String(q.lead?.contact_name || q.metadata?.customer_name || "Cliente");
   safe(page, `Preparada para ${cn}`.substring(0, 50), {
     x: PAD, y: t2, size: 10, font: fonts.reg, color: C.textMuted,
   });
@@ -285,7 +286,14 @@ function drawItinerary(doc, page, y, item, fonts, logoImage) {
     const cX = PAD + bSz + 18;
     const cW = CONTENT_W - bSz - 18;
 
-    const title = day.title || day.day || `Dia ${i + 1}`;
+    // day.day is a numeric index (1, 2, …) in the inventory schema, so the
+    // previous chain `day.title || day.day || …` could resolve to a number
+    // when day.title was empty — which then blew up at .substring() with
+    // "TypeError: m.substring is not a function" (m being the minified
+    // name of `title` in the production bundle).
+    const title = day.title
+      ? String(day.title)
+      : `Día ${day.day || i + 1}`;
     safe(page, title.substring(0, 55), { x: cX, y, size: 12, font: fonts.bold, color: C.textPrimary });
     y -= 18;
 
@@ -422,7 +430,7 @@ function drawProvider(doc, page, y, item, fonts, logoImage) {
 
   safe(page, "OPERADOR", { x: PAD, y, size: 9, font: fonts.bold, color: C.secondary });
   y -= 18;
-  let line = p.name || "";
+  let line = String(p.name || "");
   if (p.rating) line += `  *  ${p.rating}`;
   safe(page, line.substring(0, 60), { x: PAD, y, size: 11, font: fonts.reg, color: C.textPrimary });
   y -= 22;
@@ -505,7 +513,8 @@ function drawConditions(doc, page, y, q, fonts, logoImage) {
   safe(page, "CONDICIONES ESPECIALES", { x: PAD, y, size: 9, font: fonts.bold, color: C.secondary });
   y -= 16;
 
-  const lines = wrap(conditions.substring(0, 500), fonts.reg, 10, CONTENT_W);
+  // metadata is JSONB without type enforcement — coerce just in case.
+  const lines = wrap(String(conditions).substring(0, 500), fonts.reg, 10, CONTENT_W);
   for (const ln of lines.slice(0, 10)) {
     ({ page, y } = ensureSpace(doc, page, y, 14, fonts, logoImage));
     safe(page, ln, { x: PAD, y, size: 10, font: fonts.reg, color: C.textPrimary });
@@ -594,7 +603,9 @@ function drawNotes(doc, page, y, q, fonts, logoImage) {
   safe(page, "NOTAS", { x: PAD, y, size: 9, font: fonts.bold, color: C.textMuted });
   y -= 16;
 
-  const lines = wrap(q.customer_notes.substring(0, 500), fonts.reg, 10, CONTENT_W);
+  // customer_notes column is TEXT, but historically some rows have been
+  // populated with numbers via admin tools — coerce defensively.
+  const lines = wrap(String(q.customer_notes).substring(0, 500), fonts.reg, 10, CONTENT_W);
   for (const ln of lines.slice(0, 8)) {
     ({ page, y } = ensureSpace(doc, page, y, 14, fonts, logoImage));
     safe(page, ln, { x: PAD, y, size: 10, font: fonts.reg, color: C.textPrimary });
@@ -630,9 +641,11 @@ function drawSimpleHeader(page, q, fonts, logo) {
 
   const iy = y - 25;
   safe(page, "PARA", { x: PAD, y: iy, size: 8, font: fonts.bold, color: C.textMuted });
-  const cn = q.lead?.contact_name || q.metadata?.customer_name || "Cliente";
-  const ce = q.lead?.contact_email || q.metadata?.customer_email || "";
-  const cp = q.lead?.contact_phone || q.metadata?.customer_phone || "";
+  // Customer contact fields come from lead OR JSONB metadata; both paths can
+  // arrive non-string (e.g. phone stored as integer). Coerce uniformly.
+  const cn = String(q.lead?.contact_name || q.metadata?.customer_name || "Cliente");
+  const ce = String(q.lead?.contact_email || q.metadata?.customer_email || "");
+  const cp = String(q.lead?.contact_phone || q.metadata?.customer_phone || "");
   safe(page, cn.substring(0, 35), { x: PAD, y: iy - 18, size: 11, font: fonts.bold, color: C.textPrimary });
   if (ce) safe(page, ce.substring(0, 40), { x: PAD, y: iy - 34, size: 9, font: fonts.reg, color: C.textMuted });
   if (cp) safe(page, cp.substring(0, 25), { x: PAD, y: iy - 48, size: 9, font: fonts.reg, color: C.textMuted });
@@ -668,7 +681,7 @@ function drawSimpleTable(doc, page, y, q, fonts) {
     ({ page, y } = ensureSpace(doc, page, y, 22, fonts));
     if (i % 2 === 0) page.drawRectangle({ x: PAD, y: y - 8, width: CONTENT_W, height: 22, color: C.bgMuted });
     const it = q.items[i];
-    safe(page, (it.description || "").substring(0, 38), { x: cD, y: y - 1, size: 9, font: fonts.reg, color: C.textPrimary });
+    safe(page, String(it.description || "").substring(0, 38), { x: cD, y: y - 1, size: 9, font: fonts.reg, color: C.textPrimary });
     rightText(page, String(it.quantity || 1), cQ, y - 1, 9, fonts.reg, C.textPrimary);
     rightText(page, fmt(it.unit_price || 0, q.currency), cU, y - 1, 9, fonts.reg, C.textPrimary);
     rightText(page, fmt(it.total || 0, q.currency), cT, y - 1, 9, fonts.bold, C.textPrimary);
