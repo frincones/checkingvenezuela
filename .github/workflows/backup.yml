@@ -1,0 +1,183 @@
+name: Weekly Backup
+
+# Weekly cron + manual + external trigger.
+# - schedule: Sundays 05:37 UTC (off the hour to dodge GH cron drift).
+# - workflow_dispatch: button in the Actions tab.
+# - repository_dispatch: hit POST /repos/{owner}/{repo}/dispatches from
+#   cron-job.org (free) for a reliable extra trigger.
+on:
+  schedule:
+    - cron: '37 5 * * 0'
+  workflow_dispatch:
+  repository_dispatch:
+    types: [trigger-backup]
+
+jobs:
+  backup:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: write   # required for the keep-alive heartbeat commit
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Install Postgres-17 client + rclone + age + gh
+        run: |
+          set -euo pipefail
+          # Postgres 17 client (Supabase is on PG 17 in 2026)
+          sudo sh -c 'echo "deb http://apt.postgresql.org/pub/repos/apt $(lsb_release -cs)-pgdg main" \
+            > /etc/apt/sources.list.d/pgdg.list'
+          curl -fsSL https://www.postgresql.org/media/keys/ACCC4CF8.asc | \
+            sudo gpg --dearmor -o /etc/apt/trusted.gpg.d/pgdg.gpg
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq postgresql-client-17 || \
+            sudo apt-get install -y -qq postgresql-client-16 || \
+            sudo apt-get install -y -qq postgresql-client-15
+          # rclone — pinned to ≤1.67 because newer versions break Supabase S3 signing
+          curl -fsSL https://downloads.rclone.org/v1.67.0/rclone-v1.67.0-linux-amd64.zip -o /tmp/rclone.zip
+          sudo unzip -qq -o /tmp/rclone.zip -d /tmp/rclone
+          sudo install /tmp/rclone/rclone-*/rclone /usr/local/bin/rclone
+          # age (encryption)
+          curl -fsSL https://github.com/FiloSottile/age/releases/download/v1.2.0/age-v1.2.0-linux-amd64.tar.gz | \
+            sudo tar -xz -C /usr/local/bin --strip-components=1 age/age age/age-keygen
+          # Vercel CLI
+          npm i -g vercel@latest --silent
+          echo "Tool versions:"
+          pg_dump --version | head -1
+          rclone version | head -1
+          age --version
+          vercel --version
+
+      - name: Stamp + workspace
+        run: |
+          STAMP=$(date -u +%Y%m%d-%H%M)
+          echo "STAMP=$STAMP" >> "$GITHUB_ENV"
+          mkdir -p out/db out/storage out/vercel
+          echo "Backup stamp: $STAMP"
+
+      - name: Dump Postgres (schema + data via Session Pooler)
+        env:
+          PGURL: ${{ secrets.SUPABASE_DB_URL }}
+        run: |
+          set -euo pipefail
+          # 3-pass dump: roles → schema → data
+          # Roles via SQL since pg_dumpall requires superuser
+          psql "$PGURL" -At -c "SELECT rolname FROM pg_roles WHERE rolname NOT LIKE 'pg_%' ORDER BY 1" \
+            > out/db/roles-$STAMP.txt
+          # Schema with RLS policies, triggers, funcs
+          pg_dump "$PGURL" \
+            --schema=public \
+            --schema=storage \
+            -s --no-owner --no-privileges \
+            -f out/db/schema-$STAMP.sql
+          # Data in custom format (smaller + parallelizable on restore)
+          pg_dump "$PGURL" \
+            --schema=public \
+            --schema=storage \
+            -Fc --no-owner --no-privileges \
+            -f out/db/data-$STAMP.dump
+          # Sanity
+          ls -lh out/db/
+
+      - name: Configure rclone for Supabase S3
+        run: |
+          mkdir -p ~/.config/rclone
+          cat > ~/.config/rclone/rclone.conf <<EOF
+          [supa]
+          type = s3
+          provider = Other
+          endpoint = ${{ secrets.SUPABASE_S3_ENDPOINT }}
+          access_key_id = ${{ secrets.SUPABASE_S3_KEY }}
+          secret_access_key = ${{ secrets.SUPABASE_S3_SECRET }}
+          region = ${{ secrets.SUPABASE_S3_REGION }}
+          force_path_style = true
+          EOF
+
+      - name: Sync Storage buckets (email-attachments)
+        run: |
+          set -euo pipefail
+          mkdir -p out/storage/email-attachments
+          # NOTE: --s3-list-version 2 required for Supabase pagination
+          rclone sync supa:email-attachments out/storage/email-attachments \
+            --transfers 4 --checkers 8 \
+            --s3-list-version 2 \
+            --stats=10s --stats-one-line
+          du -sh out/storage/
+
+      - name: Pull Vercel env + project settings
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+        run: |
+          set -euo pipefail
+          # vercel link consumes a `.vercel/project.json` if you already have one.
+          # We create a fresh dir to avoid mixing with the repo's working tree.
+          mkdir -p /tmp/vercel-pull && cd /tmp/vercel-pull
+          # Try to link by project name first
+          echo "{}" > .vercel/project.json 2>/dev/null || mkdir -p .vercel && echo "{}" > .vercel/project.json
+          vercel link --yes --project=${{ secrets.VERCEL_PROJECT }} --token=$VERCEL_TOKEN || true
+          # Pull env vars (3 environments)
+          for envname in production preview development; do
+            vercel env pull "$GITHUB_WORKSPACE/out/vercel/.env.$envname" \
+              --environment=$envname --yes --token=$VERCEL_TOKEN || \
+              echo "  (no $envname env vars to pull, continuing)"
+          done
+          # Copy the project link so we can re-link on restore
+          cp -r .vercel "$GITHUB_WORKSPACE/out/vercel/.vercel" || true
+          ls -la "$GITHUB_WORKSPACE/out/vercel/" || true
+
+      - name: Tar + encrypt with age
+        env:
+          AGE_PUB: ${{ secrets.AGE_PUBLIC_KEY }}
+        run: |
+          set -euo pipefail
+          tar -cf - out/ | gzip -9 | age -r "$AGE_PUB" > backup-$STAMP.tgz.age
+          ls -lh backup-$STAMP.tgz.age
+          echo "Encrypted backup size: $(du -h backup-$STAMP.tgz.age | cut -f1)"
+
+      - name: Upload to private backups repo (GitHub Release)
+        env:
+          GH_TOKEN: ${{ secrets.BACKUP_REPO_PAT }}
+        run: |
+          set -euo pipefail
+          # Install gh CLI (always-current)
+          type -p gh >/dev/null || (sudo apt-get install -y -qq gh)
+          gh release create "backup-$STAMP" backup-$STAMP.tgz.age \
+            --repo frincones/backups-checkingvenezuela \
+            --title "Backup $STAMP" \
+            --notes "Encrypted with age. Components: pg_dump (schema+data) + email-attachments bucket + Vercel env vars. Auto-pruned at 12 newest."
+
+      - name: Also upload as 30-day workflow artifact (sanity)
+        uses: actions/upload-artifact@v4
+        with:
+          name: backup-${{ env.STAMP }}
+          path: backup-${{ env.STAMP }}.tgz.age
+          retention-days: 30
+
+      - name: Rotate — keep only the 12 newest releases on the backups repo
+        env:
+          GH_TOKEN: ${{ secrets.BACKUP_REPO_PAT }}
+        run: |
+          set -euo pipefail
+          # List releases sorted by tagName descending (our tags are
+          # backup-YYYYMMDD-HHMM so lexical sort = chronological sort).
+          OLD=$(gh release list --repo frincones/backups-checkingvenezuela \
+            --limit 100 --json tagName,createdAt \
+            --jq 'sort_by(.createdAt) | reverse | .[12:] | .[].tagName')
+          for tag in $OLD; do
+            echo "  Deleting old release: $tag"
+            gh release delete "$tag" --yes --cleanup-tag \
+              --repo frincones/backups-checkingvenezuela || true
+          done
+
+      - name: Final summary
+        run: |
+          echo "=========================================="
+          echo "Backup complete: backup-$STAMP"
+          echo "  - DB schema:  $(du -h out/db/schema-$STAMP.sql | cut -f1)"
+          echo "  - DB data:    $(du -h out/db/data-$STAMP.dump | cut -f1)"
+          echo "  - Storage:    $(du -sh out/storage/ | cut -f1)"
+          echo "  - Encrypted:  $(du -h backup-$STAMP.tgz.age | cut -f1)"
+          echo "Release URL: https://github.com/frincones/backups-checkingvenezuela/releases/tag/backup-$STAMP"
+          echo "=========================================="
