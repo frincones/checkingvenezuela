@@ -62,7 +62,8 @@ restore/out/
 ├── db/
 │   ├── roles-<stamp>.txt        # role names, informational only
 │   ├── schema-<stamp>.sql       # DDL (tables, RLS policies, funcs, triggers)
-│   └── data-<stamp>.dump        # COPY data, pg_dump custom format
+│   ├── data-<stamp>.dump        # public + storage data, pg_dump custom format
+│   └── auth-<stamp>.dump        # auth.users / identities / mfa_* data only
 ├── storage/                     # one subdir per Supabase bucket
 │   ├── email-attachments/       # inbound + outbound email attachments
 │   ├── documents/               # voucher + quotation PDFs
@@ -73,7 +74,11 @@ restore/out/
     ├── .env.production
     ├── .env.preview
     ├── .env.development
-    └── .vercel/                 # project link
+    ├── .vercel/                 # project link
+    ├── project.json             # framework, build cmd, regions, root dir
+    ├── domains.json             # custom domains attached to the project
+    ├── deploy-hooks.json        # external trigger URLs (if any)
+    └── account-domains.json     # account-level domains
 ```
 
 > **Auto-discover**: the workflow lists every bucket the S3 creds can
@@ -118,6 +123,35 @@ psql -At -c "SELECT 'leads='||(SELECT count(*) FROM leads),
 > (`--schema=public --schema=storage`). Do NOT run additional `GRANT`
 > statements unless you know exactly what changed — Supabase manages
 > grants for the `anon`, `authenticated` and `service_role` roles.
+
+### 3.4 — Restore Supabase Auth users
+
+The `auth-<stamp>.dump` contains rows from `auth.users`, `auth.identities`
+and the MFA tables. The Supabase platform owns the rest of the `auth`
+schema (functions, triggers, sessions, refresh_tokens) and reinstalls it
+on every new project — do NOT try to dump or restore those.
+
+```bash
+# Pre-condition: target Supabase project exists and is freshly created.
+# The auth schema is already in place on the platform side — we only
+# load the user rows.
+pg_restore --data-only --no-owner --no-privileges \
+  -d "$PGDATABASE" \
+  restore/out/db/auth-<stamp>.dump
+
+# Verify the user count is back.
+psql -At -c "SELECT count(*) AS users FROM auth.users"
+```
+
+> **Sessions are not restored.** Every user must log in again after a
+> restore. If you want to skip "password reset email" for users on
+> restore, the password hashes ARE in the dump — they will still work.
+
+> **MFA may fail to validate** if you also rotated the Supabase
+> project's JWT secret. The MFA factor rows are restored, but factors
+> tied to TOTP secrets become valid again once secrets line up. If
+> users complain, the cleanest fix is to ask them to re-enroll MFA from
+> their account page.
 
 ### Restoring into the SAME (existing) project
 
@@ -177,25 +211,47 @@ done
 
 ---
 
-## 5. Restore Vercel project + env vars
+## 5. Restore Vercel project + env vars + domains
 
 ```bash
 # Link the local repo clone to the Vercel project (or to a new one).
 vercel link --yes --project=checkingvenezuela --token=$VERCEL_TOKEN
 
-# For each environment, push the env vars back.
+# 5.1 — Env vars per environment.
 for envname in production preview development; do
   while IFS='=' read -r k v; do
-    # skip blank/comment lines
     [[ -z "$k" || "$k" == \#* ]] && continue
     echo "$v" | vercel env add "$k" "$envname" --token=$VERCEL_TOKEN
   done < "restore/out/vercel/.env.$envname"
 done
+
+# 5.2 — Re-attach custom domains.
+# The list of domains lives in restore/out/vercel/domains.json. Re-add each:
+python -c "
+import json
+for d in json.load(open('restore/out/vercel/domains.json'))['domains']:
+    print(d['name'])
+" | while read DOMAIN; do
+  vercel domains add "$DOMAIN" --token=$VERCEL_TOKEN || true
+done
+
+# 5.3 — Re-create deploy hooks (if you used any external triggers).
+cat restore/out/vercel/deploy-hooks.json
+# The output shows the previous hook names and target branches. Re-create
+# them from the Vercel Dashboard → Project → Git → Deploy Hooks (no public
+# API yet for creating hooks — needs the UI).
+
+# 5.4 — Verify project settings.
+diff <(curl -fsSL -H "Authorization: Bearer $VERCEL_TOKEN" \
+        https://api.vercel.com/v9/projects/checkingvenezuela | jq .framework,.buildCommand) \
+     <(jq .framework,.buildCommand restore/out/vercel/project.json)
 ```
 
 > If the Vercel project itself is gone, create a fresh one
-> (`vercel`), redeploy from the git repo, then run the env-var loop
-> above.
+> (`vercel`), redeploy from the git repo, then run the loops above.
+
+> **DNS step**: pointing a domain at the new Vercel project requires
+> updating the registrar (see §8 "External accounts").
 
 ---
 
@@ -240,7 +296,50 @@ artifact you have on hand.
 
 ---
 
-## 8. Key rotation
+## 8. External accounts — what backups CANNOT recover
+
+The backup archive does NOT contain credentials or data from third-party
+services. If you lose access to any of these accounts, restoring the
+encrypted backup is not enough.
+
+**Keep this checklist offline (password manager + paper copy).**
+
+### 8.1 — Account inventory
+
+| Service | Why it matters on restore | Recovery if locked out |
+|---|---|---|
+| **Domain registrar** (where the production domain is registered) | DNS still points at old infra after restore — you can't point at the new Vercel project without registrar access | Use registrar's account-recovery flow; this is often the SINGLE point of failure for restores |
+| **GitHub** (`frincones`) | Source of truth for code AND home of the encrypted backups | 2FA backup codes + recovery email |
+| **Vercel** | Hosts the app + holds env vars | 2FA backup codes + recovery email |
+| **Supabase** | DB + Storage + Auth | 2FA backup codes + recovery email |
+| **Stripe** | Payment records, customer subs (your app: `STRIPE_SECRET_KEY` + `STRIPE_WEBHOOK_SECRET`) | 2FA backup codes; Stripe support |
+| **Resend** | Email-sending API + webhook (`RESEND_API_KEY` + `RESEND_WEBHOOK_SECRET`) | 2FA backup codes |
+| **Mailjet** | Email-sending fallback (`MAIL_API_TOKEN` + `MAIL_SECRET_TOKEN`) | 2FA backup codes |
+| **Google AI Studio** | Chatbot LLM (`GOOGLE_GENERATIVE_AI_API_KEY`) | Same Google account recovery |
+| **OpenRouter** | LLM fallback (`OPENROUTER_API_KEY`) | 2FA backup codes |
+| **Groq** | LLM (used by parts of the app) | 2FA backup codes |
+| **Jina** | Embeddings for chatbot RAG (`JINA_API_KEY`) | 2FA backup codes |
+| **cron-job.org** (if used as external trigger) | Calls `repository_dispatch` to make the backup workflow more reliable than GitHub's own cron | Account email/password |
+
+### 8.2 — Inbound webhooks registered on external services
+
+These webhooks live on the THIRD-PARTY side and point at THIS app's URL.
+After restoring to a new Vercel URL, each one must be re-registered and
+the secret rotated.
+
+| Webhook | Where it's registered | App endpoint | Secret env var |
+|---|---|---|---|
+| Stripe events (payments, subs) | Stripe Dashboard → Developers → Webhooks | `POST /api/stripe/webhook` | `STRIPE_WEBHOOK_SECRET` |
+| Resend events (delivery, bounce) | Resend Dashboard → Webhooks | `POST /api/webhook/email` | `RESEND_WEBHOOK_SECRET` |
+
+After a restore:
+1. Register the new endpoint URL on each provider's dashboard.
+2. Copy the new signing secret they give you.
+3. Update the matching env var in Vercel (`vercel env add ...`).
+4. Send a test event from each provider and check the Vercel function
+   log returns 200.
+
+### 8.3 — Key rotation
 
 - **Database password**: reset via Dashboard, then update the
   `SUPABASE_DB_PASSWORD` GitHub Actions secret. The next workflow run
@@ -250,10 +349,34 @@ artifact you have on hand.
   secrets.
 - **Vercel token**: rotate via Vercel → Account Settings → Tokens.
   Update `VERCEL_TOKEN` secret.
+- **Stripe / Resend webhook secrets**: regenerate via each Dashboard
+  after re-registering the webhook URL (see §8.2). Update the matching
+  env var in Vercel.
 - **age key**: do NOT rotate without first decrypting every existing
   release with the OLD key, re-encrypting with the NEW public key, and
   uploading the replacement assets. Otherwise old releases become
   unrecoverable.
+
+### 8.4 — GitHub Actions secrets used by this workflow
+
+For reference (these CANNOT be backed up — they are encrypted on the
+GitHub side). On a fresh repo or after a leak, regenerate from the
+sources listed in §8.3 and add them to the new repo's
+*Settings → Secrets and variables → Actions*:
+
+```
+SUPABASE_DB_HOST           e.g. aws-1-us-east-1.pooler.supabase.com
+SUPABASE_DB_USER           postgres.<project-ref>
+SUPABASE_DB_PASSWORD       from Supabase Dashboard → Database
+SUPABASE_S3_ENDPOINT       https://<project-ref>.storage.supabase.co/storage/v1/s3
+SUPABASE_S3_REGION         us-east-1 (or whatever the project is in)
+SUPABASE_S3_KEY            from Supabase Dashboard → Storage → S3
+SUPABASE_S3_SECRET         from the SAME key creation step (only shown once!)
+VERCEL_TOKEN               from Vercel → Account Settings → Tokens
+VERCEL_PROJECT             project slug, e.g. checkingvenezuela
+AGE_PUBLIC_KEY             from age-keygen output (public part)
+BACKUP_REPO_PAT            GH PAT with `repo` scope on backups-checkingvenezuela
+```
 
 ---
 
