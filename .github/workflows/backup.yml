@@ -59,26 +59,27 @@ jobs:
 
       - name: Dump Postgres (schema + data via Session Pooler)
         env:
-          PGURL: ${{ secrets.SUPABASE_DB_URL }}
+          PGHOST: ${{ secrets.SUPABASE_DB_HOST }}
+          PGPORT: '5432'
+          PGUSER: ${{ secrets.SUPABASE_DB_USER }}
+          PGPASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
+          PGDATABASE: postgres
+          PGSSLMODE: require
         run: |
           set -euo pipefail
           # 3-pass dump: roles → schema → data
-          # Roles via SQL since pg_dumpall requires superuser
-          psql "$PGURL" -At -c "SELECT rolname FROM pg_roles WHERE rolname NOT LIKE 'pg_%' ORDER BY 1" \
+          psql -At -c "SELECT rolname FROM pg_roles WHERE rolname NOT LIKE 'pg_%' ORDER BY 1" \
             > out/db/roles-$STAMP.txt
-          # Schema with RLS policies, triggers, funcs
-          pg_dump "$PGURL" \
+          pg_dump \
             --schema=public \
             --schema=storage \
             -s --no-owner --no-privileges \
             -f out/db/schema-$STAMP.sql
-          # Data in custom format (smaller + parallelizable on restore)
-          pg_dump "$PGURL" \
+          pg_dump \
             --schema=public \
             --schema=storage \
             -Fc --no-owner --no-privileges \
             -f out/db/data-$STAMP.dump
-          # Sanity
           ls -lh out/db/
 
       - name: Configure rclone for Supabase S3
