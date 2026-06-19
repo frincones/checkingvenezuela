@@ -1,6 +1,6 @@
 # RESTORE RUNBOOK — Venezuela Voyages
 
-Recovery procedure for the weekly encrypted backup produced by
+Recovery procedure for the daily encrypted backup produced by
 [.github/workflows/backup.yml](../.github/workflows/backup.yml).
 
 The backup ships a single encrypted archive that contains: Postgres dump
@@ -313,7 +313,35 @@ psql -At -c "SELECT id, attachments FROM emails WHERE attachments IS NOT NULL LI
 
 ---
 
-## 7. Drill schedule
+## 7. Retention policy
+
+The backup workflow runs **daily** at 05:37 UTC. Each run produces one
+encrypted release. Old releases are pruned at the end of the workflow
+using a tiered policy:
+
+| Age of release | Action |
+|---|---|
+| 0–7 days | Keep ALL (daily granularity for recent recovery) |
+| 8 days – 1 year | Keep ONLY the first release of each month (monthly granularity) |
+| > 1 year | Delete |
+
+Steady-state storage: ~7 daily + ~11 monthly = **~18 releases** in the
+private `backups-checkingvenezuela` repo, projected ~5.5 GB after 1 year.
+
+**RPO**: 24 h (worst case, you lose 1 day of changes since the last cron).
+**RTO**: ~30 min (see §2–§6 below).
+**Lookback window**: 1 year (you can restore to any of the last 7 days,
+or to the start of any of the previous 11 months).
+
+> **If you need to keep a specific release beyond 1 year** (e.g. for an
+> audit), rename its tag from `backup-YYYYMMDD-HHMM` to anything that
+> does NOT start with `backup-` (e.g. `audit-2027-Q1`). The rotation
+> script only considers releases tagged `backup-*`; everything else is
+> preserved forever.
+
+---
+
+## 9. Drill schedule
 
 A backup that has never been restored is not a backup.
 **Restore drill every 90 days** into a scratch Supabase project:
@@ -326,12 +354,12 @@ A backup that has never been restored is not a backup.
 5. Note the run in a comment on the latest release (`gh release edit`).
 
 If a drill ever fails: do not delete the failing scratch project — open
-an issue and root-cause before the next weekly backup overwrites the
+an issue and root-cause before the next daily backup overwrites the
 artifact you have on hand.
 
 ---
 
-## 8. External accounts — what backups CANNOT recover
+## 10. External accounts — what backups CANNOT recover
 
 The backup archive does NOT contain credentials or data from third-party
 services. If you lose access to any of these accounts, restoring the
@@ -339,7 +367,7 @@ encrypted backup is not enough.
 
 **Keep this checklist offline (password manager + paper copy).**
 
-### 8.1 — Account inventory
+### 10.1 — Account inventory
 
 | Service | Why it matters on restore | Recovery if locked out |
 |---|---|---|
@@ -356,7 +384,7 @@ encrypted backup is not enough.
 | **Jina** | Embeddings for chatbot RAG (`JINA_API_KEY`) | 2FA backup codes |
 | **cron-job.org** (if used as external trigger) | Calls `repository_dispatch` to make the backup workflow more reliable than GitHub's own cron | Account email/password |
 
-### 8.2 — Inbound webhooks registered on external services
+### 10.2 — Inbound webhooks registered on external services
 
 These webhooks live on the THIRD-PARTY side and point at THIS app's URL.
 After restoring to a new Vercel URL, each one must be re-registered and
@@ -374,7 +402,7 @@ After a restore:
 4. Send a test event from each provider and check the Vercel function
    log returns 200.
 
-### 8.3 — Key rotation
+### 10.3 — Key rotation
 
 - **Database password**: reset via Dashboard, then update the
   `SUPABASE_DB_PASSWORD` GitHub Actions secret. The next workflow run
@@ -385,32 +413,37 @@ After a restore:
 - **Vercel token**: rotate via Vercel → Account Settings → Tokens.
   Update `VERCEL_TOKEN` secret.
 - **Stripe / Resend webhook secrets**: regenerate via each Dashboard
-  after re-registering the webhook URL (see §8.2). Update the matching
+  after re-registering the webhook URL (see §10.2). Update the matching
   env var in Vercel.
+- **Supabase service_role key**: rotate via Dashboard → Settings →
+  API Keys → "Reset service_role". Update `SUPABASE_SERVICE_ROLE_KEY`
+  GitHub Actions secret. NOTE: this also invalidates any clients that
+  hard-coded the old key — only do this if you suspect leakage.
 - **age key**: do NOT rotate without first decrypting every existing
   release with the OLD key, re-encrypting with the NEW public key, and
   uploading the replacement assets. Otherwise old releases become
   unrecoverable.
 
-### 8.4 — GitHub Actions secrets used by this workflow
+### 10.4 — GitHub Actions secrets used by this workflow
 
 For reference (these CANNOT be backed up — they are encrypted on the
 GitHub side). On a fresh repo or after a leak, regenerate from the
-sources listed in §8.3 and add them to the new repo's
+sources listed in §10.3 and add them to the new repo's
 *Settings → Secrets and variables → Actions*:
 
 ```
-SUPABASE_DB_HOST           e.g. aws-1-us-east-1.pooler.supabase.com
-SUPABASE_DB_USER           postgres.<project-ref>
-SUPABASE_DB_PASSWORD       from Supabase Dashboard → Database
-SUPABASE_S3_ENDPOINT       https://<project-ref>.storage.supabase.co/storage/v1/s3
-SUPABASE_S3_REGION         us-east-1 (or whatever the project is in)
-SUPABASE_S3_KEY            from Supabase Dashboard → Storage → S3
-SUPABASE_S3_SECRET         from the SAME key creation step (only shown once!)
-VERCEL_TOKEN               from Vercel → Account Settings → Tokens
-VERCEL_PROJECT             project slug, e.g. checkingvenezuela
-AGE_PUBLIC_KEY             from age-keygen output (public part)
-BACKUP_REPO_PAT            GH PAT with `repo` scope on backups-checkingvenezuela
+SUPABASE_DB_HOST              e.g. aws-1-us-east-1.pooler.supabase.com
+SUPABASE_DB_USER              postgres.<project-ref>
+SUPABASE_DB_PASSWORD          from Supabase Dashboard → Database
+SUPABASE_S3_ENDPOINT          https://<project-ref>.storage.supabase.co/storage/v1/s3
+SUPABASE_S3_REGION            us-east-1 (or whatever the project is in)
+SUPABASE_S3_KEY               from Supabase Dashboard → Storage → S3
+SUPABASE_S3_SECRET            from the SAME key creation step (only shown once!)
+SUPABASE_SERVICE_ROLE_KEY     from Supabase Dashboard → Settings → API Keys
+VERCEL_TOKEN                  from Vercel → Account Settings → Tokens
+VERCEL_PROJECT                project slug, e.g. checkingvenezuela
+AGE_PUBLIC_KEY                from age-keygen output (public part)
+BACKUP_REPO_PAT               GH PAT with `repo` scope on backups-checkingvenezuela
 ```
 
 ---

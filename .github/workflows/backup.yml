@@ -1,13 +1,19 @@
-name: Weekly Backup
+name: Daily Backup
 
-# Weekly cron + manual + external trigger.
-# - schedule: Sundays 05:37 UTC (off the hour to dodge GH cron drift).
+# Daily cron + manual + external trigger.
+# - schedule: every day at 05:37 UTC (off the hour to dodge GH cron drift).
 # - workflow_dispatch: button in the Actions tab.
 # - repository_dispatch: hit POST /repos/{owner}/{repo}/dispatches from
 #   cron-job.org (free) for a reliable extra trigger.
+#
+# Retention policy (see Final summary step):
+# - Keep ALL releases from the last 7 days  → daily granularity.
+# - Keep the oldest release of each month   → monthly granularity, cap 1 year.
+# - Delete anything older than 365 days.
+# Net: ~18 releases stored, ~5.5 GB after 1 year.
 on:
   schedule:
-    - cron: '37 5 * * 0'
+    - cron: '37 5 * * *'
   workflow_dispatch:
   repository_dispatch:
     types: [trigger-backup]
@@ -260,30 +266,59 @@ jobs:
           gh release create "backup-$STAMP" backup-$STAMP.tgz.age \
             --repo frincones/backups-checkingvenezuela \
             --title "Backup $STAMP" \
-            --notes "Encrypted with age. Components: pg_dump (public+storage schema/data) + auth.users data + all Storage buckets + Vercel env vars + Vercel project/domains metadata. Auto-pruned at 12 newest."
+            --notes "Encrypted with age. Components: pg_dump (public+storage schema/data) + auth.users JSON via Admin API + all Storage buckets + Vercel env vars + Vercel project/domains metadata. Retention: last 7 days + 1 per month (cap 1 year)."
 
-      - name: Also upload as 30-day workflow artifact (sanity)
-        uses: actions/upload-artifact@v4
-        with:
-          name: backup-${{ env.STAMP }}
-          path: backup-${{ env.STAMP }}.tgz.age
-          retention-days: 30
-
-      - name: Rotate — keep only the 12 newest releases on the backups repo
+      - name: Rotate — tiered retention (7 days daily + monthly, cap 1 year)
         env:
           GH_TOKEN: ${{ secrets.BACKUP_REPO_PAT }}
         run: |
           set -euo pipefail
-          # List releases sorted by tagName descending (our tags are
-          # backup-YYYYMMDD-HHMM so lexical sort = chronological sort).
-          OLD=$(gh release list --repo frincones/backups-checkingvenezuela \
-            --limit 100 --json tagName,createdAt \
-            --jq 'sort_by(.createdAt) | reverse | .[12:] | .[].tagName')
-          for tag in $OLD; do
+          # Rotation rules (applied per release, newest first):
+          #   age > 365 days                  → delete
+          #   age <= 7 days                   → keep (daily granularity)
+          #   first release of its month      → keep (monthly granularity)
+          #   anything else                   → delete
+          # Result: ~7 daily + ~11 monthly = ~18 releases stored long-term.
+          gh release list --repo frincones/backups-checkingvenezuela \
+            --limit 200 --json tagName,createdAt \
+            --jq 'sort_by(.createdAt) | reverse' > /tmp/releases.json
+
+          python <<'PYEOF'
+          import json
+          from datetime import datetime, timezone
+          rels = json.load(open('/tmp/releases.json'))
+          # Only the workflow's own releases are candidates for rotation.
+          # Anything renamed off the `backup-` prefix is preserved forever
+          # (intentional opt-out, e.g. for audits or compliance snapshots).
+          rels = [r for r in rels if r['tagName'].startswith('backup-')]
+          now = datetime.now(timezone.utc)
+          seen_months = set()
+          to_delete = []
+          for r in rels:
+              created = datetime.fromisoformat(r['createdAt'].replace('Z', '+00:00'))
+              age_days = (now - created).days
+              month_key = created.strftime('%Y-%m')
+              if age_days > 365:
+                  to_delete.append(r['tagName'])
+              elif age_days <= 7:
+                  pass  # keep: daily window
+              elif month_key not in seen_months:
+                  seen_months.add(month_key)  # keep: first of its month
+              else:
+                  to_delete.append(r['tagName'])
+          with open('/tmp/to_delete.txt', 'w') as f:
+              f.write('\n'.join(to_delete))
+          print(f'Tagged backup-* releases evaluated: {len(rels)}')
+          print(f'Will delete: {len(to_delete)}')
+          print(f'Will keep:   {len(rels) - len(to_delete)}')
+          PYEOF
+
+          while IFS= read -r tag; do
+            [ -z "$tag" ] && continue
             echo "  Deleting old release: $tag"
             gh release delete "$tag" --yes --cleanup-tag \
               --repo frincones/backups-checkingvenezuela || true
-          done
+          done < /tmp/to_delete.txt
 
       - name: Final summary
         run: |
