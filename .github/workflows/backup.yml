@@ -96,15 +96,34 @@ jobs:
           force_path_style = true
           EOF
 
-      - name: Sync Storage buckets (email-attachments)
+      - name: Sync ALL Storage buckets (auto-discover)
         run: |
           set -euo pipefail
-          mkdir -p out/storage/email-attachments
-          # NOTE: --s3-list-version 2 required for Supabase pagination
-          rclone sync supa:email-attachments out/storage/email-attachments \
-            --transfers 4 --checkers 8 \
-            --s3-list-version 2 \
-            --stats=10s --stats-one-line
+          mkdir -p out/storage
+          # Discover every bucket the S3 creds can see, then sync each.
+          # This auto-covers buckets created in the future (no workflow edit needed).
+          BUCKETS=$(rclone lsd supa: --s3-list-version 2 | awk '{print $NF}' | grep -v '^$')
+          if [ -z "$BUCKETS" ]; then
+            echo "WARNING: no buckets discovered. S3 creds may be wrong or all buckets empty."
+            exit 1
+          fi
+          echo "Buckets to back up:"
+          echo "$BUCKETS" | sed 's/^/  - /'
+          for B in $BUCKETS; do
+            echo
+            echo "=== Syncing bucket: $B ==="
+            mkdir -p "out/storage/$B"
+            rclone sync "supa:$B" "out/storage/$B" \
+              --transfers 4 --checkers 8 \
+              --s3-list-version 2 \
+              --stats=10s --stats-one-line || {
+                echo "WARNING: sync of bucket '$B' failed; continuing with the rest."
+              }
+          done
+          echo
+          echo "=== Per-bucket size ==="
+          du -sh out/storage/*/ 2>/dev/null
+          echo "=== Total storage backed up ==="
           du -sh out/storage/
 
       - name: Pull Vercel env + project settings
