@@ -85,24 +85,66 @@ jobs:
             -Fc --no-owner --no-privileges \
             -f out/db/data-$STAMP.dump
 
-          # Pass 4 — Supabase Auth user data (DATA ONLY).
-          # We dump only the customer-owned tables: users, identities, mfa_*.
-          # Supabase platform owns the rest of the auth schema (functions,
-          # triggers, sessions, refresh_tokens) and re-installs them on a new
-          # project — restoring those would conflict with the platform version.
-          # Non-fatal: continue the backup even if a single table fails (e.g.
-          # the project disabled MFA and mfa_factors does not exist).
-          pg_dump \
-            -Fc -a --no-owner --no-privileges \
-            --table=auth.users \
-            --table=auth.identities \
-            --table=auth.mfa_factors \
-            --table=auth.mfa_challenges \
-            --table=auth.mfa_amr_claims \
-            -f out/db/auth-$STAMP.dump || \
-            echo "WARNING: auth dump partially failed; check log above. Some tables may not exist on this project."
-
           ls -lh out/db/
+
+      - name: Export auth.users via Supabase Admin API
+        env:
+          SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+          SRK: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+        run: |
+          set -euo pipefail
+          # The pg_dump role on Supabase Free cannot read `auth.*` directly.
+          # The Auth Admin API (service_role JWT) returns user rows as JSON.
+          # We page through until empty. NOTE: password hashes are NOT returned
+          # by this endpoint by design — see RESTORE_RUNBOOK §3.4.
+
+          # Derive SUPABASE_URL from the project ref if env var was not set.
+          if [ -z "${SUPABASE_URL:-}" ]; then
+            REF=$(python -c "
+          import base64,json
+          jwt=\"$SRK\"
+          payload = jwt.split('.')[1]
+          payload += '=' * (-len(payload) % 4)
+          print(json.loads(base64.urlsafe_b64decode(payload))['ref'])
+          ")
+            SUPABASE_URL="https://$REF.supabase.co"
+          fi
+          echo "Using $SUPABASE_URL/auth/v1/admin/users"
+
+          PAGE=1
+          PER_PAGE=1000
+          OUT="out/db/auth-users-$STAMP.json"
+          echo '{"users":[]}' > "$OUT"
+
+          while :; do
+            RESP=$(curl -sfSL \
+              -H "apikey: $SRK" \
+              -H "Authorization: Bearer $SRK" \
+              "$SUPABASE_URL/auth/v1/admin/users?page=$PAGE&per_page=$PER_PAGE")
+            COUNT=$(echo "$RESP" | python -c "import json,sys; print(len(json.load(sys.stdin).get('users',[])))")
+            echo "  page=$PAGE count=$COUNT"
+            if [ "$COUNT" = "0" ]; then break; fi
+            # Merge users into the accumulator.
+            python - <<PYEOF
+          import json
+          acc = json.load(open("$OUT"))
+          new = json.loads("""$RESP""").get("users", [])
+          acc["users"].extend(new)
+          json.dump(acc, open("$OUT","w"), indent=2)
+          PYEOF
+            if [ "$COUNT" -lt "$PER_PAGE" ]; then break; fi
+            PAGE=$((PAGE+1))
+            # Safety stop in case of an API loop.
+            if [ "$PAGE" -gt 50 ]; then
+              echo "WARNING: stopped after 50 pages (~50k users). Bump if you legitimately have more."
+              break
+            fi
+          done
+
+          # Summary
+          TOTAL=$(python -c "import json; print(len(json.load(open('$OUT'))['users']))")
+          echo "Auth users backed up: $TOTAL"
+          du -h "$OUT"
 
       - name: Configure rclone for Supabase S3
         run: |

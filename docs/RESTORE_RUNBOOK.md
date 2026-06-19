@@ -63,7 +63,7 @@ restore/out/
 │   ├── roles-<stamp>.txt        # role names, informational only
 │   ├── schema-<stamp>.sql       # DDL (tables, RLS policies, funcs, triggers)
 │   ├── data-<stamp>.dump        # public + storage data, pg_dump custom format
-│   └── auth-<stamp>.dump        # auth.users / identities / mfa_* data only
+│   └── auth-users-<stamp>.json  # auth.users (JSON via Admin API — NO password hashes)
 ├── storage/                     # one subdir per Supabase bucket
 │   ├── email-attachments/       # inbound + outbound email attachments
 │   ├── documents/               # voucher + quotation PDFs
@@ -126,32 +126,67 @@ psql -At -c "SELECT 'leads='||(SELECT count(*) FROM leads),
 
 ### 3.4 — Restore Supabase Auth users
 
-The `auth-<stamp>.dump` contains rows from `auth.users`, `auth.identities`
-and the MFA tables. The Supabase platform owns the rest of the `auth`
-schema (functions, triggers, sessions, refresh_tokens) and reinstalls it
-on every new project — do NOT try to dump or restore those.
+`auth-users-<stamp>.json` is the output of the Auth Admin API
+(`GET /auth/v1/admin/users`). It contains every user row with email,
+metadata, providers, MFA factors, and timestamps. **Password hashes
+are NOT included** — the API deliberately hides them — so restored
+users will need to set a new password.
 
+Two restore strategies, pick one:
+
+**Strategy A — magic-link migration (recommended)**
 ```bash
-# Pre-condition: target Supabase project exists and is freshly created.
-# The auth schema is already in place on the platform side — we only
-# load the user rows.
-pg_restore --data-only --no-owner --no-privileges \
-  -d "$PGDATABASE" \
-  restore/out/db/auth-<stamp>.dump
+# Requires the NEW project's service_role key.
+export NEW_SRK='<service_role of the destination project>'
+export NEW_URL='https://<new-ref>.supabase.co'
 
-# Verify the user count is back.
-psql -At -c "SELECT count(*) AS users FROM auth.users"
+python - <<PYEOF
+import json, urllib.request
+users = json.load(open("restore/out/db/auth-users-<stamp>.json"))["users"]
+for u in users:
+    body = json.dumps({
+        "email": u["email"],
+        "email_confirm": bool(u.get("email_confirmed_at")),
+        "phone": u.get("phone") or None,
+        "phone_confirm": bool(u.get("phone_confirmed_at")),
+        "user_metadata": u.get("user_metadata", {}),
+        "app_metadata": u.get("app_metadata", {}),
+    }).encode()
+    req = urllib.request.Request(
+        f"{'$NEW_URL'}/auth/v1/admin/users",
+        data=body, method="POST",
+        headers={
+            "apikey": "$NEW_SRK",
+            "Authorization": "Bearer $NEW_SRK",
+            "Content-Type": "application/json",
+        },
+    )
+    try:
+        urllib.request.urlopen(req)
+        print(f"OK   {u['email']}")
+    except Exception as e:
+        print(f"FAIL {u['email']}: {e}")
+PYEOF
+
+# Then send each user a password reset email via the Dashboard
+# (Authentication → Users → "Send recovery link") or programmatically
+# via /auth/v1/recover.
 ```
 
-> **Sessions are not restored.** Every user must log in again after a
-> restore. If you want to skip "password reset email" for users on
-> restore, the password hashes ARE in the dump — they will still work.
+**Strategy B — manual email outreach**
+Read the JSON, export the email list, and tell users to sign up again
+with the same email. Acceptable for tiny user bases.
 
-> **MFA may fail to validate** if you also rotated the Supabase
-> project's JWT secret. The MFA factor rows are restored, but factors
-> tied to TOTP secrets become valid again once secrets line up. If
-> users complain, the cleanest fix is to ask them to re-enroll MFA from
-> their account page.
+> **MFA**: factors restored as JSON cannot be reactivated without their
+> original TOTP secrets (which the API never exposes). Users will need
+> to re-enroll MFA on next login.
+
+> **Sessions**: not preserved either — every user logs in fresh.
+
+> **What about old IDs?**: a recreated user gets a NEW UUID. If any of
+> your `public.*` rows reference `auth.users.id` directly via FK, those
+> rows will be orphaned on restore. Mitigation: store the old → new ID
+> mapping during the loop and run an UPDATE on the FK rows.
 
 ### Restoring into the SAME (existing) project
 
