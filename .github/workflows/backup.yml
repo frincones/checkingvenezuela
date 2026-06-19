@@ -67,19 +67,41 @@ jobs:
           PGSSLMODE: require
         run: |
           set -euo pipefail
-          # 3-pass dump: roles → schema → data
+          # Pass 1 — role names (informational; restore uses platform-managed roles).
           psql -At -c "SELECT rolname FROM pg_roles WHERE rolname NOT LIKE 'pg_%' ORDER BY 1" \
             > out/db/roles-$STAMP.txt
+
+          # Pass 2 — schema DDL for public + storage (tables, RLS, funcs, triggers).
           pg_dump \
             --schema=public \
             --schema=storage \
             -s --no-owner --no-privileges \
             -f out/db/schema-$STAMP.sql
+
+          # Pass 3 — data for public + storage (custom format).
           pg_dump \
             --schema=public \
             --schema=storage \
             -Fc --no-owner --no-privileges \
             -f out/db/data-$STAMP.dump
+
+          # Pass 4 — Supabase Auth user data (DATA ONLY).
+          # We dump only the customer-owned tables: users, identities, mfa_*.
+          # Supabase platform owns the rest of the auth schema (functions,
+          # triggers, sessions, refresh_tokens) and re-installs them on a new
+          # project — restoring those would conflict with the platform version.
+          # Non-fatal: continue the backup even if a single table fails (e.g.
+          # the project disabled MFA and mfa_factors does not exist).
+          pg_dump \
+            -Fc -a --no-owner --no-privileges \
+            --table=auth.users \
+            --table=auth.identities \
+            --table=auth.mfa_factors \
+            --table=auth.mfa_challenges \
+            --table=auth.mfa_amr_claims \
+            -f out/db/auth-$STAMP.dump || \
+            echo "WARNING: auth dump partially failed; check log above. Some tables may not exist on this project."
+
           ls -lh out/db/
 
       - name: Configure rclone for Supabase S3
@@ -126,25 +148,55 @@ jobs:
           echo "=== Total storage backed up ==="
           du -sh out/storage/
 
-      - name: Pull Vercel env + project settings
+      - name: Pull Vercel env + project metadata
         env:
           VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+          VERCEL_PROJECT: ${{ secrets.VERCEL_PROJECT }}
         run: |
           set -euo pipefail
-          # vercel link consumes a `.vercel/project.json` if you already have one.
-          # We create a fresh dir to avoid mixing with the repo's working tree.
           mkdir -p /tmp/vercel-pull && cd /tmp/vercel-pull
-          # Try to link by project name first
-          echo "{}" > .vercel/project.json 2>/dev/null || mkdir -p .vercel && echo "{}" > .vercel/project.json
-          vercel link --yes --project=${{ secrets.VERCEL_PROJECT }} --token=$VERCEL_TOKEN || true
-          # Pull env vars (3 environments)
+          mkdir -p .vercel && echo "{}" > .vercel/project.json
+          vercel link --yes --project="$VERCEL_PROJECT" --token="$VERCEL_TOKEN" || true
+
+          # Env vars per environment.
           for envname in production preview development; do
             vercel env pull "$GITHUB_WORKSPACE/out/vercel/.env.$envname" \
-              --environment=$envname --yes --token=$VERCEL_TOKEN || \
+              --environment=$envname --yes --token="$VERCEL_TOKEN" || \
               echo "  (no $envname env vars to pull, continuing)"
           done
-          # Copy the project link so we can re-link on restore
           cp -r .vercel "$GITHUB_WORKSPACE/out/vercel/.vercel" || true
+
+          # Resolve projectId from the link the CLI just created.
+          PID=$(python -c "import json; print(json.load(open('.vercel/project.json'))['projectId'])" 2>/dev/null || true)
+          ORG=$(python -c "import json; print(json.load(open('.vercel/project.json'))['orgId'])" 2>/dev/null || true)
+          echo "Resolved projectId=$PID  orgId=$ORG"
+
+          # Project metadata (framework, build cmd, regions, root dir, etc.)
+          if [ -n "$PID" ]; then
+            curl -fsSL -H "Authorization: Bearer $VERCEL_TOKEN" \
+              "https://api.vercel.com/v9/projects/$PID" \
+              > "$GITHUB_WORKSPACE/out/vercel/project.json" || \
+              echo "WARNING: could not pull project metadata"
+
+            # Custom domains attached to this project.
+            curl -fsSL -H "Authorization: Bearer $VERCEL_TOKEN" \
+              "https://api.vercel.com/v9/projects/$PID/domains" \
+              > "$GITHUB_WORKSPACE/out/vercel/domains.json" || \
+              echo "WARNING: could not pull domains"
+
+            # Deployment hooks (URLs that external schedulers may call).
+            curl -fsSL -H "Authorization: Bearer $VERCEL_TOKEN" \
+              "https://api.vercel.com/v1/projects/$PID/deploy-hooks" \
+              > "$GITHUB_WORKSPACE/out/vercel/deploy-hooks.json" 2>/dev/null || \
+              echo "(no deploy hooks endpoint or none configured)"
+          fi
+
+          # Account-level domains (some may not be attached to a project yet).
+          curl -fsSL -H "Authorization: Bearer $VERCEL_TOKEN" \
+            "https://api.vercel.com/v5/domains" \
+            > "$GITHUB_WORKSPACE/out/vercel/account-domains.json" || \
+            echo "WARNING: could not pull account domains"
+
           ls -la "$GITHUB_WORKSPACE/out/vercel/" || true
 
       - name: Tar + encrypt with age
@@ -166,7 +218,7 @@ jobs:
           gh release create "backup-$STAMP" backup-$STAMP.tgz.age \
             --repo frincones/backups-checkingvenezuela \
             --title "Backup $STAMP" \
-            --notes "Encrypted with age. Components: pg_dump (schema+data) + email-attachments bucket + Vercel env vars. Auto-pruned at 12 newest."
+            --notes "Encrypted with age. Components: pg_dump (public+storage schema/data) + auth.users data + all Storage buckets + Vercel env vars + Vercel project/domains metadata. Auto-pruned at 12 newest."
 
       - name: Also upload as 30-day workflow artifact (sanity)
         uses: actions/upload-artifact@v4
