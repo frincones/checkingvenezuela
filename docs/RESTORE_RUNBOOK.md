@@ -63,14 +63,22 @@ restore/out/
 │   ├── roles-<stamp>.txt        # role names, informational only
 │   ├── schema-<stamp>.sql       # DDL (tables, RLS policies, funcs, triggers)
 │   └── data-<stamp>.dump        # COPY data, pg_dump custom format
-├── storage/
-│   └── email-attachments/       # raw files, mirror of the bucket
+├── storage/                     # one subdir per Supabase bucket
+│   ├── email-attachments/       # inbound + outbound email attachments
+│   ├── documents/               # voucher + quotation PDFs
+│   ├── chatbot-kb/              # chatbot knowledge-base sources
+│   ├── cms-images/              # CMS / blog images
+│   └── <any-new-bucket>/        # auto-discovered every run
 └── vercel/
     ├── .env.production
     ├── .env.preview
     ├── .env.development
     └── .vercel/                 # project link
 ```
+
+> **Auto-discover**: the workflow lists every bucket the S3 creds can
+> see and syncs each one. Any bucket you create in the future is backed
+> up automatically — no workflow edit required.
 
 ---
 
@@ -122,7 +130,7 @@ For a wholesale rollback into the same project:
 
 ---
 
-## 4. Restore Storage bucket (`email-attachments`)
+## 4. Restore ALL Storage buckets
 
 Get S3 credentials for the target project:
 *Project Settings → Storage → S3 Configuration → New access key*.
@@ -140,18 +148,32 @@ region = us-east-1
 force_path_style = true
 EOF
 
-# Ensure the bucket exists on the destination (create via Dashboard or SQL).
-# Then push files back. NOTE: same flag pinning as backup.
-rclone sync restore/out/storage/email-attachments \
-  supa-restore:email-attachments \
-  --transfers 4 --checkers 8 \
-  --s3-list-version 2 \
-  --stats=10s --stats-one-line
+# The bucket metadata (public/private, allowed mime types, file size limit)
+# is restored by step 3 (it lives in storage.buckets). After that, push the
+# file payload back for EVERY bucket in the archive:
+for DIR in restore/out/storage/*/; do
+  B=$(basename "$DIR")
+  echo "=== Restoring bucket: $B ==="
+  rclone sync "$DIR" "supa-restore:$B" \
+    --transfers 4 --checkers 8 \
+    --s3-list-version 2 \
+    --stats=10s --stats-one-line
+done
 ```
 
-> **Public/private bucket flag** is stored in the `storage.buckets` row,
-> which is part of the SQL dump. After step 3 the bucket metadata is
-> already in place — rclone only needs to push the file payload.
+> **If a bucket does NOT exist** on the destination (e.g. you nuked
+> `storage.buckets` before restoring), create it via Dashboard with the
+> SAME name and same public/private flag before re-running the loop.
+> rclone will not create the bucket for you.
+
+### Buckets in this app
+
+| Bucket | Purpose | Public? |
+|---|---|---|
+| `email-attachments` | Inbound + outbound email attachments | private |
+| `documents` | Voucher + quotation PDFs (delivered to leads via signed URLs) | private |
+| `chatbot-kb` | Knowledge-base sources for the travel chatbot | private |
+| `cms-images` | CMS / blog images shown on the marketing site | public |
 
 ---
 
