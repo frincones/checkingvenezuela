@@ -29,6 +29,11 @@ jobs:
 
       - name: Ping the database
         env:
-          PGURL: ${{ secrets.SUPABASE_DB_URL }}
+          PGHOST: ${{ secrets.SUPABASE_DB_HOST }}
+          PGPORT: '5432'
+          PGUSER: ${{ secrets.SUPABASE_DB_USER }}
+          PGPASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
+          PGDATABASE: postgres
+          PGSSLMODE: require
         run: |
-          psql "$PGURL" -At -c "SELECT 'keepalive ok at ' || now()::text"
+          psql -At -c "SELECT 'keepalive ok at ' || now()::text"

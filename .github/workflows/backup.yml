@@ -1,13 +1,19 @@
-name: Weekly Backup
+name: Daily Backup
 
-# Weekly cron + manual + external trigger.
-# - schedule: Sundays 05:37 UTC (off the hour to dodge GH cron drift).
+# Daily cron + manual + external trigger.
+# - schedule: every day at 05:37 UTC (off the hour to dodge GH cron drift).
 # - workflow_dispatch: button in the Actions tab.
 # - repository_dispatch: hit POST /repos/{owner}/{repo}/dispatches from
 #   cron-job.org (free) for a reliable extra trigger.
+#
+# Retention policy (see Final summary step):
+# - Keep ALL releases from the last 7 days  → daily granularity.
+# - Keep the oldest release of each month   → monthly granularity, cap 1 year.
+# - Delete anything older than 365 days.
+# Net: ~18 releases stored, ~5.5 GB after 1 year.
 on:
   schedule:
-    - cron: '37 5 * * 0'
+    - cron: '37 5 * * *'
   workflow_dispatch:
   repository_dispatch:
     types: [trigger-backup]
@@ -59,27 +65,92 @@ jobs:
 
       - name: Dump Postgres (schema + data via Session Pooler)
         env:
-          PGURL: ${{ secrets.SUPABASE_DB_URL }}
+          PGHOST: ${{ secrets.SUPABASE_DB_HOST }}
+          PGPORT: '5432'
+          PGUSER: ${{ secrets.SUPABASE_DB_USER }}
+          PGPASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
+          PGDATABASE: postgres
+          PGSSLMODE: require
         run: |
           set -euo pipefail
-          # 3-pass dump: roles → schema → data
-          # Roles via SQL since pg_dumpall requires superuser
-          psql "$PGURL" -At -c "SELECT rolname FROM pg_roles WHERE rolname NOT LIKE 'pg_%' ORDER BY 1" \
+          # Pass 1 — role names (informational; restore uses platform-managed roles).
+          psql -At -c "SELECT rolname FROM pg_roles WHERE rolname NOT LIKE 'pg_%' ORDER BY 1" \
             > out/db/roles-$STAMP.txt
-          # Schema with RLS policies, triggers, funcs
-          pg_dump "$PGURL" \
+
+          # Pass 2 — schema DDL for public + storage (tables, RLS, funcs, triggers).
+          pg_dump \
             --schema=public \
             --schema=storage \
             -s --no-owner --no-privileges \
             -f out/db/schema-$STAMP.sql
-          # Data in custom format (smaller + parallelizable on restore)
-          pg_dump "$PGURL" \
+
+          # Pass 3 — data for public + storage (custom format).
+          pg_dump \
             --schema=public \
             --schema=storage \
             -Fc --no-owner --no-privileges \
             -f out/db/data-$STAMP.dump
-          # Sanity
+
           ls -lh out/db/
+
+      - name: Export auth.users via Supabase Admin API
+        env:
+          SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+          SRK: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+        run: |
+          set -euo pipefail
+          # The pg_dump role on Supabase Free cannot read `auth.*` directly.
+          # The Auth Admin API (service_role JWT) returns user rows as JSON.
+          # We page through until empty. NOTE: password hashes are NOT returned
+          # by this endpoint by design — see RESTORE_RUNBOOK §3.4.
+
+          # Derive SUPABASE_URL from the project ref if env var was not set.
+          if [ -z "${SUPABASE_URL:-}" ]; then
+            REF=$(python -c "
+          import base64,json
+          jwt=\"$SRK\"
+          payload = jwt.split('.')[1]
+          payload += '=' * (-len(payload) % 4)
+          print(json.loads(base64.urlsafe_b64decode(payload))['ref'])
+          ")
+            SUPABASE_URL="https://$REF.supabase.co"
+          fi
+          echo "Using $SUPABASE_URL/auth/v1/admin/users"
+
+          PAGE=1
+          PER_PAGE=1000
+          OUT="out/db/auth-users-$STAMP.json"
+          echo '{"users":[]}' > "$OUT"
+
+          while :; do
+            RESP=$(curl -sfSL \
+              -H "apikey: $SRK" \
+              -H "Authorization: Bearer $SRK" \
+              "$SUPABASE_URL/auth/v1/admin/users?page=$PAGE&per_page=$PER_PAGE")
+            COUNT=$(echo "$RESP" | python -c "import json,sys; print(len(json.load(sys.stdin).get('users',[])))")
+            echo "  page=$PAGE count=$COUNT"
+            if [ "$COUNT" = "0" ]; then break; fi
+            # Merge users into the accumulator.
+            python - <<PYEOF
+          import json
+          acc = json.load(open("$OUT"))
+          new = json.loads("""$RESP""").get("users", [])
+          acc["users"].extend(new)
+          json.dump(acc, open("$OUT","w"), indent=2)
+          PYEOF
+            if [ "$COUNT" -lt "$PER_PAGE" ]; then break; fi
+            PAGE=$((PAGE+1))
+            # Safety stop in case of an API loop.
+            if [ "$PAGE" -gt 50 ]; then
+              echo "WARNING: stopped after 50 pages (~50k users). Bump if you legitimately have more."
+              break
+            fi
+          done
+
+          # Summary
+          TOTAL=$(python -c "import json; print(len(json.load(open('$OUT'))['users']))")
+          echo "Auth users backed up: $TOTAL"
+          du -h "$OUT"
 
       - name: Configure rclone for Supabase S3
         run: |
@@ -95,36 +166,85 @@ jobs:
           force_path_style = true
           EOF
 
-      - name: Sync Storage buckets (email-attachments)
+      - name: Sync ALL Storage buckets (auto-discover)
         run: |
           set -euo pipefail
-          mkdir -p out/storage/email-attachments
-          # NOTE: --s3-list-version 2 required for Supabase pagination
-          rclone sync supa:email-attachments out/storage/email-attachments \
-            --transfers 4 --checkers 8 \
-            --s3-list-version 2 \
-            --stats=10s --stats-one-line
+          mkdir -p out/storage
+          # Discover every bucket the S3 creds can see, then sync each.
+          # This auto-covers buckets created in the future (no workflow edit needed).
+          BUCKETS=$(rclone lsd supa: --s3-list-version 2 | awk '{print $NF}' | grep -v '^$')
+          if [ -z "$BUCKETS" ]; then
+            echo "WARNING: no buckets discovered. S3 creds may be wrong or all buckets empty."
+            exit 1
+          fi
+          echo "Buckets to back up:"
+          echo "$BUCKETS" | sed 's/^/  - /'
+          for B in $BUCKETS; do
+            echo
+            echo "=== Syncing bucket: $B ==="
+            mkdir -p "out/storage/$B"
+            rclone sync "supa:$B" "out/storage/$B" \
+              --transfers 4 --checkers 8 \
+              --s3-list-version 2 \
+              --stats=10s --stats-one-line || {
+                echo "WARNING: sync of bucket '$B' failed; continuing with the rest."
+              }
+          done
+          echo
+          echo "=== Per-bucket size ==="
+          du -sh out/storage/*/ 2>/dev/null
+          echo "=== Total storage backed up ==="
           du -sh out/storage/
 
-      - name: Pull Vercel env + project settings
+      - name: Pull Vercel env + project metadata
         env:
           VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+          VERCEL_PROJECT: ${{ secrets.VERCEL_PROJECT }}
         run: |
           set -euo pipefail
-          # vercel link consumes a `.vercel/project.json` if you already have one.
-          # We create a fresh dir to avoid mixing with the repo's working tree.
           mkdir -p /tmp/vercel-pull && cd /tmp/vercel-pull
-          # Try to link by project name first
-          echo "{}" > .vercel/project.json 2>/dev/null || mkdir -p .vercel && echo "{}" > .vercel/project.json
-          vercel link --yes --project=${{ secrets.VERCEL_PROJECT }} --token=$VERCEL_TOKEN || true
-          # Pull env vars (3 environments)
+          mkdir -p .vercel && echo "{}" > .vercel/project.json
+          vercel link --yes --project="$VERCEL_PROJECT" --token="$VERCEL_TOKEN" || true
+
+          # Env vars per environment.
           for envname in production preview development; do
             vercel env pull "$GITHUB_WORKSPACE/out/vercel/.env.$envname" \
-              --environment=$envname --yes --token=$VERCEL_TOKEN || \
+              --environment=$envname --yes --token="$VERCEL_TOKEN" || \
               echo "  (no $envname env vars to pull, continuing)"
           done
-          # Copy the project link so we can re-link on restore
           cp -r .vercel "$GITHUB_WORKSPACE/out/vercel/.vercel" || true
+
+          # Resolve projectId from the link the CLI just created.
+          PID=$(python -c "import json; print(json.load(open('.vercel/project.json'))['projectId'])" 2>/dev/null || true)
+          ORG=$(python -c "import json; print(json.load(open('.vercel/project.json'))['orgId'])" 2>/dev/null || true)
+          echo "Resolved projectId=$PID  orgId=$ORG"
+
+          # Project metadata (framework, build cmd, regions, root dir, etc.)
+          if [ -n "$PID" ]; then
+            curl -fsSL -H "Authorization: Bearer $VERCEL_TOKEN" \
+              "https://api.vercel.com/v9/projects/$PID" \
+              > "$GITHUB_WORKSPACE/out/vercel/project.json" || \
+              echo "WARNING: could not pull project metadata"
+
+            # Custom domains attached to this project.
+            curl -fsSL -H "Authorization: Bearer $VERCEL_TOKEN" \
+              "https://api.vercel.com/v9/projects/$PID/domains" \
+              > "$GITHUB_WORKSPACE/out/vercel/domains.json" || \
+              echo "WARNING: could not pull domains"
+
+            # Deployment hooks (URLs that external schedulers may call).
+            curl -fsSL -H "Authorization: Bearer $VERCEL_TOKEN" \
+              "https://api.vercel.com/v1/projects/$PID/deploy-hooks" \
+              > "$GITHUB_WORKSPACE/out/vercel/deploy-hooks.json" 2>/dev/null || \
+              echo "(no deploy hooks endpoint or none configured)"
+          fi
+
+          # Account-level domains (some may not be attached to a project yet).
+          curl -fsSL -H "Authorization: Bearer $VERCEL_TOKEN" \
+            "https://api.vercel.com/v5/domains" \
+            > "$GITHUB_WORKSPACE/out/vercel/account-domains.json" || \
+            echo "WARNING: could not pull account domains"
+
           ls -la "$GITHUB_WORKSPACE/out/vercel/" || true
 
       - name: Tar + encrypt with age
@@ -146,30 +266,59 @@ jobs:
           gh release create "backup-$STAMP" backup-$STAMP.tgz.age \
             --repo frincones/backups-checkingvenezuela \
             --title "Backup $STAMP" \
-            --notes "Encrypted with age. Components: pg_dump (schema+data) + email-attachments bucket + Vercel env vars. Auto-pruned at 12 newest."
+            --notes "Encrypted with age. Components: pg_dump (public+storage schema/data) + auth.users JSON via Admin API + all Storage buckets + Vercel env vars + Vercel project/domains metadata. Retention: last 7 days + 1 per month (cap 1 year)."
 
-      - name: Also upload as 30-day workflow artifact (sanity)
-        uses: actions/upload-artifact@v4
-        with:
-          name: backup-${{ env.STAMP }}
-          path: backup-${{ env.STAMP }}.tgz.age
-          retention-days: 30
-
-      - name: Rotate — keep only the 12 newest releases on the backups repo
+      - name: Rotate — tiered retention (7 days daily + monthly, cap 1 year)
         env:
           GH_TOKEN: ${{ secrets.BACKUP_REPO_PAT }}
         run: |
           set -euo pipefail
-          # List releases sorted by tagName descending (our tags are
-          # backup-YYYYMMDD-HHMM so lexical sort = chronological sort).
-          OLD=$(gh release list --repo frincones/backups-checkingvenezuela \
-            --limit 100 --json tagName,createdAt \
-            --jq 'sort_by(.createdAt) | reverse | .[12:] | .[].tagName')
-          for tag in $OLD; do
+          # Rotation rules (applied per release, newest first):
+          #   age > 365 days                  → delete
+          #   age <= 7 days                   → keep (daily granularity)
+          #   first release of its month      → keep (monthly granularity)
+          #   anything else                   → delete
+          # Result: ~7 daily + ~11 monthly = ~18 releases stored long-term.
+          gh release list --repo frincones/backups-checkingvenezuela \
+            --limit 200 --json tagName,createdAt \
+            --jq 'sort_by(.createdAt) | reverse' > /tmp/releases.json
+
+          python <<'PYEOF'
+          import json
+          from datetime import datetime, timezone
+          rels = json.load(open('/tmp/releases.json'))
+          # Only the workflow's own releases are candidates for rotation.
+          # Anything renamed off the `backup-` prefix is preserved forever
+          # (intentional opt-out, e.g. for audits or compliance snapshots).
+          rels = [r for r in rels if r['tagName'].startswith('backup-')]
+          now = datetime.now(timezone.utc)
+          seen_months = set()
+          to_delete = []
+          for r in rels:
+              created = datetime.fromisoformat(r['createdAt'].replace('Z', '+00:00'))
+              age_days = (now - created).days
+              month_key = created.strftime('%Y-%m')
+              if age_days > 365:
+                  to_delete.append(r['tagName'])
+              elif age_days <= 7:
+                  pass  # keep: daily window
+              elif month_key not in seen_months:
+                  seen_months.add(month_key)  # keep: first of its month
+              else:
+                  to_delete.append(r['tagName'])
+          with open('/tmp/to_delete.txt', 'w') as f:
+              f.write('\n'.join(to_delete))
+          print(f'Tagged backup-* releases evaluated: {len(rels)}')
+          print(f'Will delete: {len(to_delete)}')
+          print(f'Will keep:   {len(rels) - len(to_delete)}')
+          PYEOF
+
+          while IFS= read -r tag; do
+            [ -z "$tag" ] && continue
             echo "  Deleting old release: $tag"
             gh release delete "$tag" --yes --cleanup-tag \
               --repo frincones/backups-checkingvenezuela || true
-          done
+          done < /tmp/to_delete.txt
 
       - name: Final summary
         run: |
