@@ -2,9 +2,11 @@ import { notFound } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
 import { BreadcrumbUI } from "@/components/local-ui/breadcrumb";
+import ShareButtons from "@/components/local-ui/ShareButtons";
 import { Button } from "@/components/ui/button";
 import { PackageCard } from "@/components/pages/packages/components/PackageCard";
 import { createAdminClient } from "@/lib/db/supabase/server";
+import { canonicalUrl } from "@/lib/utils/canonicalUrl";
 import { MapPin, Package, ArrowLeft } from "lucide-react";
 
 async function getDestinationBySlug(slug) {
@@ -132,15 +134,21 @@ export default async function PackagesByDestinationPage({ params }) {
 
       {/* Content */}
       <main className="mx-auto mb-10 w-[90%] md:mb-20">
-        {/* Breadcrumb + Back */}
+        {/* Breadcrumb + Share + Back */}
         <div className="my-6 flex flex-wrap items-center justify-between gap-4">
           <BreadcrumbUI />
-          <Button asChild variant="ghost" size="sm">
-            <Link href="/packages" className="flex items-center gap-2">
-              <ArrowLeft className="h-4 w-4" />
-              Todos los paquetes
-            </Link>
-          </Button>
+          <div className="flex flex-wrap items-center gap-3">
+            <ShareButtons
+              title={`Paquetes en ${destination.name}`}
+              url={canonicalUrl(`/packages/destino/${destination.slug}`)}
+            />
+            <Button asChild variant="ghost" size="sm">
+              <Link href="/packages" className="flex items-center gap-2">
+                <ArrowLeft className="h-4 w-4" />
+                Todos los paquetes
+              </Link>
+            </Button>
+          </div>
         </div>
 
         {/* Destination description */}

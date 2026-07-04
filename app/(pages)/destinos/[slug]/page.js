@@ -1,9 +1,11 @@
 import { notFound } from "next/navigation";
 import Image from "next/image";
 import { BreadcrumbUI } from "@/components/local-ui/breadcrumb";
+import ShareButtons from "@/components/local-ui/ShareButtons";
 import { PackageCard } from "@/components/pages/packages/components/PackageCard";
 import { DualCTA } from "@/components/ui/DualCTA";
 import { createAdminClient } from "@/lib/db/supabase/server";
+import { canonicalUrl } from "@/lib/utils/canonicalUrl";
 import {
   MapPin, Compass, Utensils, Hotel, Sun, Banknote, Plane,
   Bus, Lightbulb, Quote, Package as PackageIcon, Map as MapIcon,
@@ -86,9 +88,13 @@ export default async function DestinationPage({ params }) {
       </section>
 
       <main className="mx-auto mb-10 w-[90%] max-w-6xl md:mb-20">
-        {/* Breadcrumb */}
-        <div className="my-6">
+        {/* Breadcrumb + Share */}
+        <div className="my-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <BreadcrumbUI />
+          <ShareButtons
+            title={`${dest.name}, ${dest.country}`}
+            url={canonicalUrl(`/destinos/${dest.slug}`)}
+          />
         </div>
 
         {/* Descubre el destino */}
