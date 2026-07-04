@@ -3,6 +3,7 @@ import localFont from "next/font/local";
 import "./globals.css";
 
 import NextTopLoader from "nextjs-toploader";
+import Script from "next/script";
 import { Toaster } from "@/components/ui/sonner";
 import { StoreProvider } from "@/app/StoreProvider";
 
@@ -18,6 +19,8 @@ import { ChatWidget } from "@/components/ChatWidget/ChatWidget";
 import { getOneDoc } from "@/lib/db/getOperationDB";
 import { headers } from "next/headers";
 import { Analytics } from "@vercel/analytics/next";
+
+const GA_ID = process.env.NEXT_PUBLIC_GA_ID || "G-ZP34JNKX19";
 
 const monse = Montserrat({
   subsets: ["latin"],
@@ -132,6 +135,22 @@ export default async function RootLayout({ children }) {
         {!currentPathname?.startsWith("/dashboard") && <BannersSidebar />}
         {!currentPathname?.startsWith("/dashboard") && <ChatWidget />}
         <Analytics />
+        {GA_ID && (
+          <>
+            <Script
+              src={`https://www.googletagmanager.com/gtag/js?id=${GA_ID}`}
+              strategy="afterInteractive"
+            />
+            <Script id="ga4-init" strategy="afterInteractive">
+              {`
+                window.dataLayer = window.dataLayer || [];
+                function gtag(){dataLayer.push(arguments);}
+                gtag('js', new Date());
+                gtag('config', '${GA_ID}');
+              `}
+            </Script>
+          </>
+        )}
       </body>
     </html>
   );
