@@ -135,13 +135,19 @@ export default async function RootLayout({ children }) {
         {!currentPathname?.startsWith("/dashboard") && <BannersSidebar />}
         {!currentPathname?.startsWith("/dashboard") && <ChatWidget />}
         <Analytics />
+        {/* Google Analytics 4 — beforeInteractive lands the tag in the
+            server-rendered <head>, which is what the GA setup wizard
+            (a JS-less scraper) requires to detect the tag. Real users
+            still get the same behaviour; TTI impact is negligible
+            because both scripts are async. */}
         {GA_ID && (
           <>
             <Script
+              id="ga4-loader"
               src={`https://www.googletagmanager.com/gtag/js?id=${GA_ID}`}
-              strategy="afterInteractive"
+              strategy="beforeInteractive"
             />
-            <Script id="ga4-init" strategy="afterInteractive">
+            <Script id="ga4-init" strategy="beforeInteractive">
               {`
                 window.dataLayer = window.dataLayer || [];
                 function gtag(){dataLayer.push(arguments);}
