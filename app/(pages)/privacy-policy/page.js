@@ -171,8 +171,8 @@ export default function PrivacyPolicyPage() {
       </ol>
       <p>
         Puedes deshabilitar estas herramientas mediante extensiones de bloqueo
-        de rastreadores en tu navegador o mediante la configuración de "Do
-        Not Track" del mismo.
+        de rastreadores en tu navegador o mediante la configuración de
+        &ldquo;Do Not Track&rdquo; del mismo.
       </p>
 
       <h2>5. Seguridad de Datos</h2>
