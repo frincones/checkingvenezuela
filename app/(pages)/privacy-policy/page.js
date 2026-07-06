@@ -130,6 +130,50 @@ export default function PrivacyPolicyPage() {
         electrónico y restablecimiento de contraseña. Puedes controlar las
         cookies a través de la configuración de tu navegador.
       </p>
+      <p>
+        Además, utilizamos herramientas de análisis de terceros para entender
+        cómo se usa nuestro sitio y mejorar la experiencia:
+      </p>
+      <ol>
+        <li>
+          <b>Google Analytics 4:</b> registra visitas, páginas vistas y eventos
+          agregados de navegación. Los datos se procesan por Google. Puedes
+          consultar la{" "}
+          <a
+            href="https://policies.google.com/privacy"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            política de privacidad de Google
+          </a>
+          .
+        </li>
+        <li>
+          <b>Microsoft Clarity:</b> registra interacciones anónimas
+          (movimientos del cursor, clicks y scrolls) para generar mapas de
+          calor y grabaciones agregadas que nos ayudan a detectar problemas de
+          usabilidad. Los datos se procesan por Microsoft. Puedes consultar la{" "}
+          <a
+            href="https://privacy.microsoft.com/es-es/privacystatement"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            política de privacidad de Microsoft
+          </a>
+          . Configuramos Clarity para enmascarar automáticamente el texto de
+          los campos de formulario, de modo que datos sensibles como emails,
+          contraseñas o información de pago no queden registrados.
+        </li>
+        <li>
+          <b>Vercel Analytics:</b> mide métricas de rendimiento (Core Web
+          Vitals) del sitio, sin recopilar información personal.
+        </li>
+      </ol>
+      <p>
+        Puedes deshabilitar estas herramientas mediante extensiones de bloqueo
+        de rastreadores en tu navegador o mediante la configuración de "Do
+        Not Track" del mismo.
+      </p>
 
       <h2>5. Seguridad de Datos</h2>
       <p>
