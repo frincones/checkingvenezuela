@@ -4,6 +4,7 @@ import "./globals.css";
 
 import NextTopLoader from "nextjs-toploader";
 import Script from "next/script";
+import { GoogleAnalytics } from "@next/third-parties/google";
 import { Toaster } from "@/components/ui/sonner";
 import { StoreProvider } from "@/app/StoreProvider";
 
@@ -136,31 +137,9 @@ export default async function RootLayout({ children }) {
         {!currentPathname?.startsWith("/dashboard") && <BannersSidebar />}
         {!currentPathname?.startsWith("/dashboard") && <ChatWidget />}
         <Analytics />
-        {/* Google Analytics 4 — beforeInteractive lands the tag in the
-            server-rendered <head>, which is what the GA setup wizard
-            (a JS-less scraper) requires to detect the tag. Real users
-            still get the same behaviour; TTI impact is negligible
-            because both scripts are async. */}
-        {GA_ID && (
-          <>
-            <Script
-              id="ga4-loader"
-              src={`https://www.googletagmanager.com/gtag/js?id=${GA_ID}`}
-              strategy="beforeInteractive"
-            />
-            <Script id="ga4-init" strategy="beforeInteractive">
-              {`
-                window.dataLayer = window.dataLayer || [];
-                function gtag(){dataLayer.push(arguments);}
-                gtag('js', new Date());
-                gtag('config', '${GA_ID}');
-              `}
-            </Script>
-          </>
-        )}
-        {/* Microsoft Clarity — session recordings + heatmaps. Same
-            beforeInteractive placement as GA4 so Microsoft's install
-            wizard picks it up from the raw HTML. */}
+        {/* Microsoft Clarity — session recordings + heatmaps. The IIFE
+            self-injects the loader <script> at runtime, so beforeInteractive
+            plus Next.js' script queue is enough for real users. */}
         {CLARITY_ID && (
           <Script id="clarity-init" strategy="beforeInteractive">
             {`
@@ -173,6 +152,12 @@ export default async function RootLayout({ children }) {
           </Script>
         )}
       </body>
+      {/* Google Analytics 4 — @next/third-parties emits <script async
+          src="...gtag/js"> as a real HTML tag (not through the Next
+          script queue), so gtag('config') runs immediately without
+          waiting for React hydration. That was the root cause of the
+          zero-pageview problem reported in July 2026. */}
+      {GA_ID && <GoogleAnalytics gaId={GA_ID} />}
     </html>
   );
 }
