@@ -4,7 +4,6 @@ import "./globals.css";
 
 import NextTopLoader from "nextjs-toploader";
 import Script from "next/script";
-import { GoogleAnalytics } from "@next/third-parties/google";
 import { Toaster } from "@/components/ui/sonner";
 import { StoreProvider } from "@/app/StoreProvider";
 
@@ -109,6 +108,29 @@ export default async function RootLayout({ children }) {
 
   return (
     <html lang="en" className={`${tradegothic.variable} ${monse.variable}`}>
+      <head>
+        {/* Google Analytics 4 — plain HTML <script> tags emitted server-side
+            so the loader starts fetching BEFORE React hydration. This is the
+            same snippet Google copy-pastes; keeping it as raw tags (not
+            next/script) is what actually causes pageviews to fire on every
+            visit, not just after hydration completes. */}
+        {GA_ID && (
+          <>
+            <script
+              async
+              src={`https://www.googletagmanager.com/gtag/js?id=${GA_ID}`}
+            />
+            <script
+              dangerouslySetInnerHTML={{
+                __html: `window.dataLayer = window.dataLayer || [];
+function gtag(){dataLayer.push(arguments);}
+gtag('js', new Date());
+gtag('config', '${GA_ID}');`,
+              }}
+            />
+          </>
+        )}
+      </head>
       <body className={monse.className}>
         {maintenanceMode.enabled === true &&
         !alloweRoutesWhileMaintenance.some(
@@ -137,11 +159,6 @@ export default async function RootLayout({ children }) {
         {!currentPathname?.startsWith("/dashboard") && <BannersSidebar />}
         {!currentPathname?.startsWith("/dashboard") && <ChatWidget />}
         <Analytics />
-        {/* Google Analytics 4 — @next/third-parties helper emits
-            <script id='_next-ga' src='...gtag/js'> and an inline
-            <script id='_next-ga-init'> with gtag('config', ID).
-            Placed inside <body> so Next.js renders them server-side. */}
-        {GA_ID && <GoogleAnalytics gaId={GA_ID} />}
         {/* Microsoft Clarity — session recordings + heatmaps. The IIFE
             self-injects the loader <script> at runtime. */}
         {CLARITY_ID && (
