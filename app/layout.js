@@ -137,9 +137,13 @@ export default async function RootLayout({ children }) {
         {!currentPathname?.startsWith("/dashboard") && <BannersSidebar />}
         {!currentPathname?.startsWith("/dashboard") && <ChatWidget />}
         <Analytics />
+        {/* Google Analytics 4 — @next/third-parties helper emits
+            <script id='_next-ga' src='...gtag/js'> and an inline
+            <script id='_next-ga-init'> with gtag('config', ID).
+            Placed inside <body> so Next.js renders them server-side. */}
+        {GA_ID && <GoogleAnalytics gaId={GA_ID} />}
         {/* Microsoft Clarity — session recordings + heatmaps. The IIFE
-            self-injects the loader <script> at runtime, so beforeInteractive
-            plus Next.js' script queue is enough for real users. */}
+            self-injects the loader <script> at runtime. */}
         {CLARITY_ID && (
           <Script id="clarity-init" strategy="beforeInteractive">
             {`
@@ -152,12 +156,6 @@ export default async function RootLayout({ children }) {
           </Script>
         )}
       </body>
-      {/* Google Analytics 4 — @next/third-parties emits <script async
-          src="...gtag/js"> as a real HTML tag (not through the Next
-          script queue), so gtag('config') runs immediately without
-          waiting for React hydration. That was the root cause of the
-          zero-pageview problem reported in July 2026. */}
-      {GA_ID && <GoogleAnalytics gaId={GA_ID} />}
     </html>
   );
 }
