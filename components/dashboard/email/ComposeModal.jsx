@@ -536,18 +536,58 @@ export default function ComposeModal({ isOpen, onClose, replyTo, forwardEmail, o
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isOpen, replyTo?.id, forwardEmail?.id, defaultFromAddress]);
 
-  const initialContent = forwardEmail
-    ? `<br/><br/><blockquote style="border-left:2px solid #ccc;padding-left:12px;color:#666;">
+  // Build the piece of HTML that corresponds to the quoted email at the
+  // bottom of the composer (reply or forward). Kept as a helper so the
+  // signature-injection effect below can rebuild the whole editor content
+  // once the default signature is fetched from the API.
+  const buildQuoteHtml = () => {
+    if (forwardEmail) {
+      return `<br/><br/><blockquote style="border-left:2px solid #ccc;padding-left:12px;color:#666;">
         <p><small>---------- Mensaje reenviado ----------</small></p>
         <p><small>De: ${forwardEmail.from_email}<br/>Fecha: ${new Date(forwardEmail.created_at).toLocaleString("es-VE")}<br/>Asunto: ${forwardEmail.subject || ""}</small></p>
         ${forwardEmail.body_html || forwardEmail.body_text || ""}
-      </blockquote>`
-    : replyTo
-      ? `<br/><br/><blockquote style="border-left:2px solid #ccc;padding-left:12px;color:#666;">
+      </blockquote>`;
+    }
+    if (replyTo) {
+      return `<br/><br/><blockquote style="border-left:2px solid #ccc;padding-left:12px;color:#666;">
           <p><small>El ${new Date(replyTo.created_at).toLocaleString("es-VE")} &lt;${replyTo.from_email}&gt; escribió:</small></p>
           ${replyTo.body_html || replyTo.body_text || ""}
-        </blockquote>`
-      : "";
+        </blockquote>`;
+    }
+    return "";
+  };
+
+  const initialContent = buildQuoteHtml();
+
+  // Default signature the current user selected under
+  // /dashboard/email/signatures. Fetched once every time the composer
+  // opens for a new target so an updated signature is picked up without
+  // a page reload.
+  const [defaultSignature, setDefaultSignature] = useState(null);
+  const [signaturesLoaded, setSignaturesLoaded] = useState(false);
+
+  useEffect(() => {
+    if (!isOpen) {
+      setSignaturesLoaded(false);
+      setDefaultSignature(null);
+      return;
+    }
+    let cancelled = false;
+    fetch("/api/email/signatures")
+      .then((r) => r.json())
+      .then((d) => {
+        if (cancelled) return;
+        const list = Array.isArray(d.signatures) ? d.signatures : [];
+        setDefaultSignature(list.find((s) => s.is_default) || null);
+      })
+      .catch(() => {})
+      .finally(() => {
+        if (!cancelled) setSignaturesLoaded(true);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [isOpen, replyTo?.id, forwardEmail?.id]);
 
   const editor = useEditor({
     extensions: [
@@ -576,6 +616,48 @@ export default function ComposeModal({ isOpen, onClose, replyTo, forwardEmail, o
     },
     onUpdate: () => setTouched(true),
   });
+
+  /* ── Auto-insert default signature (Outlook layout) ──
+   *  When the composer opens (new / reply / forward) and the user hasn't
+   *  started typing, drop the whole editor content so we can lay out:
+   *
+   *      <cursor here — user types their message here>
+   *      <br><br>
+   *      { default signature body_html }
+   *      <br><br>
+   *      { quoted reply/forwarded email, if any }
+   *
+   *  This matches Outlook's convention: the signature sits between the
+   *  new message and the quoted context, so the user writes above their
+   *  own signature and the recipient sees a natural top-down structure.
+   *
+   *  `touched` guards against clobbering the user's edits if the fetch
+   *  returned mid-typing. The layout is rebuilt whenever the reply target
+   *  changes so switching from Reply to Forward mid-open still gets the
+   *  right quote. */
+  useEffect(() => {
+    if (!isOpen || !editor || !signaturesLoaded || touched) return;
+    const signaturePart = defaultSignature?.body_html
+      ? `<br/><br/>${defaultSignature.body_html}`
+      : "";
+    const quotePart = buildQuoteHtml();
+    // Empty leading paragraph so the cursor has somewhere to land above
+    // the signature block.
+    editor.commands.setContent(`<p></p>${signaturePart}${quotePart}`, false);
+    editor.commands.setTextSelection(0);
+    editor.commands.focus();
+    // buildQuoteHtml is stable per (replyTo, forwardEmail) pair, and
+    // `touched` intentionally excluded so re-fetches after user edits are
+    // ignored (guard above already returns).
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [
+    isOpen,
+    editor,
+    signaturesLoaded,
+    defaultSignature?.id,
+    replyTo?.id,
+    forwardEmail?.id,
+  ]);
 
   /* ── Dropzone ── */
   const onDrop = useCallback((acceptedFiles) => {
