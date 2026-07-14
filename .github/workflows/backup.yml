@@ -279,23 +279,45 @@ jobs:
           #   first release of its month      → keep (monthly granularity)
           #   anything else                   → delete
           # Result: ~7 daily + ~11 monthly = ~18 releases stored long-term.
+          #
+          # Age is derived from the TAG NAME (`backup-YYYYMMDD-HHMM`) rather
+          # than from `gh release list`'s createdAt field. Reason: this repo
+          # only receives `gh release create` calls and never new commits,
+          # so every git tag points at the same HEAD commit and GitHub
+          # reports the same createdAt (the commit date) for every tag.
+          # That broke rotation from 2026-06-30 to 2026-07-14: every day
+          # all rows tied on age → only the "first of month" survived, so
+          # the daily backup from the previous day was deleted.
           gh release list --repo frincones/backups-checkingvenezuela \
-            --limit 200 --json tagName,createdAt \
-            --jq 'sort_by(.createdAt) | reverse' > /tmp/releases.json
+            --limit 200 --json tagName > /tmp/releases.json
 
           python <<'PYEOF'
           import json
+          import re
           from datetime import datetime, timezone
+
           rels = json.load(open('/tmp/releases.json'))
           # Only the workflow's own releases are candidates for rotation.
           # Anything renamed off the `backup-` prefix is preserved forever
           # (intentional opt-out, e.g. for audits or compliance snapshots).
           rels = [r for r in rels if r['tagName'].startswith('backup-')]
+
+          def parse_tag_date(tag):
+              # Format: backup-YYYYMMDD-HHMM  → aware UTC datetime.
+              m = re.match(r'^backup-(\d{8})-(\d{4})$', tag)
+              if not m:
+                  return None
+              return datetime.strptime(m.group(1) + m.group(2), '%Y%m%d%H%M').replace(tzinfo=timezone.utc)
+
+          # Sort newest first BY REAL DATE derived from the tag name.
+          rels = [r for r in rels if parse_tag_date(r['tagName']) is not None]
+          rels.sort(key=lambda r: parse_tag_date(r['tagName']), reverse=True)
+
           now = datetime.now(timezone.utc)
           seen_months = set()
           to_delete = []
           for r in rels:
-              created = datetime.fromisoformat(r['createdAt'].replace('Z', '+00:00'))
+              created = parse_tag_date(r['tagName'])
               age_days = (now - created).days
               month_key = created.strftime('%Y-%m')
               if age_days > 365:
@@ -306,11 +328,16 @@ jobs:
                   seen_months.add(month_key)  # keep: first of its month
               else:
                   to_delete.append(r['tagName'])
+
+          # Trailing newline so `while read` reads the last line reliably.
           with open('/tmp/to_delete.txt', 'w') as f:
-              f.write('\n'.join(to_delete))
+              for tag in to_delete:
+                  f.write(tag + '\n')
           print(f'Tagged backup-* releases evaluated: {len(rels)}')
           print(f'Will delete: {len(to_delete)}')
           print(f'Will keep:   {len(rels) - len(to_delete)}')
+          for tag in to_delete:
+              print(f'  → will delete: {tag}')
           PYEOF
 
           while IFS= read -r tag; do
