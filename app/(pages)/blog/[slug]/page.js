@@ -5,6 +5,7 @@ import { createAdminClient } from "@/lib/db/supabase/server";
 import { Calendar, Tag, ArrowLeft, ChevronRight, Clock } from "lucide-react";
 import ShareButtons from "./ShareButtons";
 import { DualCTA } from "@/components/ui/DualCTA";
+import { categoryLabel } from "@/lib/blogCategories";
 
 // Normaliza un slug removiendo tildes, pasando a minúsculas y dejando solo a-z0-9-
 function normalizeSlug(s) {
@@ -73,7 +74,7 @@ function estimateReadTime(content) {
 
 function formatDate(dateStr) {
   if (!dateStr) return "";
-  return new Date(dateStr).toLocaleDateString("es-VE", {
+  return new Date(dateStr).toLocaleDateString("en-US", {
     day: "numeric",
     month: "long",
     year: "numeric",
@@ -142,7 +143,7 @@ export default async function BlogPostPage(props) {
                 href={`/blog?category=${post.category}`}
                 className="transition-colors hover:text-[#0A1A44]"
               >
-                {post.category.charAt(0).toUpperCase() + post.category.slice(1)}
+                {categoryLabel(post.category)}
               </Link>
             </>
           )}
@@ -171,7 +172,7 @@ export default async function BlogPostPage(props) {
               href={`/blog?category=${post.category}`}
               className="rounded-full bg-[#F2A93B]/15 px-4 py-1 text-xs font-semibold uppercase tracking-wide text-[#0A1A44] transition-colors hover:bg-[#F2A93B]/25"
             >
-              {post.category}
+              {categoryLabel(post.category)}
             </Link>
           )}
           {post.published_at && (

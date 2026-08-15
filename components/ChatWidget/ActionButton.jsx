@@ -6,7 +6,7 @@ import { ExternalLink, MessageCircle } from "lucide-react";
  * Botón de acción rápida que aparece dentro de un mensaje del bot.
  * Por ahora soporta acción 'open_whatsapp'.
  */
-export function ActionButton({ output, language = "es" }) {
+export function ActionButton({ output, language = "en" }) {
   if (!output || !output.ok) return null;
 
   if (output.action === "open_whatsapp" && output.url) {

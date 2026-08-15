@@ -32,7 +32,7 @@ You can request deletion of your data at any time by writing to privacy@venezuel
 export function ConsentDialog({
   open,
   onOpenChange,
-  language = "es",
+  language = "en",
   visitorToken,
   onDecide,
 }) {
