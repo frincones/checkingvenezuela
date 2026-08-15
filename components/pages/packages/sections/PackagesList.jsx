@@ -40,11 +40,11 @@ export async function PackagesList() {
         <div className="mx-auto max-w-md">
           <div className="mb-4 text-6xl">📦</div>
           <h3 className="mb-2 text-2xl font-bold text-gray-900">
-            Próximamente
+            Coming soon
           </h3>
           <p className="text-gray-600">
-            Estamos preparando increíbles paquetes turísticos para ti.
-            ¡Vuelve pronto!
+            We are putting together incredible travel packages for you.
+            Check back soon!
           </p>
         </div>
       </section>
@@ -55,10 +55,10 @@ export async function PackagesList() {
     <section>
       <div className="mb-8">
         <h2 className="text-3xl font-bold text-secondary">
-          Todos los Paquetes
+          All packages
         </h2>
         <p className="mt-2 text-gray-600">
-          Explora todas nuestras opciones de viaje
+          Explore all our travel options
         </p>
       </div>
 

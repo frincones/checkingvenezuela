@@ -1,9 +1,9 @@
 import "./terms-of-service.css";
 
 export const metadata = {
-  title: "Términos y Condiciones | Venezuela Voyages",
+  title: "Terms & Conditions | Venezuela Voyages",
   description:
-    "Términos y condiciones de uso de Venezuela Voyages. Información sobre reservas, pagos, responsabilidades y legislación aplicable.",
+    "Terms and conditions of use for Venezuela Voyages. Information about bookings, payments, liability and applicable law.",
 };
 
 export default function TermsOfServicePage() {
@@ -12,131 +12,125 @@ export default function TermsOfServicePage() {
       id="terms-of-service-container"
       className="mx-auto w-[90%] lg:mb-[80px] mb-[40px] mt-5"
     >
-      <h1>Términos y Condiciones</h1>
+      <h1>Terms &amp; Conditions</h1>
       <p>
         <strong>Venezuela Voyages</strong>
       </p>
 
-      <h2>1. Introducción</h2>
+      <h2>1. Introduction</h2>
       <p>
-        Bienvenido a Venezuela Voyages. Al acceder y utilizar nuestro sitio web,
-        aceptas estos Términos y Condiciones. Si no estás de acuerdo con alguna
-        disposición, te recomendamos que no utilices nuestro sitio.
+        Welcome to Venezuela Voyages. By accessing and using our website, you
+        accept these Terms and Conditions. If you do not agree with any
+        provision, we recommend that you do not use our site.
       </p>
 
-      <h2>2. Definiciones</h2>
+      <h2>2. Definitions</h2>
       <ol>
         <li>
-          <b>Venezuela Voyages:</b> Agencia de viajes con domicilio en Caracas,
-          Edo. Miranda, Venezuela.
+          <b>Venezuela Voyages:</b> Travel agency with registered offices in
+          Caracas, Miranda State, Venezuela.
         </li>
         <li>
-          <b>Usuario:</b> Persona que accede y utiliza nuestro sitio web.
+          <b>User:</b> Any person who accesses and uses our website.
         </li>
         <li>
-          <b>Servicios:</b> Incluye la búsqueda, reserva y compra de paquetes
-          turísticos, boletos de avión, alojamiento y otros servicios
-          relacionados con viajes.
+          <b>Services:</b> Includes searching for, booking and purchasing travel
+          packages, flight tickets, accommodation and other travel-related
+          services.
         </li>
       </ol>
 
-      <h2>3. Uso del Sitio Web</h2>
+      <h2>3. Use of the Website</h2>
       <p>
-        Nuestro sitio web:{" "}
+        Our website:{" "}
         <a href="https://www.venezuelavoyages.com">
           www.venezuelavoyages.com
         </a>{" "}
-        se proporciona para uso comercial relacionado con la planificación y
-        reserva de viajes.
+        is provided for commercial use related to travel planning and booking.
       </p>
 
-      <h2>4. Registro y Cuenta de Usuario</h2>
+      <h2>4. Registration and User Account</h2>
       <p>
-        Para acceder a ciertos servicios, es posible que debas registrarte y
-        crear una cuenta. Eres responsable de mantener la confidencialidad de tu
-        información de cuenta y de todas las actividades que ocurran bajo tu
-        cuenta. Notifícanos de inmediato si sospechas de cualquier uso no
-        autorizado.
+        To access certain services you may need to register and create an
+        account. You are responsible for keeping your account information
+        confidential and for all activity that occurs under your account. Notify
+        us immediately if you suspect any unauthorized use.
       </p>
 
-      <h2>5. Reservas y Pagos</h2>
+      <h2>5. Bookings and Payments</h2>
 
-      <h3>5.1 Reserva de Servicios</h3>
+      <h3>5.1 Booking Services</h3>
       <p>
-        Las reservas se confirman al recibir el pago. Los precios están
-        expresados en dólares y pueden cambiar sin previo aviso hasta que se
-        confirme el pago. Los precios incluyen alojamiento y los servicios
-        especificados en el itinerario, pero no cubren extras como alimentos (no
-        especificados), propinas, exceso de equipaje, trámites migratorios u
-        otros conceptos no detallados en el programa.
+        Bookings are confirmed upon receipt of payment. Prices are quoted in US
+        dollars and may change without prior notice until payment is confirmed.
+        Prices include accommodation and the services specified in the
+        itinerary, but do not cover extras such as meals (not specified),
+        gratuities, excess baggage, immigration procedures or any other item not
+        detailed in the programme.
       </p>
 
-      <h3>5.2 Pagos</h3>
+      <h3>5.2 Payments</h3>
       <p>
-        Los pagos pueden realizarse mediante tarjeta de crédito, depósito,
-        transferencia bancaria u otros métodos aceptados en nuestro sitio. Los
-        pagos deben completarse 60 días antes de la llegada. Cualquier cambio o
-        adición de servicios durante el viaje debe ser pagado directamente por
-        el pasajero.
+        Payments can be made by credit card, deposit, bank transfer or other
+        methods accepted on our site. Payments must be completed 60 days before
+        arrival. Any change or addition of services during the trip must be paid
+        directly by the traveller.
       </p>
 
-      <h3>5.3 Documentación</h3>
+      <h3>5.3 Documentation</h3>
       <p>
-        Los pasajeros deben tener pasaporte y visas vigentes. Se requiere
-        proporcionar información personal precisa, como nombre completo, número
-        de pasaporte, nacionalidad, edad y cualquier condición médica o
-        preferencia alimentaria.
+        Travellers must hold a valid passport and visas. Accurate personal
+        information must be provided, such as full name, passport number,
+        nationality, age and any medical condition or dietary preference.
       </p>
 
-      <h2>6. Política de Cancelación y Reembolsos</h2>
+      <h2>6. Cancellation and Refund Policy</h2>
       <p>
-        Las políticas de cancelación y reembolsos están detalladas en nuestra{" "}
-        <a href="/return-policy">Política de Devolución y Reembolso</a>.
+        Cancellation and refund policies are detailed in our{" "}
+        <a href="/return-policy">Return &amp; Refund Policy</a>.
       </p>
 
-      <h2>7. Responsabilidad</h2>
+      <h2>7. Liability</h2>
       <p>
-        Venezuela Voyages actúa como intermediario en la organización de viajes,
-        coordinando servicios de transporte, alojamiento y actividades ofrecidos
-        por terceros. No somos responsables por daños, demoras u otros
-        inconvenientes derivados de los servicios de terceros. Nuestra
-        responsabilidad se limita a la correcta gestión de las reservas y a la
-        prestación de servicios conforme a las descripciones proporcionadas en
-        el sitio.
+        Venezuela Voyages acts as an intermediary in organizing travel,
+        coordinating transport, accommodation and activity services offered by
+        third parties. We are not liable for damages, delays or other
+        inconveniences arising from third-party services. Our liability is
+        limited to the correct handling of bookings and to providing services in
+        accordance with the descriptions given on the site.
       </p>
 
-      <h2>8. Modificaciones del Servicio</h2>
+      <h2>8. Changes to the Service</h2>
       <p>
-        Podemos modificar, suspender o interrumpir cualquier parte de nuestro
-        sitio web o servicios en cualquier momento sin previo aviso. También
-        podemos modificar estos Términos y Condiciones, y cualquier cambio será
-        efectivo inmediatamente después de su publicación en nuestro sitio web.
+        We may modify, suspend or discontinue any part of our website or
+        services at any time without prior notice. We may also amend these Terms
+        and Conditions, and any change will take effect immediately upon
+        publication on our website.
       </p>
 
-      <h2>9. Enlaces a Otros Sitios</h2>
+      <h2>9. Links to Other Sites</h2>
       <p>
-        Nuestro sitio puede contener enlaces a sitios web de terceros. No
-        tenemos control sobre el contenido o las prácticas de estos sitios y no
-        asumimos ninguna responsabilidad por ellos. El acceso a estos sitios se
-        realiza bajo tu propio riesgo.
+        Our site may contain links to third-party websites. We have no control
+        over the content or practices of these sites and accept no
+        responsibility for them. Access to these sites is at your own risk.
       </p>
 
-      <h2>10. Legislación Aplicable y Jurisdicción</h2>
+      <h2>10. Applicable Law and Jurisdiction</h2>
       <p>
-        Estos Términos y Condiciones se regirán e interpretarán de acuerdo con
-        las leyes de La República Bolivariana de Venezuela. Cualquier disputa
-        relacionada con estos Términos y Condiciones estará sujeta a la
-        jurisdicción exclusiva de los tribunales de La República Bolivariana de
+        These Terms and Conditions shall be governed by and construed in
+        accordance with the laws of the Bolivarian Republic of Venezuela. Any
+        dispute relating to these Terms and Conditions shall be subject to the
+        exclusive jurisdiction of the courts of the Bolivarian Republic of
         Venezuela.
       </p>
 
-      <h2>11. Contacto</h2>
+      <h2>11. Contact</h2>
       <p>
-        Para cualquier pregunta o comentario sobre estos Términos y Condiciones,
-        por favor contáctanos en:
+        For any question or comment about these Terms and Conditions, please
+        contact us at:
       </p>
       <p>
-        Correo electrónico:{" "}
+        Email:{" "}
         <strong>
           <a href="mailto:info@venezuelavoyages.com">
             info@venezuelavoyages.com
@@ -144,15 +138,15 @@ export default function TermsOfServicePage() {
         </strong>
       </p>
       <p>
-        Teléfono:{" "}
+        Phone:{" "}
         <strong>
           <a href="tel:+584264034052">+58 426 4034052</a>
         </strong>
       </p>
       <p>
-        Gracias por confiar en Venezuela Voyages. Nos comprometemos a proteger
-        tu información personal y a proporcionarte un servicio seguro y
-        confiable.
+        Thank you for trusting Venezuela Voyages. We are committed to protecting
+        your personal information and to providing you with a safe and reliable
+        service.
       </p>
     </div>
   );

@@ -37,7 +37,7 @@ export default async function HomePage() {
         >
           <Image
             src="/images/hero-venezuela.jpg"
-            alt="Venezuela - Paisaje caribeño"
+            alt="Venezuela - Caribbean landscape"
             fill
             sizes="100vw"
             quality={90}

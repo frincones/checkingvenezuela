@@ -17,13 +17,13 @@ export function DualCTA({
   // Configuración de compra online
   onlineEnabled = true,
   onlinePath = "#",
-  onlineLabel = "Comprar",
+  onlineLabel = "Book now",
   onlineComingSoon = false,
 
   // Configuración de cotización WhatsApp
   quoteEnabled = true,
-  quoteMessage = "Hola, estoy interesado en cotizar este servicio.",
-  quoteLabel = "Cotizar",
+  quoteMessage = "Hi, I'm interested in getting a quote for this service.",
+  quoteLabel = "Get a quote",
 
   // Tracking data for lead capture
   trackingData = null,
@@ -71,7 +71,7 @@ export function DualCTA({
             variant="default"
             className="h-8 w-8"
             disabled={onlineComingSoon}
-            title={onlineComingSoon ? "Próximamente" : onlineLabel}
+            title={onlineComingSoon ? "Coming soon" : onlineLabel}
           >
             {onlineComingSoon ? (
               <span>
@@ -94,7 +94,7 @@ export function DualCTA({
           onOpenChange={setModalOpen}
           onSubmit={handleLeadSubmit}
           trackingData={modalTrackingData}
-          triggerLabel="Continuar a WhatsApp"
+          triggerLabel="Continue to WhatsApp"
         />
       </div>
     );
@@ -115,7 +115,7 @@ export function DualCTA({
             {onlineComingSoon ? (
               <span className="flex items-center gap-1">
                 <ShoppingCart className="h-3 w-3" />
-                Próximamente
+                Coming soon
               </span>
             ) : (
               <Link href={onlinePath} className="flex items-center gap-1">
@@ -138,7 +138,7 @@ export function DualCTA({
           onOpenChange={setModalOpen}
           onSubmit={handleLeadSubmit}
           trackingData={modalTrackingData}
-          triggerLabel="Continuar a WhatsApp"
+          triggerLabel="Continue to WhatsApp"
         />
       </div>
     );
@@ -156,7 +156,7 @@ export function DualCTA({
           {onlineComingSoon ? (
             <span className="flex items-center gap-2">
               <ShoppingCart className="h-4 w-4" />
-              Próximamente
+              Coming soon
             </span>
           ) : (
             <Link href={onlinePath} className="flex items-center gap-2">
@@ -179,7 +179,7 @@ export function DualCTA({
         onOpenChange={setModalOpen}
         onSubmit={handleLeadSubmit}
         trackingData={modalTrackingData}
-        triggerLabel="Continuar a WhatsApp"
+        triggerLabel="Continue to WhatsApp"
       />
     </div>
   );

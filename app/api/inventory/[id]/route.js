@@ -56,7 +56,7 @@ export async function PATCH(request, { params }) {
     const adminClient = createAdminClient();
 
     const allowedFields = [
-      "provider_id", "service_id", "destination_id", "name", "sku",
+      "provider_id", "service_id", "destination_id", "name", "slug", "sku",
       "description", "product_type", "cost_price", "sale_price", "currency",
       "pricing_details", "status", "quantity_available", "valid_from",
       "valid_until", "blackout_dates", "details", "images", "is_featured",
@@ -107,7 +107,11 @@ export async function PATCH(request, { params }) {
     if (error) {
       console.error("Error updating inventory item:", error);
       if (error.code === "23505") {
-        return NextResponse.json({ error: "Ya existe un producto con ese SKU" }, { status: 409 });
+        const dupSlug = String(error.message || "").includes("idx_service_inventory_slug");
+        return NextResponse.json(
+          { error: dupSlug ? "Ya existe un producto con esa URL (slug)" : "Ya existe un producto con ese SKU" },
+          { status: 409 },
+        );
       }
       return NextResponse.json({ error: "Error al actualizar producto" }, { status: 500 });
     }

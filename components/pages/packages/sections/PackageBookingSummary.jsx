@@ -45,7 +45,7 @@ export function PackageBookingSummary({ packageData }) {
           <div className="flex items-start gap-3">
             <Clock className="mt-0.5 h-5 w-5 flex-shrink-0 text-gray-400" />
             <div>
-              <p className="text-sm font-medium text-gray-900">Duración</p>
+              <p className="text-sm font-medium text-gray-900">Duration</p>
               <p className="text-sm text-gray-600">{details.duration}</p>
             </div>
           </div>
@@ -71,7 +71,7 @@ export function PackageBookingSummary({ packageData }) {
           </span>
         </div>
         <p className="text-xs text-gray-500">
-          {pricingDetails.display_text || "Por persona"}
+          {pricingDetails.display_text || "Per person"}
         </p>
       </div>
 
@@ -79,7 +79,7 @@ export function PackageBookingSummary({ packageData }) {
       {details.includes && details.includes.length > 0 && (
         <div className="rounded-lg bg-green-50 p-4">
           <p className="mb-2 text-sm font-semibold text-green-900">
-            Incluye:
+            Includes:
           </p>
           <ul className="space-y-1">
             {details.includes.slice(0, 4).map((item, index) => (
@@ -92,7 +92,7 @@ export function PackageBookingSummary({ packageData }) {
             ))}
             {details.includes.length > 4 && (
               <li className="text-xs italic text-green-700">
-                Y {details.includes.length - 4} más...
+                And {details.includes.length - 4} more...
               </li>
             )}
           </ul>
@@ -102,8 +102,8 @@ export function PackageBookingSummary({ packageData }) {
       {/* Info Note */}
       <div className="mt-6 rounded-lg bg-blue-50 p-4">
         <p className="text-xs text-blue-900">
-          💡 <strong>Nota:</strong> El precio final puede variar según el número de personas,
-          fechas y disponibilidad. Recibirás una cotización personalizada.
+          💡 <strong>Note:</strong> The final price may vary depending on the number of
+          travellers, dates and availability. You will receive a personalised quote.
         </p>
       </div>
     </div>

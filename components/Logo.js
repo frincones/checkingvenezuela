@@ -17,7 +17,7 @@ export function Logo({ className, size = "md" }) {
   };
 
   return (
-    <Link aria-label={"Venezuela Voyages - Ir a inicio"} href={"/"}>
+    <Link aria-label={"Venezuela Voyages - Go to home"} href={"/"}>
       <Image
         src="/images/venezuela-voyages-logo.png"
         alt="Venezuela Voyages Logo - Explore Now"

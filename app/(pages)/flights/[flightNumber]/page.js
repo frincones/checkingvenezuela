@@ -19,13 +19,13 @@ import { strToObjectId } from "@/lib/db/utilsDB";
 export async function generateMetadata({ params }) {
   try {
     const flight = await getOneDoc("Flight", { flightNumber: params.flightNumber }, [], 0);
-    if (!flight) return { title: "Vuelo no encontrado | Venezuela Voyages" };
+    if (!flight) return { title: "Flight not found | Venezuela Voyages" };
     return {
-      title: `Vuelo ${flight.flightNumber} - ${flight.departureCity} a ${flight.arrivalCity} | Venezuela Voyages`,
-      description: `Vuelo ${flight.flightNumber} de ${flight.departureCity} a ${flight.arrivalCity}. Reserva con Venezuela Voyages.`,
+      title: `Flight ${flight.flightNumber} - ${flight.departureCity} to ${flight.arrivalCity} | Venezuela Voyages`,
+      description: `Flight ${flight.flightNumber} from ${flight.departureCity} to ${flight.arrivalCity}. Book with Venezuela Voyages.`,
     };
   } catch {
-    return { title: "Vuelo | Venezuela Voyages" };
+    return { title: "Flight | Venezuela Voyages" };
   }
 }
 

@@ -11,7 +11,7 @@ export function FooterWhatsAppLink() {
     e.preventDefault();
     requestCapture({
       action: "whatsapp",
-      whatsappMessage: "Hola, estoy interesado en sus servicios de viajes.",
+      whatsappMessage: "Hi, I'm interested in your travel services.",
       trackingData: {
         source: "web_form",
         interest_type: "other",
@@ -34,7 +34,7 @@ export function FooterWhatsAppLink() {
         onOpenChange={setModalOpen}
         onSubmit={handleLeadSubmit}
         trackingData={trackingData}
-        triggerLabel="Continuar a WhatsApp"
+        triggerLabel="Continue to WhatsApp"
       />
     </>
   );

@@ -5,10 +5,10 @@ import { getRecentSearches } from "@/lib/services";
 import { RecentSearches } from "@/components/sections/RecentSearches";
 
 export const metadata = {
-  title: "Vuelos | Venezuela Voyages",
+  title: "Flights | Venezuela Voyages",
   description:
-    "Busca y reserva vuelos nacionales e internacionales con Venezuela Voyages. Encuentra las mejores tarifas y destinos.",
-  keywords: ["vuelos", "vuelos baratos", "vuelos venezuela", "reservar vuelos", "venezuela voyages"],
+    "Search and book domestic and international flights with Venezuela Voyages. Find the best fares and destinations.",
+  keywords: ["flights", "cheap flights", "venezuela flights", "book flights", "venezuela voyages"],
 };
 
 export default async function Flights() {

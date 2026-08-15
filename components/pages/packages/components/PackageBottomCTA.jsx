@@ -11,7 +11,7 @@ export function PackageBottomCTA({ packageName, displayPrice }) {
   function handleClick() {
     requestCapture({
       action: "whatsapp",
-      whatsappMessage: `Hola! Estoy interesado en el paquete "${packageName}". Me gustaría recibir más información y cotización.`,
+      whatsappMessage: `Hi! I'm interested in the "${packageName}" package. I'd like more information and a quote.`,
       trackingData: {
         source: "web_form",
         interest_type: "package",
@@ -27,7 +27,7 @@ export function PackageBottomCTA({ packageName, displayPrice }) {
   return (
     <>
       <Button size="lg" className="min-w-[200px]" onClick={handleClick}>
-        Reservar {packageName}
+        Book {packageName}
       </Button>
 
       <LeadCaptureModal
@@ -35,7 +35,7 @@ export function PackageBottomCTA({ packageName, displayPrice }) {
         onOpenChange={setModalOpen}
         onSubmit={handleLeadSubmit}
         trackingData={trackingData}
-        triggerLabel="Continuar a WhatsApp"
+        triggerLabel="Continue to WhatsApp"
       />
     </>
   );

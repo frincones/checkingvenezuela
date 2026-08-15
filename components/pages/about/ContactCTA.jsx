@@ -11,7 +11,7 @@ export function ContactCTA() {
     e.preventDefault();
     requestCapture({
       action: "whatsapp",
-      whatsappMessage: "Hola, los contacto desde la página About. Estoy interesado en sus servicios de viajes.",
+      whatsappMessage: "Hi, I'm reaching out from the About page. I'm interested in your travel services.",
       trackingData: {
         source: "web_form",
         interest_type: "other",
@@ -41,7 +41,7 @@ export function ContactCTA() {
         onOpenChange={setModalOpen}
         onSubmit={handleLeadSubmit}
         trackingData={trackingData}
-        triggerLabel="Continuar a WhatsApp"
+        triggerLabel="Continue to WhatsApp"
       />
     </>
   );

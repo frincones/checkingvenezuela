@@ -12,7 +12,7 @@ export function WhatsAppButton() {
     e.preventDefault();
     requestCapture({
       action: "whatsapp",
-      whatsappMessage: "Hola, estoy interesado en sus servicios de viajes.",
+      whatsappMessage: "Hi, I'm interested in your travel services.",
       trackingData: {
         source: "whatsapp",
         interest_type: "other",
@@ -25,7 +25,7 @@ export function WhatsAppButton() {
     <>
       <button
         onClick={handleClick}
-        aria-label="Contactar por WhatsApp"
+        aria-label="Contact us on WhatsApp"
         className="fixed bottom-6 right-6 z-50 flex h-14 w-14 items-center justify-center rounded-full bg-[#25D366] text-white shadow-lg transition-all duration-300 hover:scale-110 hover:bg-[#128C7E] hover:shadow-xl focus:outline-none focus:ring-2 focus:ring-[#25D366] focus:ring-offset-2"
       >
         <MessageCircle className="h-7 w-7" />
@@ -39,7 +39,7 @@ export function WhatsAppButton() {
         onOpenChange={setModalOpen}
         onSubmit={handleLeadSubmit}
         trackingData={trackingData}
-        triggerLabel="Continuar a WhatsApp"
+        triggerLabel="Continue to WhatsApp"
       />
     </>
   );

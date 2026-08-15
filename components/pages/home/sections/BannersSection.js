@@ -58,7 +58,7 @@ function BannerCard({ banner, className = "" }) {
         )}
         {banner.link_url && (
           <span className="mt-3 inline-block rounded-lg bg-white px-5 py-2 text-xs font-semibold text-gray-900 shadow-md transition-colors hover:bg-gray-100 md:text-sm">
-            {banner.link_label || "Ver más"}
+            {banner.link_label || "Learn more"}
           </span>
         )}
       </div>
@@ -187,7 +187,7 @@ function SidebarBannerCard({ banner }) {
         )}
         {banner.link_url && (
           <span className="mt-2 rounded bg-white/90 px-3 py-1 text-[10px] font-semibold text-gray-900">
-            {banner.link_label || "Ver más"}
+            {banner.link_label || "Learn more"}
           </span>
         )}
       </div>
