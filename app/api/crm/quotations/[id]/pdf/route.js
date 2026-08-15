@@ -16,6 +16,7 @@ import { createClient, createAdminClient } from "@/lib/db/supabase/server";
 import { NextResponse } from "next/server";
 import { PDFDocument, StandardFonts } from "pdf-lib";
 import { readFileSync } from "fs";
+import QRCode from "qrcode";
 import { join } from "path";
 import {
   PAGE_W, PAGE_H, PAD, MARGIN_L, MARGIN_R, CONTENT_W, FOOTER_H,
@@ -712,7 +713,50 @@ function drawSimpleTable(doc, page, y, q, fonts) {
 
 // ── MAIN GENERATOR ──
 
-async function generatePDF(q) {
+const amountLabel = (q) =>
+  q?.total != null
+    ? `Amount due: ${Number(q.total).toLocaleString("en-US", { style: "currency", currency: "USD" })}`
+    : "";
+
+/**
+ * Bloque de pago con QR (D3).
+ *
+ * Se usa la librería local `qrcode` en lugar del endpoint de PayPal: este
+ * devuelve multipart/form-data (más código para parsearlo) y añade una llamada
+ * de red. `qrcode` ya es dependencia del proyecto y produce un PNG que pdf-lib
+ * embebe directamente.
+ */
+async function drawPaymentQR(doc, page, y, paymentUrl, amountText, fonts, logoImage) {
+  if (!paymentUrl) return { page, y };
+
+  const BLOCK_H = 170;
+  if (y < BLOCK_H + 60) {
+    page = doc.addPage([PAGE_W, PAGE_H]);
+    if (typeof drawFooter === "function") drawFooter(page, fonts, logoImage);
+    y = PAGE_H - 60;
+  }
+
+  const dataUrl = await QRCode.toDataURL(paymentUrl, { width: 320, margin: 1 });
+  const png = await doc.embedPng(Buffer.from(dataUrl.split(",")[1], "base64"));
+  const size = 108;
+
+  page.drawText("Pay online", { x: PAD, y: y - 18, size: 14, font: fonts.bold });
+  page.drawText(
+    "Scan this code with your phone camera to pay securely with PayPal,",
+    { x: PAD, y: y - 36, size: 9, font: fonts.reg },
+  );
+  page.drawText("credit or debit card. No PayPal account required.", {
+    x: PAD, y: y - 48, size: 9, font: fonts.reg,
+  });
+  if (amountText) {
+    page.drawText(amountText, { x: PAD, y: y - 70, size: 12, font: fonts.bold });
+  }
+  page.drawImage(png, { x: PAGE_W - PAD - size, y: y - 48 - size, width: size, height: size });
+
+  return { page, y: y - BLOCK_H };
+}
+
+async function generatePDF(q, paymentUrl = null) {
   const doc = await PDFDocument.create();
   const reg = await doc.embedFont(StandardFonts.Helvetica);
   const bold = await doc.embedFont(StandardFonts.HelveticaBold);
@@ -731,6 +775,7 @@ async function generatePDF(q) {
     ({ page, y } = drawSimpleTable(doc, page, y, q, fonts));
     ({ page, y } = drawNotes(doc, page, y, q, fonts));
     ({ page, y } = drawPolicies(doc, page, y, fonts));
+    ({ page, y } = await drawPaymentQR(doc, page, y, paymentUrl, amountLabel(q), fonts, logo));
   } else {
     for (const item of enriched) {
       let page = doc.addPage([PAGE_W, PAGE_H]);
@@ -753,10 +798,32 @@ async function generatePDF(q) {
       ({ page, y } = drawConditions(doc, page, y, q, fonts, logo));
       ({ page, y } = drawNotes(doc, page, y, q, fonts, logo));
       ({ page, y } = drawPolicies(doc, page, y, fonts, logo));
+      ({ page, y } = await drawPaymentQR(doc, page, y, paymentUrl, amountLabel(q), fonts, logo));
     }
   }
 
   return Buffer.from(await doc.save());
+}
+
+/**
+ * URL de pago vigente de la cotización, para el QR.
+ *
+ * Devuelve null si no hay cobro o si la tabla aún no existe (migración sin
+ * aplicar): el PDF se genera igual, simplemente sin bloque de pago.
+ */
+async function getPaymentUrl(admin, quotationId) {
+  try {
+    const { data, error } = await admin
+      .from("payment_links")
+      .select("url, status")
+      .eq("quotation_id", quotationId)
+      .in("status", ["created", "sent", "viewed", "partially_paid"])
+      .maybeSingle();
+    if (error || !data) return null;
+    return data.url;
+  } catch {
+    return null;
+  }
 }
 
 // ── ROUTE HANDLERS ──
@@ -775,7 +842,8 @@ export async function GET(request, { params }) {
       .eq("id", id).single();
     if (error || !q) return NextResponse.json({ error: "Cotizacion no encontrada" }, { status: 404 });
 
-    const pdf = await generatePDF(q);
+    const paymentUrl = await getPaymentUrl(admin, id);
+    const pdf = await generatePDF(q, paymentUrl);
     const fileName = `quotations/${q.quotation_number}.pdf`;
 
     const { error: upErr } = await admin.storage.from("documents").upload(fileName, pdf, { contentType: "application/pdf", upsert: true });
@@ -810,7 +878,8 @@ export async function POST(request, { params }) {
       .eq("id", id).single();
     if (error || !q) return NextResponse.json({ error: "Cotizacion no encontrada" }, { status: 404 });
 
-    const pdf = await generatePDF(q);
+    const paymentUrl = await getPaymentUrl(admin, id);
+    const pdf = await generatePDF(q, paymentUrl);
     const fileName = `quotations/${q.quotation_number}.pdf`;
 
     const { data: upData, error: upErr } = await admin.storage.from("documents").upload(fileName, pdf, { contentType: "application/pdf", upsert: true });
