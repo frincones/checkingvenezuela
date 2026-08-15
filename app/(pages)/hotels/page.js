@@ -7,10 +7,10 @@ import { getRecentSearches } from "@/lib/services";
 import { PopularHotelDestinations } from "@/components/pages/hotels/sections/PopularHotelDestinations";
 
 export const metadata = {
-  title: "Hoteles | Venezuela Voyages",
+  title: "Hotels | Venezuela Voyages",
   description:
-    "Encuentra y reserva los mejores hoteles en Venezuela y el mundo. Alojamiento para todos los presupuestos con Venezuela Voyages.",
-  keywords: ["hoteles", "reservar hotel", "hoteles venezuela", "alojamiento", "venezuela voyages"],
+    "Find and book the best hotels in Venezuela and worldwide. Accommodation for every budget with Venezuela Voyages.",
+  keywords: ["hotels", "book hotel", "venezuela hotels", "accommodation", "venezuela voyages"],
 };
 
 export default async function HotelsPage() {

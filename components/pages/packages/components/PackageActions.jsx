@@ -16,7 +16,7 @@ export function PackageActions({ packageName, whatsappMessage, shareUrl, display
       try {
         await navigator.share({
           title: packageName,
-          text: `Mira este paquete turístico: ${packageName}`,
+          text: `Check out this travel package: ${packageName}`,
           url: shareUrl,
         });
       } catch (error) {
@@ -38,7 +38,7 @@ export function PackageActions({ packageName, whatsappMessage, shareUrl, display
       action: "whatsapp",
       whatsappMessage:
         whatsappMessage ||
-        `Hola! Estoy interesado en el paquete "${packageName}". Me gustaría recibir más información y cotización.`,
+        `Hi! I'm interested in the "${packageName}" package. I'd like more information and a quote.`,
       trackingData: {
         source: "web_form",
         interest_type: "package",
@@ -60,14 +60,14 @@ export function PackageActions({ packageName, whatsappMessage, shareUrl, display
           onClick={handleShare}
         >
           <Share2 className="mr-2 h-4 w-4" />
-          {copied ? "Copiado!" : "Compartir"}
+          {copied ? "Copied!" : "Share"}
         </Button>
         <Button
           size="lg"
           className="flex-1 lg:min-w-[200px]"
           onClick={handleReserve}
         >
-          Reservar Ahora
+          Book now
         </Button>
       </div>
 
@@ -76,7 +76,7 @@ export function PackageActions({ packageName, whatsappMessage, shareUrl, display
         onOpenChange={setModalOpen}
         onSubmit={handleLeadSubmit}
         trackingData={trackingData}
-        triggerLabel="Continuar a WhatsApp"
+        triggerLabel="Continue to WhatsApp"
       />
     </>
   );

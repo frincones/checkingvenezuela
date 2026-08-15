@@ -41,6 +41,9 @@ export async function POST(request) {
 
     const result = await ingestKbAction({
       type: body.type,
+      // El catálogo está en inglés desde el flip; sin esto ingestKbAction
+      // vuelve a etiquetar los ~50 documentos como `es` en cada re-sync.
+      language: body.language || "en",
       url: body.url,
       name: body.name,
       language: body.language || "es",

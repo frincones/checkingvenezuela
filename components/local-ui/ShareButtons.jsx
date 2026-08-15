@@ -136,8 +136,8 @@ export default function ShareButtons({ title, url, className = "" }) {
           type="button"
           onClick={handleCopy}
           className="inline-flex items-center gap-2 rounded-full bg-gray-100 px-3 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-200 sm:px-4"
-          title="Copiar enlace"
-          aria-label="Copiar enlace"
+          title="Copy link"
+          aria-label="Copy link"
         >
           {copied ? (
             <Check className="h-5 w-5 text-green-500" />
@@ -145,27 +145,27 @@ export default function ShareButtons({ title, url, className = "" }) {
             <Link2 className="h-5 w-5" />
           )}
           <span className="hidden sm:inline">
-            {copied ? "Copiado" : "Copiar link"}
+            {copied ? "Copied" : "Copy link"}
           </span>
         </button>
         <button
           type="button"
           onClick={handleMore}
           className="inline-flex items-center gap-2 rounded-full bg-gray-100 px-3 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-200 sm:px-4"
-          title="Más opciones"
-          aria-label="Más opciones para compartir"
+          title="More options"
+          aria-label="More sharing options"
         >
           <MoreHorizontal className="h-5 w-5" />
-          <span className="hidden sm:inline">Más</span>
+          <span className="hidden sm:inline">More</span>
         </button>
       </div>
 
       <Dialog open={moreOpen} onOpenChange={setMoreOpen}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle>Compartir</DialogTitle>
+            <DialogTitle>Share</DialogTitle>
             <DialogDescription>
-              Elige dónde quieres compartir este contenido.
+              Choose where you want to share this content.
             </DialogDescription>
           </DialogHeader>
           <div className="grid grid-cols-2 gap-3 pt-2">

@@ -62,11 +62,15 @@ export default async function sitemap() {
   // Dynamic: individual packages
   let packagePages = [];
   try {
+    // `slug` existe desde la migración 20260814_inventory_slug.sql. Antes de
+    // ella esta query fallaba entera y los paquetes quedaban FUERA del sitemap.
+    // El .not(slug, is, null) evita emitir /packages/null si algún backfill falta.
     const { data: packages } = await adminClient
       .from("service_inventory")
       .select("slug, updated_at")
       .eq("is_published", true)
       .eq("product_type", "package")
+      .not("slug", "is", null)
       .neq("status", "discontinued");
 
     if (packages) {

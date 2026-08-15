@@ -1,9 +1,9 @@
 import "../privacy-policy/privacy-policy.css";
 
 export const metadata = {
-  title: "Política de Devolución y Reembolso | Venezuela Voyages",
+  title: "Return & Refund Policy | Venezuela Voyages",
   description:
-    "Conoce nuestra política de devolución y reembolso. Información sobre cancelaciones, cambios y reembolsos en Venezuela Voyages.",
+    "Read our return and refund policy. Information about cancellations, changes and refunds at Venezuela Voyages.",
 };
 
 export default function ReturnPolicyPage() {
@@ -12,109 +12,107 @@ export default function ReturnPolicyPage() {
       id="privacy-policy-container"
       className="mx-auto w-[90%] lg:mb-[80px] mb-[40px] mt-5"
     >
-      <h1>Política de Devolución y Reembolso</h1>
+      <h1>Return &amp; Refund Policy</h1>
       <p>
         <strong>Venezuela Voyages</strong>
       </p>
 
       <p>
-        Venezuela Voyages actúa únicamente como intermediario en la organización
-        de viajes. Su función es coordinar los servicios de transporte,
-        alojamiento y actividades turísticas ofrecidos por terceros, como líneas
-        aéreas, hoteles y agencias de turismo. Venezuela Voyages no tiene
-        control sobre estas empresas y, por lo tanto, no se responsabiliza por
-        daños, demoras u otros inconvenientes derivados de los servicios de
-        terceros. La agencia organiza los servicios en nombre de sus clientes y
-        se reserva el derecho de aceptar o rechazar reservas y de modificar o
-        cancelar servicios según las circunstancias.
+        Venezuela Voyages acts solely as an intermediary in organizing travel.
+        Its role is to coordinate the transport, accommodation and tourism
+        services offered by third parties, such as airlines, hotels and tour
+        operators. Venezuela Voyages has no control over these companies and is
+        therefore not liable for damages, delays or other inconveniences arising
+        from third-party services. The agency arranges services on behalf of its
+        clients and reserves the right to accept or decline bookings and to
+        modify or cancel services as circumstances require.
       </p>
 
-      <h2>Precios y Tarifas</h2>
+      <h2>Prices and Rates</h2>
       <p>
-        Los precios están expresados en dólares y pueden cambiar sin previo
-        aviso hasta que se confirme el pago. Incluyen alojamiento en habitación
-        y los servicios especificados, pero no cubren extras como alimentos no
-        especificados, propinas, exceso de equipaje, trámites migratorios u
-        otros conceptos no detallados en el programa.
+        Prices are quoted in US dollars and may change without prior notice
+        until payment is confirmed. They include room accommodation and the
+        services specified, but do not cover extras such as meals not specified,
+        gratuities, excess baggage, immigration procedures or any other item not
+        detailed in the programme.
       </p>
 
-      <h2>Itinerario</h2>
+      <h2>Itinerary</h2>
       <p>
-        Aunque los itinerarios se planifican cuidadosamente, pueden ser
-        modificados debido a factores operacionales como condiciones climáticas
-        u horarios de transporte. Los cambios se realizan para asegurar el mejor
-        desarrollo del viaje y pueden no ser notificados con antelación.
+        Although itineraries are planned carefully, they may be modified due to
+        operational factors such as weather conditions or transport schedules.
+        Changes are made to ensure the best possible running of the trip and may
+        not be notified in advance.
       </p>
 
-      <h2>Reservaciones y Pagos</h2>
+      <h2>Bookings and Payments</h2>
       <p>
-        Las reservas se confirman al recibir el pago total. Los pagos deben
-        completarse 60 días antes de la llegada. Cualquier cambio o adición de
-        servicios durante el viaje se paga directamente por el pasajero.
+        Bookings are confirmed upon receipt of full payment. Payments must be
+        completed 60 days before arrival. Any change or addition of services
+        during the trip is paid directly by the traveller.
       </p>
 
-      <h2>Métodos de Pago</h2>
+      <h2>Payment Methods</h2>
       <p>
-        Los pagos se pueden realizar mediante depósito, transferencia bancaria o
-        directamente en el sitio web de Venezuela Voyages.
+        Payments can be made by deposit, bank transfer or directly on the
+        Venezuela Voyages website.
       </p>
 
-      <h2>Documentación</h2>
+      <h2>Documentation</h2>
       <p>
-        Los pasajeros deben tener su pasaporte y visas vigentes. Se requiere
-        información personal como nombre completo, número de pasaporte,
-        nacionalidad, edad y sexo, así como cualquier condición médica o
-        preferencia alimentaria.
+        Travellers must hold a valid passport and visas. Personal information is
+        required, including full name, passport number, nationality, age and
+        gender, as well as any medical condition or dietary preference.
       </p>
 
-      <h2>Política de Reembolsos y Devoluciones</h2>
+      <h2>Refund and Return Policy</h2>
 
-      <h3>Anticipo y Servicios No Utilizados</h3>
+      <h3>Deposit and Unused Services</h3>
       <p>
-        El anticipo pagado no es reembolsable bajo ninguna circunstancia. Los
-        servicios no utilizados por los pasajeros tampoco son reembolsables.
+        The deposit paid is non-refundable under any circumstances. Services not
+        used by travellers are likewise non-refundable.
       </p>
 
-      <h3>No Presentación y Cancelaciones</h3>
+      <h3>No-Shows and Cancellations</h3>
       <p>
-        No se concede reembolso en caso de no presentación del pasajero o
-        cancelación durante el viaje. Tampoco se reembolsarán partes de
-        servicios turísticos no utilizadas.
+        No refund is granted in the event of a traveller no-show or cancellation
+        during the trip. Unused portions of tourism services will not be
+        refunded either.
       </p>
 
-      <h3>Cambios y Modificaciones</h3>
+      <h3>Changes and Modifications</h3>
       <p>
-        Los cambios de nombre, fecha, hora, itinerario o cancelaciones pueden
-        incurrir en cargos adicionales, sujetos a las condiciones del servicio.
-        En casos extremos, como enfermedad o fallecimiento, las cancelaciones y
-        reembolsos estarán sujetos a las condiciones de la tarifa o servicio
-        comprado y a las políticas del proveedor.
+        Changes of name, date, time or itinerary, as well as cancellations, may
+        incur additional charges subject to the conditions of the service. In
+        extreme cases such as illness or death, cancellations and refunds will
+        be subject to the conditions of the fare or service purchased and to the
+        provider&apos;s policies.
       </p>
 
-      <h3>Servicios Aéreos y Otros Servicios</h3>
+      <h3>Air and Other Services</h3>
       <p>
-        Las cancelaciones de servicios turísticos que incluyan transporte aéreo,
-        en bus o tren ya emitidos no son reembolsables. En su lugar, se puede
-        ofrecer un boleto abierto con vigencia de un año desde la fecha de
-        emisión. Ciertos servicios pueden ser interrumpidos o cancelados por
-        condiciones climáticas, disturbios u otras razones fuera del control de
-        Venezuela Voyages o los proveedores de servicios. En estos casos, no se
-        otorgará reembolso.
+        Cancellations of tourism services that include air, bus or rail
+        transport already issued are non-refundable. Instead, an open ticket
+        valid for one year from the date of issue may be offered. Certain
+        services may be interrupted or cancelled due to weather conditions,
+        civil disturbance or other reasons beyond the control of Venezuela
+        Voyages or the service providers. No refund will be granted in these
+        cases.
       </p>
 
-      <h3>Restricciones de Viaje</h3>
+      <h3>Travel Restrictions</h3>
       <p>
-        En caso de cancelación debido a restricciones de viaje al país de
-        destino, el boleto emitido quedará abierto con vigencia de un año a
-        partir de la fecha de emisión. Este boleto es intransferible e
-        intercambiable. Si la cancelación ocurre después de la fecha de vigencia
-        de la tarifa, el depósito no será reembolsable y estará sujeto a las
-        políticas de cancelación de la aerolínea o proveedor correspondiente.
+        In the event of cancellation due to travel restrictions to the
+        destination country, the issued ticket will remain open and valid for
+        one year from the date of issue. This ticket is non-transferable and
+        non-exchangeable. If the cancellation occurs after the fare validity
+        date, the deposit will be non-refundable and subject to the cancellation
+        policies of the corresponding airline or provider.
       </p>
 
-      <h2>Contacto</h2>
+      <h2>Contact</h2>
       <p>
-        Para cualquier consulta sobre esta política, contáctanos en:{" "}
+        For any question about this policy, contact us at:{" "}
         <strong>
           <a href="mailto:info@venezuelavoyages.com">
             info@venezuelavoyages.com
@@ -122,7 +120,7 @@ export default function ReturnPolicyPage() {
         </strong>
       </p>
       <p>
-        Teléfono:{" "}
+        Phone:{" "}
         <strong>
           <a href="tel:+584264034052">+58 426 4034052</a>
         </strong>

@@ -47,12 +47,12 @@ export async function FeaturedPackages() {
     <section className="mx-auto mb-[80px]">
       <div className="mb-[20px] flex items-center justify-between max-md:flex-col max-md:gap-[16px] md:mb-[40px]">
         <SectionTitle
-          title="Paquetes Turísticos Destacados"
-          subTitle="Descubre nuestros paquetes más populares con todo incluido"
+          title="Featured Travel Packages"
+          subTitle="Discover our most popular all-inclusive packages"
         />
         <Button asChild variant="outline">
           <Link href="/packages">
-            Ver todos los paquetes
+            View all packages
           </Link>
         </Button>
       </div>

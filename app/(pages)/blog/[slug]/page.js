@@ -98,14 +98,14 @@ export async function generateMetadata(props) {
     description:
       post.meta_description ||
       post.excerpt ||
-      `Lee ${post.title} en el blog de Venezuela Voyages.`,
+      `Read ${post.title} on the Venezuela Voyages blog.`,
     keywords,
     openGraph: {
       title: post.title,
       description: post.excerpt || post.meta_description,
       images: post.cover_image ? [post.cover_image] : [],
       type: "article",
-      locale: "es_VE",
+      locale: "en_VE",
       publishedTime: post.published_at,
       authors: post.author_name ? [post.author_name] : [],
     },
@@ -182,7 +182,7 @@ export default async function BlogPostPage(props) {
           )}
           <span className="flex items-center gap-1.5 text-sm text-gray-500">
             <Clock className="h-4 w-4" />
-            {readTime} min de lectura
+            {readTime} min read
           </span>
         </div>
 
@@ -232,7 +232,7 @@ export default async function BlogPostPage(props) {
 
         {/* Share buttons */}
         <div className="mt-8 border-t border-gray-100 pt-8">
-          <p className="mb-4 text-sm font-semibold text-gray-500">Compartir este artículo</p>
+          <p className="mb-4 text-sm font-semibold text-gray-500">Share this article</p>
           <ShareButtons title={post.title} url={postUrl} />
         </div>
 
@@ -274,15 +274,15 @@ export default async function BlogPostPage(props) {
 
         {/* CTA */}
         <div className="mt-12 rounded-2xl bg-gradient-to-r from-[#0A1A44] to-[#0A1A44]/90 p-8 text-center text-white md:p-10">
-          <h2 className="text-2xl font-extrabold md:text-3xl">¿Listo para viajar?</h2>
+          <h2 className="text-2xl font-extrabold md:text-3xl">Ready to travel?</h2>
           <p className="mx-auto mt-3 max-w-md text-white/70">
-            Déjanos ayudarte a planificar tu próxima aventura por Venezuela.
+            Let us help you plan your next adventure through Venezuela.
           </p>
           <div className="mt-6 flex justify-center">
             <DualCTA
               onlineEnabled={false}
               quoteLabel="Planificar mi viaje"
-              quoteMessage="Hola, acabo de leer un artículo del blog y me interesa planificar un viaje."
+              quoteMessage="Hi, I just read an article on your blog and I'd like to plan a trip."
               trackingData={{
                 interest_type: "blog_cta",
                 interest_details: { post_slug: post.slug, post_title: post.title },
@@ -297,7 +297,7 @@ export default async function BlogPostPage(props) {
         <section className="border-t border-gray-100 bg-white px-4 py-16">
           <div className="mx-auto max-w-6xl">
             <h2 className="mb-8 text-center text-2xl font-bold text-gray-900">
-              Artículos Relacionados
+              Related Articles
             </h2>
             <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
               {relatedPosts.map((rp) => (
@@ -351,7 +351,7 @@ export default async function BlogPostPage(props) {
           className="inline-flex items-center gap-2 text-sm font-semibold text-[#0A1A44] transition-colors hover:text-[#0A1A44]/70"
         >
           <ArrowLeft className="h-4 w-4" />
-          Volver al blog
+          Back to blog
         </Link>
       </div>
     </main>

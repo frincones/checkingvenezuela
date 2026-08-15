@@ -24,24 +24,24 @@ import {
 
 export async function generateMetadata({ params }) {
   const pkg = await getPackageBySlug(params.slug);
-  if (!pkg) return { title: "Paquete no encontrado | Venezuela Voyages" };
-  const price = pkg.sale_price ? `desde $${pkg.sale_price}` : "";
+  if (!pkg) return { title: "Package not found | Venezuela Voyages" };
+  const price = pkg.sale_price ? `from $${pkg.sale_price}` : "";
   const destName = pkg.destination?.name || "";
   const fallbackDesc = price
-    ? `${pkg.name} ${price}. ${pkg.description || `Paquete turístico en ${destName}. Reserva con Venezuela Voyages.`}`
-    : pkg.description || `Descubre el paquete ${pkg.name}. Reserva con Venezuela Voyages.`;
+    ? `${pkg.name} ${price}. ${pkg.description || `Travel package in ${destName}. Book with Venezuela Voyages.`}`
+    : pkg.description || `Discover the ${pkg.name} package. Book with Venezuela Voyages.`;
   const title = pkg.meta_title || `${pkg.name} | Venezuela Voyages`;
   const description = (pkg.meta_description || fallbackDesc).slice(0, 160);
   const tags = pkg.details?.tags || pkg.destination?.tags || [];
   return {
     title,
     description,
-    keywords: ["paquete turístico", pkg.name, destName, "venezuela voyages", ...tags].filter(Boolean),
+    keywords: ["travel package", pkg.name, destName, "venezuela voyages", ...tags].filter(Boolean),
     openGraph: {
       title,
       description,
       images: pkg.images?.[0] ? [pkg.images[0]] : [],
-      locale: "es_VE",
+      locale: "en_VE",
     },
   };
 }
@@ -72,7 +72,7 @@ export default async function PackageDetailPage({ params }) {
   // WhatsApp configuration
   const phoneNumber = "584264034052";
   const whatsappMessage = encodeURIComponent(
-    `Hola! Estoy interesado en el paquete "${packageData.name}". Me gustaría recibir más información y cotización. Precio visto: ${formatCurrency(displayPrice)}`
+    `Hi! I'm interested in the "${packageData.name}" package. I'd like more information and a quote. Price shown: ${formatCurrency(displayPrice)}`
   );
   const whatsappUrl = `https://wa.me/${phoneNumber}?text=${whatsappMessage}`;
 
@@ -90,7 +90,7 @@ export default async function PackageDetailPage({ params }) {
           <div className="mb-4 flex items-center gap-3">
             <PackageIcon className="h-6 w-6 text-primary" />
             <span className="rounded-full bg-primary/10 px-3 py-1 text-sm font-medium text-primary">
-              Paquete Turístico
+              Travel Package
             </span>
           </div>
 
@@ -130,7 +130,7 @@ export default async function PackageDetailPage({ params }) {
 
           <PackageActions
             packageName={packageData.name}
-            whatsappMessage={`Hola! Estoy interesado en el paquete "${packageData.name}". Me gustaría recibir más información y cotización. Precio visto: ${formatCurrency(displayPrice)}`}
+            whatsappMessage={`Hi! I'm interested in the "${packageData.name}" package. I'd like more information and a quote. Price shown: ${formatCurrency(displayPrice)}`}
             shareUrl={shareUrl}
             displayPrice={displayPrice}
           />
@@ -168,7 +168,7 @@ export default async function PackageDetailPage({ params }) {
       {packageData.description && (
         <>
           <div className="mb-8">
-            <h2 className="mb-4 text-2xl font-bold">Descripción del Paquete</h2>
+            <h2 className="mb-4 text-2xl font-bold">Package description</h2>
             <p className="whitespace-pre-line text-gray-700 leading-relaxed">
               {packageData.description}
             </p>
@@ -196,16 +196,16 @@ export default async function PackageDetailPage({ params }) {
       {/* Additional Details */}
       {details.schedule && (
         <div className="mb-8">
-          <h2 className="mb-4 text-2xl font-bold">Horarios</h2>
+          <h2 className="mb-4 text-2xl font-bold">Schedule</h2>
           <div className="rounded-lg bg-gray-50 p-6">
             {details.schedule.departure && (
               <div className="mb-3">
-                <span className="font-semibold">Salida:</span> {details.schedule.departure}
+                <span className="font-semibold">Departure:</span> {details.schedule.departure}
               </div>
             )}
             {details.schedule.return && (
               <div>
-                <span className="font-semibold">Retorno:</span> {details.schedule.return}
+                <span className="font-semibold">Return:</span> {details.schedule.return}
               </div>
             )}
           </div>
@@ -214,9 +214,9 @@ export default async function PackageDetailPage({ params }) {
 
       {/* CTA Section */}
       <div className="mt-12 rounded-xl bg-primary/5 p-8 text-center">
-        <h3 className="mb-4 text-2xl font-bold">¿Listo para tu aventura?</h3>
+        <h3 className="mb-4 text-2xl font-bold">Ready for your adventure?</h3>
         <p className="mb-6 text-gray-600">
-          Reserva ahora y asegura tu lugar en esta experiencia única
+          Book now and secure your place on this unique experience
         </p>
         <PackageBottomCTA packageName={packageData.name} displayPrice={displayPrice} />
       </div>

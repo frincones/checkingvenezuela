@@ -55,7 +55,7 @@ export async function LatestBlogPosts() {
           href="/blog"
           className="group hidden items-center gap-2 rounded-full bg-primary/10 px-5 py-2.5 text-sm font-semibold text-primary transition-colors hover:bg-primary hover:text-white sm:inline-flex"
         >
-          Ver todos
+          View all
           <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
         </Link>
       </div>
@@ -115,7 +115,7 @@ export async function LatestBlogPosts() {
           href="/blog"
           className="inline-flex items-center gap-2 rounded-full bg-primary/10 px-5 py-2.5 text-sm font-semibold text-primary"
         >
-          Ver todos los artículos
+          View all articles
           <ArrowRight className="h-4 w-4" />
         </Link>
       </div>

@@ -44,17 +44,17 @@ import routes from "@/data/routes.json";
 export async function generateMetadata({ params }) {
   try {
     const hotel = await getHotel(params.slug);
-    if (!hotel) return { title: "Hotel no encontrado | Venezuela Voyages" };
+    if (!hotel) return { title: "Hotel not found | Venezuela Voyages" };
     return {
       title: `${hotel.name} | Venezuela Voyages`,
       description: hotel.description
         ? hotel.description.substring(0, 160)
-        : `Reserva ${hotel.name} con Venezuela Voyages. Alojamiento de calidad.`,
+        : `Book ${hotel.name} with Venezuela Voyages. Quality accommodation.`,
       openGraph: {
         title: `${hotel.name} | Venezuela Voyages`,
         description: hotel.description?.substring(0, 160) || `Hotel ${hotel.name}`,
         images: hotel.images?.[0] ? [hotel.images[0]] : [],
-        locale: "es_VE",
+        locale: "en_VE",
       },
     };
   } catch {

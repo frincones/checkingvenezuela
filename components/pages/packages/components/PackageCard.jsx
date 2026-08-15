@@ -11,7 +11,9 @@ export function PackageCard({ packageData, featured = false }) {
   const pricingDetails = packageData.pricing_details || {};
   const details = packageData.details || {};
 
-  const slug = generateSlug(packageData.name);
+  // La columna `slug` manda: es estable y sobrevive a la traducción del
+  // nombre. generateSlug solo cubre filas cuyo backfill aún no ha corrido.
+  const slug = packageData.slug || generateSlug(packageData.name);
 
   return (
     <article className={`group overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm transition-all hover:shadow-xl ${featured ? 'ring-2 ring-primary ring-offset-2' : ''}`}>
@@ -27,7 +29,7 @@ export function PackageCard({ packageData, featured = false }) {
         {featured && (
           <div className="absolute left-4 top-4 flex items-center gap-1 rounded-full bg-yellow-500 px-3 py-1 text-sm font-semibold text-white shadow-lg">
             <Star className="h-4 w-4 fill-current" />
-            <span>Destacado</span>
+            <span>Featured</span>
           </div>
         )}
 
@@ -76,7 +78,7 @@ export function PackageCard({ packageData, featured = false }) {
               <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
-              <span className="text-xs">Salida: {details.schedule.departure}</span>
+              <span className="text-xs">Departs: {details.schedule.departure}</span>
             </div>
           )}
         </div>
@@ -85,17 +87,17 @@ export function PackageCard({ packageData, featured = false }) {
         <div className="flex items-end justify-between border-t border-gray-100 pt-4">
           <div>
             <p className="text-xs text-gray-500">
-              {pricingDetails.display_text || "Desde"}
+              {pricingDetails.display_text || "From"}
             </p>
             <p className="text-2xl font-bold text-primary">
               {formatCurrency(displayPrice)}
             </p>
-            <p className="text-xs text-gray-500">por persona</p>
+            <p className="text-xs text-gray-500">per person</p>
           </div>
 
           <Button asChild size="sm">
             <Link href={`/packages/${slug}`}>
-              Ver Detalles
+              View details
             </Link>
           </Button>
         </div>

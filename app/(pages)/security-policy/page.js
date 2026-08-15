@@ -1,9 +1,9 @@
 import "../privacy-policy/privacy-policy.css";
 
 export const metadata = {
-  title: "Políticas de Seguridad | Venezuela Voyages",
+  title: "Security Policies | Venezuela Voyages",
   description:
-    "Conoce las políticas de seguridad de Venezuela Voyages. Protección de datos personales, cifrado SSL, cumplimiento PCI-DSS y más.",
+    "Learn about Venezuela Voyages' security policies. Personal data protection, SSL encryption, PCI-DSS compliance and more.",
 };
 
 export default function SecurityPolicyPage() {
@@ -12,84 +12,79 @@ export default function SecurityPolicyPage() {
       id="privacy-policy-container"
       className="mx-auto w-[90%] lg:mb-[80px] mb-[40px] mt-5"
     >
-      <h1>Políticas de Seguridad</h1>
+      <h1>Security Policies</h1>
       <p>
-        En <strong>Venezuela Voyages</strong>, la seguridad de tus datos
-        personales es una de nuestras principales prioridades. Implementamos
-        medidas avanzadas y seguimos las mejores prácticas de la industria para
-        garantizar que tu información esté protegida y que tu experiencia de
-        usuario sea segura.
+        At <strong>Venezuela Voyages</strong>, the security of your personal
+        data is one of our highest priorities. We implement advanced measures
+        and follow industry best practices to ensure your information is
+        protected and your experience as a user is safe.
       </p>
 
-      <h2>Seguridad del Sitio Web</h2>
+      <h2>Website Security</h2>
 
-      <h3>Protección de Información Personal</h3>
+      <h3>Protection of Personal Information</h3>
       <p>
-        Tomamos todas las medidas y precauciones razonables para proteger tu
-        información personal. Utilizamos tecnologías de cifrado avanzadas para
-        proteger la información que compartes con nosotros. Toda la información
-        de tu tarjeta de crédito es cifrada mediante la tecnología de capa de
-        puertos seguros (SSL), lo que garantiza que los datos transmitidos estén
-        protegidos contra accesos no autorizados. Además, almacenamos la
-        información con cifrado AES-256, un estándar de alta seguridad que
-        asegura tus datos en reposo.
+        We take every reasonable measure and precaution to protect your personal
+        information. We use advanced encryption technologies to protect the
+        information you share with us. All credit card information is encrypted
+        using Secure Sockets Layer (SSL) technology, which ensures that
+        transmitted data is protected against unauthorized access. In addition,
+        we store information using AES-256 encryption, a high-security standard
+        that keeps your data safe at rest.
       </p>
 
-      <h3>Cumplimiento de PCI-DSS</h3>
+      <h3>PCI-DSS Compliance</h3>
       <p>
-        Nos adherimos a todos los requisitos del Estándar de Seguridad de Datos
-        para la Industria de Tarjetas de Pago (PCI-DSS). Esto asegura que
-        manejamos la información de tu tarjeta de crédito de acuerdo con los
-        estándares de seguridad más rigurosos y actualizados.
+        We adhere to all requirements of the Payment Card Industry Data Security
+        Standard (PCI-DSS). This ensures that we handle your credit card
+        information in accordance with the most rigorous and up-to-date security
+        standards.
       </p>
 
-      <h2>Seguridad en Pagos</h2>
+      <h2>Payment Security</h2>
 
-      <h3>Métodos de Pago</h3>
+      <h3>Payment Methods</h3>
       <p>
-        Los métodos de pago utilizados por Venezuela Voyages son gestionados por
-        servicios de terceros. Estos servicios de terceros cumplen con todos los
-        estándares de seguridad y cifrado necesarios para mantener tu
-        información segura durante las transacciones.
+        The payment methods used by Venezuela Voyages are managed by third-party
+        services. These third-party services comply with all the security and
+        encryption standards required to keep your information safe during
+        transactions.
       </p>
 
-      <h3>Uso de la Información</h3>
+      <h3>Use of Information</h3>
       <p>
-        Los proveedores de pagos solo utilizarán la información necesaria para
-        completar el proceso de pago. No emplean la información para otros
-        fines. Recomendamos que revises las Políticas de Privacidad de estos
-        proveedores para entender cómo manejan y protegen la información que les
-        proporcionas.
+        Payment providers will only use the information necessary to complete
+        the payment process. They do not use the information for any other
+        purpose. We recommend reviewing the Privacy Policies of these providers
+        to understand how they handle and protect the information you give them.
       </p>
 
-      <h2>Recomendaciones de Seguridad</h2>
+      <h2>Security Recommendations</h2>
 
-      <h3>Medidas Adicionales</h3>
+      <h3>Additional Measures</h3>
       <p>
-        Además de nuestras prácticas de seguridad, te recomendamos adoptar
-        medidas adicionales para proteger tus datos, como utilizar contraseñas
-        seguras y evitar compartir información confidencial.
+        In addition to our security practices, we recommend adopting further
+        measures to protect your data, such as using strong passwords and
+        avoiding sharing confidential information.
       </p>
 
-      <h3>Contacto y Asistencia</h3>
+      <h3>Contact and Support</h3>
       <p>
-        Si tienes alguna pregunta sobre nuestras políticas de seguridad o
-        necesitas asistencia, no dudes en ponerte en contacto con nosotros a
-        través de nuestro correo electrónico de contacto:{" "}
+        If you have any questions about our security policies or need
+        assistance, please do not hesitate to contact us at our email address:{" "}
         <strong>
           <a href="mailto:info@venezuelavoyages.com">
             info@venezuelavoyages.com
           </a>
         </strong>
-        . Estamos aquí para ayudarte y resolver cualquier inquietud que puedas
-        tener.
+        . We are here to help and to resolve any concerns you may have.
       </p>
 
-      <h2>Actualizaciones</h2>
+      <h2>Updates</h2>
       <p>
-        Nos reservamos el derecho de actualizar nuestras políticas de seguridad
-        en cualquier momento. Cualquier cambio será publicado en esta página, y
-        te notificaremos adecuadamente sobre los cambios importantes.
+        We reserve the right to update our security policies at any time. Any
+        change will be published on this page, and we will notify you
+        appropriately about significant changes.
       </p>
     </div>
   );

@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/db/supabase/server";
 import { createAdminClient } from "@/lib/db/supabase/server";
+import { generateSlug } from "@/lib/packages/slug";
 
 // GET - Listar inventario
 export async function GET(request) {
@@ -120,6 +121,9 @@ export async function POST(request) {
       service_id: body.serviceId || body.service_id || null,
       destination_id: body.destinationId || body.destination_id || null,
       name: body.name,
+      // slug estable: se deriva del nombre AL CREAR, y a partir de ahí es
+      // independiente de él (traducir el nombre no debe cambiar la URL).
+      slug: body.slug || generateSlug(body.name) || null,
       sku: body.sku || null,
       description: body.description || null,
       product_type: productType,
@@ -157,7 +161,11 @@ export async function POST(request) {
     if (error) {
       console.error("Error creating inventory item:", error);
       if (error.code === "23505") {
-        return NextResponse.json({ error: "Ya existe un producto con ese SKU" }, { status: 409 });
+        const dupSlug = String(error.message || "").includes("idx_service_inventory_slug");
+        return NextResponse.json(
+          { error: dupSlug ? "Ya existe un producto con esa URL (slug)" : "Ya existe un producto con ese SKU" },
+          { status: 409 },
+        );
       }
       return NextResponse.json({ error: "Error al crear producto" }, { status: 500 });
     }

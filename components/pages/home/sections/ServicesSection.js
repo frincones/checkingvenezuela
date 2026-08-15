@@ -56,15 +56,15 @@ export async function ServicesSection() {
     <section className="mx-auto mb-[80px]">
       <div className="mb-[20px] md:mb-[40px]">
         <SectionTitle
-          title="Nuestros Servicios"
-          subTitle="Todo lo que necesitas para tu viaje perfecto"
+          title="Our Services"
+          subTitle="Everything you need for the perfect trip"
         />
       </div>
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
         {services.map((service) => {
           const IconComponent = iconMap[service.icon];
-          const whatsappMessage = `Hola, estoy interesado en cotizar: ${service.name}`;
+          const whatsappMessage = `Hi, I'd like a quote for: ${service.name}`;
 
           return (
             <Card
@@ -90,7 +90,7 @@ export async function ServicesSection() {
                 {/* Badge "Próximamente" */}
                 {service.comingSoon && (
                   <span className="mb-2 inline-block rounded-full bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-800">
-                    Próximamente
+                    Coming soon
                   </span>
                 )}
 
@@ -103,7 +103,7 @@ export async function ServicesSection() {
                   onlineComingSoon={service.comingSoon}
                   quoteEnabled={service.hasQuoteRequest}
                   quoteMessage={whatsappMessage}
-                  quoteLabel={`Cotizar ${service.name}`}
+                  quoteLabel={`Get a quote for ${service.name}`}
                   className="mt-auto"
                 />
               </CardContent>
