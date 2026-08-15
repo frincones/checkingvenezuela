@@ -5,6 +5,7 @@ import { Share2 } from "lucide-react";
 import { useState } from "react";
 import { useLeadCapture } from "@/hooks/useLeadCapture";
 import { LeadCaptureModal } from "@/components/ui/LeadCaptureModal";
+import { PaymentBadge } from "@/components/ui/PaymentBadge";
 
 export function PackageActions({ packageName, whatsappMessage, shareUrl, displayPrice }) {
   const [copied, setCopied] = useState(false);
@@ -70,6 +71,8 @@ export function PackageActions({ packageName, whatsappMessage, shareUrl, display
           Book now
         </Button>
       </div>
+
+      <PaymentBadge variant="inline" className="mt-3" />
 
       <LeadCaptureModal
         open={modalOpen}

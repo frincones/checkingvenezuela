@@ -81,6 +81,27 @@ node scripts/paypal/doctor.mjs     # debe salir todo en verde
 
 ---
 
+## Idioma de la factura
+
+**La API no permite fijarlo.** Se probaron `detail.locale`, `detail.language` y
+`detail.locale_code` contra la API real: los tres se descartan **en silencio**.
+
+Los rótulos del documento ("Amount due", "Invoice", "Bill to") los decide PayPal
+según **el idioma de la cuenta del comercio**. Para que salgan en inglés hay que
+cambiarlo en **PayPal → Perfil → Idioma / Preferencias**.
+
+Lo que sí controlamos va en inglés desde el código: nota al cliente, condiciones
+y datos del emisor.
+
+**Excepción conocida**: los nombres de las líneas salen de
+`quotations.items[].description`, que es el snapshot de la cotización. Si la
+cotización se creó en español, la línea aparecerá en español ("Relámpago del
+Catatumbo"). No se traduce automáticamente porque son importes y descripciones
+comerciales ya pactadas con el cliente: cambiarlos al vuelo sería alterar el
+documento. Las cotizaciones nuevas deberían redactarse en inglés.
+
+---
+
 ## Detalles que rompen esto si se tocan
 
 **`terms_and_conditions`, no `term`.** PayPal **descarta `term` en silencio**,
