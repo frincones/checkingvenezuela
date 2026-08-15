@@ -32,7 +32,9 @@ export function ChatWidget() {
   const [bootstrapped, setBootstrapped] = useState(false);
   const [visitorToken, setVisitorToken] = useState(null);
   const [conversationId, setConversationId] = useState(null);
-  const [language, setLanguage] = useState("es");
+  // Por defecto inglés: el sitio es monolingüe EN. detectLanguage sigue
+  // cambiando el idioma si el visitante escribe en español.
+  const [language, setLanguage] = useState("en");
   const [consentOpen, setConsentOpen] = useState(false);
   const [consentAccepted, setConsentAccepted] = useState(false);
   const [error, setError] = useState(null);

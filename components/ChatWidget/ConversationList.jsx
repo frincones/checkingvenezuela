@@ -43,7 +43,7 @@ function formatTime(ts, language) {
 export function ConversationList({
   conversations,
   loading,
-  language = "es",
+  language = "en",
   onSelect,
   onCreate,
   onDelete,

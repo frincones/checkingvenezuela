@@ -41,10 +41,10 @@ export async function FeaturedPackages() {
     <section>
       <div className="mb-8">
         <h2 className="text-3xl font-bold text-secondary">
-          Paquetes Destacados
+          Featured Packages
         </h2>
         <p className="mt-2 text-gray-600">
-          Las mejores experiencias seleccionadas para ti
+          The best experiences, hand-picked for you
         </p>
       </div>
 

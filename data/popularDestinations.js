@@ -117,7 +117,7 @@ export const hotelDestinations = [
     type: "hotel",
     description: "All-inclusive beachfront hotels",
     image: "https://images.unsplash.com/photo-1520250497591-112f2f40a3f4?q=80&w=2070&auto=format&fit=crop",
-    category: "Todo Incluido",
+    category: "All Inclusive",
   },
   {
     id: "canaima-hotel",
@@ -171,7 +171,7 @@ export const hotelDestinations = [
     type: "hotel",
     description: "All inclusive with dream beaches",
     image: "https://images.unsplash.com/photo-1571896349842-33c89424de2d?q=80&w=2080&auto=format&fit=crop",
-    category: "Todo Incluido",
+    category: "All Inclusive",
   },
   {
     id: "miami-hotel",

@@ -188,7 +188,7 @@ export async function POST(request) {
     } else {
       language = conv.language || "es";
     }
-    if (!language) language = "es";
+    if (!language) language = "en";
 
     // Persistir si cambió respecto a la conv (telemetría / siguiente turno)
     if (conv.language !== language) {

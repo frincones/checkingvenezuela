@@ -9,7 +9,7 @@ import { ActionButton } from "./ActionButton";
 /**
  * Renderiza un mensaje del chat (UIMessage AI SDK 6) con markdown + botones de acción.
  */
-export function MessageBubble({ message, language = "es" }) {
+export function MessageBubble({ message, language = "en" }) {
   const isUser = message.role === "user";
   const text = (message.parts || [])
     .filter((p) => p.type === "text")
@@ -103,7 +103,9 @@ export function MessageBubble({ message, language = "es" }) {
         )}
         {leadCreated && (
           <div className="mt-2 rounded-md bg-green-100 px-2 py-1 text-xs text-green-700">
-            ✓ Tus datos fueron registrados. Un asesor te contactará pronto.
+            {language === "es"
+              ? "✓ Tus datos fueron registrados. Un asesor te contactará pronto."
+              : "✓ Your details were saved. An advisor will contact you shortly."}
           </div>
         )}
       </div>

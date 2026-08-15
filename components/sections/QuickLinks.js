@@ -189,25 +189,25 @@ export function QuickLinks() {
               href="/privacy-policy"
               className="text-[0.875rem] font-medium text-white/70 transition-colors hover:text-accent"
             >
-              Política de Privacidad
+              Privacy Policy
             </Link>
             <Link
               href="/terms-of-service"
               className="text-[0.875rem] font-medium text-white/70 transition-colors hover:text-accent"
             >
-              Términos y Condiciones
+              Terms & Conditions
             </Link>
             <Link
               href="/return-policy"
               className="text-[0.875rem] font-medium text-white/70 transition-colors hover:text-accent"
             >
-              Devolución y Reembolso
+              Return & Refund Policy
             </Link>
             <Link
               href="/security-policy"
               className="text-[0.875rem] font-medium text-white/70 transition-colors hover:text-accent"
             >
-              Políticas de Seguridad
+              Security Policies
             </Link>
           </div>
         </div>

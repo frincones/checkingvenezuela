@@ -65,7 +65,7 @@ export function PackageBookingSummary({ packageData }) {
       {/* Price Summary */}
       <div className="mb-6 space-y-2">
         <div className="flex items-baseline justify-between">
-          <span className="text-sm text-gray-600">Precio base</span>
+          <span className="text-sm text-gray-600">Base price</span>
           <span className="text-lg font-bold text-gray-900">
             {formatCurrency(displayPrice)}
           </span>
