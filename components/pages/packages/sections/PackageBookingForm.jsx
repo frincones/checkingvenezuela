@@ -9,6 +9,7 @@ import { useToast } from "@/components/ui/use-toast";
 import { Calendar, Users, Mail, Phone, MessageSquare } from "lucide-react";
 import { COUNTRY_CODES, DEFAULT_COUNTRY_CODE } from "@/data/countryCodes";
 import Link from "next/link";
+import { PaymentBadge } from "@/components/ui/PaymentBadge";
 
 export function PackageBookingForm({ packageData, userEmail, userId }) {
   const { toast } = useToast();
@@ -270,6 +271,8 @@ export function PackageBookingForm({ packageData, userEmail, userId }) {
         >
           {isSubmitting ? "Sending..." : "Request a quote"}
         </Button>
+
+        <PaymentBadge variant="card" />
       </form>
     </div>
   );
