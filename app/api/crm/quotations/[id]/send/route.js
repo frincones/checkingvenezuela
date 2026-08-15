@@ -126,6 +126,37 @@ export async function POST(request, { params }) {
     // Mensaje personalizado del usuario (opcional)
     const customMessage = body.message || "";
 
+    // Cobro vigente: si existe, el email lleva botón de pago. Si la tabla aún
+    // no existe (migración sin aplicar), el email se envía igual sin botón.
+    let paymentLink = null;
+    try {
+      const { data: pl } = await adminClient
+        .from("payment_links")
+        .select("url, amount, currency, status")
+        .eq("quotation_id", id)
+        .in("status", ["created", "sent", "viewed", "partially_paid"])
+        .maybeSingle();
+      paymentLink = pl || null;
+    } catch {
+      paymentLink = null;
+    }
+
+    const payButtonHtml = paymentLink
+      ? `
+        <div style="text-align:center;margin:28px 0;">
+          <a href="${paymentLink.url}"
+             style="display:inline-block;background:#F2A93B;color:#0A1A44;padding:14px 32px;
+                    border-radius:8px;font-weight:700;font-size:16px;text-decoration:none;">
+            Pagar ahora · ${Number(paymentLink.amount).toLocaleString("en-US", {
+              style: "currency", currency: paymentLink.currency || "USD",
+            })}
+          </a>
+          <p style="color:#888;font-size:12px;margin:10px 0 0;">
+            Pago seguro con PayPal, tarjeta de crédito o débito. No necesita cuenta de PayPal.
+          </p>
+        </div>`
+      : "";
+
     // HTML del email
     const htmlBody = `
     <div style="font-family:'Segoe UI',Arial,sans-serif;max-width:600px;margin:0 auto;background:#ffffff;">
@@ -147,6 +178,8 @@ export async function POST(request, { params }) {
           Le hacemos llegar su cotización <strong>${quotation.quotation_number}</strong> con los detalles de su viaje.
           Encontrará el documento completo en el PDF adjunto.
         </p>
+
+        ${payButtonHtml}
 
         ${itemsList ? `
         <div style="margin:24px 0;background:#f8f9fa;border-radius:8px;padding:20px;">
