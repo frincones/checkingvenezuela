@@ -9,6 +9,7 @@
 
 import { createClient, createAdminClient } from "@/lib/db/supabase/server";
 import { NextResponse } from "next/server";
+import { getActivePaymentLock } from "@/lib/payments/quotationGuard";
 
 /**
  * GET - Obtiene una cotización específica
@@ -124,6 +125,15 @@ export async function PATCH(request, { params }) {
         { error: "No se puede editar una cotización ya convertida" },
         { status: 400 }
       );
+    }
+
+    // I2: bloquear la edición de items si hay un cobro vivo. Sin esto, el
+    // importe de la factura y el del PDF enviado al cliente divergen.
+    if (body.items) {
+      const lock = await getActivePaymentLock(id);
+      if (lock.locked) {
+        return NextResponse.json({ error: lock.error, link: lock.link }, { status: 409 });
+      }
     }
 
     // Preparar datos de actualización

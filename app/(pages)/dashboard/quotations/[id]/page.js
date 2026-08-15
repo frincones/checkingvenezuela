@@ -3,12 +3,14 @@
 import { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
+import { PaymentBlock } from "@/components/dashboard/quotations/PaymentBlock";
 
 const QUOTATION_STATUS_LABELS = {
   draft: { label: "Borrador", color: "bg-gray-100 text-gray-800" },
   sent: { label: "Enviada", color: "bg-blue-100 text-blue-800" },
   viewed: { label: "Vista", color: "bg-indigo-100 text-indigo-800" },
   accepted: { label: "Aceptada", color: "bg-green-100 text-green-800" },
+  paid: { label: "Pagada", color: "bg-emerald-100 text-emerald-800" },
   rejected: { label: "Rechazada", color: "bg-red-100 text-red-800" },
   expired: { label: "Expirada", color: "bg-yellow-100 text-yellow-800" },
   converted: { label: "Convertida", color: "bg-emerald-100 text-emerald-800" },
@@ -404,6 +406,14 @@ export default function QuotationDetailPage() {
               )}
             </dl>
           </div>
+
+          {/* Cobro */}
+          <PaymentBlock
+            quotationId={quotation.id}
+            total={quotation.total || quotation.total_amount || 0}
+            currency={quotation.currency}
+            onChange={fetchQuotation}
+          />
 
           {/* Quick Actions */}
           <div className="rounded-lg bg-white p-6 shadow-md">
