@@ -10,6 +10,7 @@ import {
 } from "@/components/ui/dialog";
 import { COUNTRY_CODES, DEFAULT_COUNTRY_CODE } from "@/data/countryCodes";
 import Link from "next/link";
+import { PaymentBadge } from "@/components/ui/PaymentBadge";
 
 const STORAGE_KEY = "leadCaptureData";
 
@@ -326,12 +327,14 @@ export function LeadCaptureModal({
                     d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
                   />
                 </svg>
-                Procesando...
+                Processing...
               </>
             ) : (
               triggerLabel
             )}
           </button>
+
+          <PaymentBadge variant="inline" className="justify-center pt-1" />
         </form>
       </DialogContent>
     </Dialog>

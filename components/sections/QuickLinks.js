@@ -2,6 +2,7 @@ import Link from "next/link";
 import { Logo } from "@/components/Logo";
 import { MapPin, Phone, Clock, Instagram, Facebook, Youtube } from "lucide-react";
 import { FooterWhatsAppLink } from "@/components/sections/FooterWhatsAppLink";
+import { PaymentBadge } from "@/components/ui/PaymentBadge";
 
 // Configuración de redes sociales - Actualizar URLs cuando estén disponibles
 const socialLinks = [
@@ -114,6 +115,9 @@ export function QuickLinks() {
           <Clock className="h-4 w-4 text-accent" />
           <span className="text-sm font-medium">24/7 Support</span>
         </div>
+
+        {/* Métodos de pago aceptados */}
+        <PaymentBadge variant="footer" className="mb-6" />
 
         {/* Redes sociales */}
         <div className="flex items-center gap-3">

@@ -1,6 +1,7 @@
 "use client";
 
 import { Package } from "lucide-react";
+import { PaymentBadge } from "@/components/ui/PaymentBadge";
 
 export function PackagesHeader() {
   return (
@@ -40,6 +41,12 @@ export function PackagesHeader() {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
               </svg>
               <span>Unique experiences</span>
+            </div>
+            <div className="flex items-center gap-2 rounded-full bg-white/20 px-3 py-2 backdrop-blur-sm">
+              <span className="text-xs">Secure payment</span>
+              <span className="inline-flex items-center rounded bg-white px-1.5 py-1">
+                <PaymentBadge variant="compact" />
+              </span>
             </div>
           </div>
         </div>
