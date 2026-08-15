@@ -118,13 +118,13 @@ export default async function PackageDetailPage({ params }) {
         <div className="w-full lg:w-auto">
           <div className="mb-4 text-right">
             <p className="text-sm font-medium text-gray-500">
-              {pricingDetails.display_text || "Precio por persona"}
+              {pricingDetails.display_text || "Price per person"}
             </p>
             <p className="text-4xl font-bold text-primary">
               {formatCurrency(displayPrice)}
             </p>
             {pricingDetails.price_type === "per_person" && (
-              <p className="text-sm text-gray-500">Por persona</p>
+              <p className="text-sm text-gray-500">Per person</p>
             )}
           </div>
 

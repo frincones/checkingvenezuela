@@ -2,6 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { createAdminClient } from "@/lib/db/supabase/server";
 import { Calendar, ArrowRight } from "lucide-react";
+import { CATEGORY_LABELS as categoryLabels } from "@/lib/blogCategories";
 
 async function getLatestPosts() {
   try {
@@ -20,21 +21,13 @@ async function getLatestPosts() {
 
 function formatDate(dateStr) {
   if (!dateStr) return "";
-  return new Date(dateStr).toLocaleDateString("es-VE", {
+  return new Date(dateStr).toLocaleDateString("en-US", {
     day: "numeric",
     month: "short",
     year: "numeric",
   });
 }
 
-const categoryLabels = {
-  general: "General",
-  destinos: "Destinos",
-  consejos: "Consejos",
-  itinerarios: "Itinerarios",
-  ofertas: "Ofertas",
-  noticias: "Noticias",
-};
 
 export async function LatestBlogPosts() {
   const posts = await getLatestPosts();
@@ -48,7 +41,7 @@ export async function LatestBlogPosts() {
             Blog de Viajes
           </h2>
           <p className="mt-1 text-gray-500">
-            Descubre destinos, consejos y experiencias
+            Discover destinations, tips and travel experiences
           </p>
         </div>
         <Link

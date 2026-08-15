@@ -7,7 +7,7 @@ export function PackageIncludes({ includes, notIncludes }) {
       {includes && includes.length > 0 && (
         <div>
           <h2 className="mb-4 text-2xl font-bold text-green-700">
-            ✅ Qué Incluye
+            ✅ What&apos;s Included
           </h2>
           <ul className="space-y-3">
             {includes.map((item, index) => (
@@ -26,7 +26,7 @@ export function PackageIncludes({ includes, notIncludes }) {
       {notIncludes && notIncludes.length > 0 && (
         <div>
           <h2 className="mb-4 text-2xl font-bold text-red-700">
-            ❌ No Incluye
+            ❌ Not Included
           </h2>
           <ul className="space-y-3">
             {notIncludes.map((item, index) => (

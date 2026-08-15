@@ -2,6 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { createAdminClient } from "@/lib/db/supabase/server";
 import { Calendar, User, Tag, Search, Mail, ArrowRight, MessageCircle } from "lucide-react";
+import { categoryLabel } from "@/lib/blogCategories";
 
 export const metadata = {
   title: "Travel Blog | Venezuela Voyages",
@@ -54,7 +55,7 @@ async function getPublishedPosts({ query, category }) {
 
 function formatDate(dateStr) {
   if (!dateStr) return "";
-  return new Date(dateStr).toLocaleDateString("es-VE", {
+  return new Date(dateStr).toLocaleDateString("en-US", {
     day: "numeric",
     month: "short",
     year: "numeric",
@@ -89,7 +90,7 @@ function PostCard({ post, featured = false }) {
       <div className={`flex flex-1 flex-col justify-center ${featured ? "p-6 md:p-8" : "p-5"}`}>
         {post.category && (
           <span className="mb-2 inline-block w-fit rounded-full bg-[#F2A93B]/15 px-3 py-0.5 text-xs font-semibold uppercase tracking-wide text-[#0A1A44]">
-            {post.category}
+            {categoryLabel(post.category)}
           </span>
         )}
         <h2
