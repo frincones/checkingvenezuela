@@ -108,16 +108,29 @@ export async function POST(request) {
     return NextResponse.json({ ok: true, unknown_invoice: invoiceId });
   }
 
-  const paidAmount = Number(
-    invoice?.payments?.paid_amount?.value ?? invoice?.amount?.value ?? link.amount_paid ?? 0,
-  );
+  // Lo cobrado sale ÚNICAMENTE de `payments.paid_amount`.
+  //
+  // Antes esto caía a `invoice.amount.value` cuando `payments` faltaba, pero
+  // ese campo es el TOTAL de la factura, no lo pagado. Resultado: una factura
+  // CANCELADA y nunca pagada llegaba con `payments` ausente y se registraba
+  // como cobrada por su importe íntegro, contaminando también la cotización.
+  // Detectado en la validación end-to-end del 2026-08-15.
+  //
+  // Si el evento no trae `payments`, se conserva lo que ya hubiera.
+  const paidAmount = invoice?.payments?.paid_amount?.value != null
+    ? Number(invoice.payments.paid_amount.value)
+    : Number(link.amount_paid ?? 0);
   const total = Number(link.amount);
 
   let status = EVENT_STATUS[event.event_type];
-  if (status === "paid" && paidAmount > 0 && paidAmount < total) {
+
+  // Cancelado o reembolsado son terminales: el estado manda sobre el importe.
+  if (status === "cancelled" || status === "refunded") {
+    // no se toca paidAmount: refleja lo que realmente se hubiera cobrado antes
+  } else if (status === "paid" && paidAmount > 0 && paidAmount < total) {
     status = "partially_paid"; // el evento dice PAID pero solo cubre el anticipo
-  }
-  if (!status) {
+  } else if (!status) {
+    // INVOICING.INVOICE.UPDATED: se deduce del importe cobrado
     status = paidAmount >= total ? "paid" : paidAmount > 0 ? "partially_paid" : link.status;
   }
 
@@ -131,12 +144,20 @@ export async function POST(request) {
     })
     .eq("id", link.id);
 
-  // Reflejo en la cotización
+  // Reflejo en la cotización.
+  //
+  // Al cancelar se pone a 0: la cotización vuelve a estar pendiente de cobro y
+  // debe poder generarse un cobro nuevo sin arrastrar un importe fantasma.
   if (link.quotation_id) {
-    const patch = { amount_paid: paidAmount };
+    const patch = {
+      amount_paid: status === "cancelled" ? 0 : paidAmount,
+    };
     if (status === "paid") {
       patch.status = "paid";
       patch.paid_at = new Date().toISOString();
+    }
+    if (status === "cancelled") {
+      patch.paid_at = null;
     }
     const { error: qError } = await admin
       .from("quotations")
@@ -149,7 +170,7 @@ export async function POST(request) {
       console.error("[paypal webhook] actualizando cotización:", qError.message);
       await admin
         .from("quotations")
-        .update({ amount_paid: paidAmount })
+        .update({ amount_paid: patch.amount_paid })
         .eq("id", link.quotation_id);
     }
   }
