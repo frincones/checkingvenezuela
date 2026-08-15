@@ -39,15 +39,15 @@ async function getPackages(destinationId) {
 
 export async function generateMetadata({ params }) {
   const dest = await getDestination(params.slug);
-  if (!dest) return { title: "Destino no encontrado | Venezuela Voyages" };
+  if (!dest) return { title: "Destination not found | Venezuela Voyages" };
   return {
     title: dest.meta_title || `${dest.name}, ${dest.country} | Venezuela Voyages`,
-    description: dest.meta_description || dest.short_description || `Descubre ${dest.name}. Guía completa de viaje con Venezuela Voyages.`,
+    description: dest.meta_description || dest.short_description || `Discover ${dest.name}. Complete travel guide by Venezuela Voyages.`,
     openGraph: {
       title: `${dest.name} | Venezuela Voyages`,
-      description: dest.short_description || `Guía de viaje a ${dest.name}`,
+      description: dest.short_description || `Travel guide to ${dest.name}`,
       images: dest.image_url ? [dest.image_url] : [],
-      locale: "es_VE",
+      locale: "en_VE",
     },
   };
 }
@@ -101,7 +101,7 @@ export default async function DestinationPage({ params }) {
         {culturalDesc && (
           <section className="mb-12">
             <h2 className="mb-4 text-2xl font-bold text-gray-900 sm:text-3xl">
-              Descubre {dest.name}
+              Discover {dest.name}
             </h2>
             <p className="whitespace-pre-line text-lg leading-relaxed text-gray-700">
               {culturalDesc}
@@ -113,7 +113,7 @@ export default async function DestinationPage({ params }) {
         {places.length > 0 && (
           <section className="mb-12">
             <h2 className="mb-6 text-2xl font-bold text-gray-900 sm:text-3xl">
-              Lugares Imprescindibles
+              Must-see places
             </h2>
             <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
               {places.map((place, i) => (
@@ -137,7 +137,7 @@ export default async function DestinationPage({ params }) {
         {experiences.length > 0 && (
           <section className="mb-12">
             <h2 className="mb-6 text-2xl font-bold text-gray-900 sm:text-3xl">
-              Experiencias y Rutas
+              Experiences & routes
             </h2>
             <div className="grid gap-4 sm:grid-cols-2">
               {experiences.map((exp, i) => (
@@ -159,36 +159,36 @@ export default async function DestinationPage({ params }) {
         {hasPractical && (
           <section className="mb-12">
             <h2 className="mb-6 text-2xl font-bold text-gray-900 sm:text-3xl">
-              Información Práctica
+              Practical information
             </h2>
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
               {practical.climate && (
                 <div className="rounded-xl border border-gray-100 bg-white p-5 shadow-sm">
-                  <div className="mb-2 flex items-center gap-2 text-primary"><Sun className="h-5 w-5" /><h3 className="font-bold">Clima</h3></div>
+                  <div className="mb-2 flex items-center gap-2 text-primary"><Sun className="h-5 w-5" /><h3 className="font-bold">Climate</h3></div>
                   <p className="text-sm text-gray-600">{practical.climate}</p>
                 </div>
               )}
               {practical.currency && (
                 <div className="rounded-xl border border-gray-100 bg-white p-5 shadow-sm">
-                  <div className="mb-2 flex items-center gap-2 text-primary"><Banknote className="h-5 w-5" /><h3 className="font-bold">Moneda</h3></div>
+                  <div className="mb-2 flex items-center gap-2 text-primary"><Banknote className="h-5 w-5" /><h3 className="font-bold">Currency</h3></div>
                   <p className="text-sm text-gray-600">{practical.currency}</p>
                 </div>
               )}
               {practical.how_to_get_there && (
                 <div className="rounded-xl border border-gray-100 bg-white p-5 shadow-sm">
-                  <div className="mb-2 flex items-center gap-2 text-primary"><Plane className="h-5 w-5" /><h3 className="font-bold">Cómo llegar</h3></div>
+                  <div className="mb-2 flex items-center gap-2 text-primary"><Plane className="h-5 w-5" /><h3 className="font-bold">Getting there</h3></div>
                   <p className="text-sm text-gray-600">{practical.how_to_get_there}</p>
                 </div>
               )}
               {practical.local_transport && (
                 <div className="rounded-xl border border-gray-100 bg-white p-5 shadow-sm">
-                  <div className="mb-2 flex items-center gap-2 text-primary"><Bus className="h-5 w-5" /><h3 className="font-bold">Transporte Local</h3></div>
+                  <div className="mb-2 flex items-center gap-2 text-primary"><Bus className="h-5 w-5" /><h3 className="font-bold">Local transport</h3></div>
                   <p className="text-sm text-gray-600">{practical.local_transport}</p>
                 </div>
               )}
               {practical.useful_tips && (
                 <div className="rounded-xl border border-gray-100 bg-white p-5 shadow-sm sm:col-span-2">
-                  <div className="mb-2 flex items-center gap-2 text-primary"><Lightbulb className="h-5 w-5" /><h3 className="font-bold">Consejos Útiles</h3></div>
+                  <div className="mb-2 flex items-center gap-2 text-primary"><Lightbulb className="h-5 w-5" /><h3 className="font-bold">Useful tips</h3></div>
                   <p className="text-sm text-gray-600">{practical.useful_tips}</p>
                 </div>
               )}
@@ -200,18 +200,18 @@ export default async function DestinationPage({ params }) {
         {(meta.gastronomy || meta.lodging) && (
           <section className="mb-12">
             <h2 className="mb-6 text-2xl font-bold text-gray-900 sm:text-3xl">
-              Gastronomía y Alojamiento
+              Food & accommodation
             </h2>
             <div className="grid gap-6 md:grid-cols-2">
               {meta.gastronomy && (
                 <div className="rounded-xl border border-gray-100 bg-white p-6 shadow-sm">
-                  <div className="mb-3 flex items-center gap-2 text-primary"><Utensils className="h-5 w-5" /><h3 className="text-lg font-bold">Gastronomía</h3></div>
+                  <div className="mb-3 flex items-center gap-2 text-primary"><Utensils className="h-5 w-5" /><h3 className="text-lg font-bold">Food</h3></div>
                   <p className="whitespace-pre-line text-sm leading-relaxed text-gray-600">{meta.gastronomy}</p>
                 </div>
               )}
               {meta.lodging && (
                 <div className="rounded-xl border border-gray-100 bg-white p-6 shadow-sm">
-                  <div className="mb-3 flex items-center gap-2 text-primary"><Hotel className="h-5 w-5" /><h3 className="text-lg font-bold">Alojamiento</h3></div>
+                  <div className="mb-3 flex items-center gap-2 text-primary"><Hotel className="h-5 w-5" /><h3 className="text-lg font-bold">Accommodation</h3></div>
                   <p className="whitespace-pre-line text-sm leading-relaxed text-gray-600">{meta.lodging}</p>
                 </div>
               )}
@@ -222,7 +222,7 @@ export default async function DestinationPage({ params }) {
         {/* Galería */}
         {gallery.length > 0 && (
           <section className="mb-12">
-            <h2 className="mb-6 text-2xl font-bold text-gray-900 sm:text-3xl">Galería</h2>
+            <h2 className="mb-6 text-2xl font-bold text-gray-900 sm:text-3xl">Gallery</h2>
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
               {gallery.filter(Boolean).map((url, i) => (
                 <div key={i} className="relative h-56 overflow-hidden rounded-xl">
@@ -238,7 +238,7 @@ export default async function DestinationPage({ params }) {
           <section className="mb-12">
             <h2 className="mb-6 text-2xl font-bold text-gray-900 sm:text-3xl">
               <MapIcon className="mr-2 inline h-7 w-7" />
-              Ubicación
+              Location
             </h2>
             <div className="overflow-hidden rounded-xl border border-gray-200">
               <iframe
@@ -261,7 +261,7 @@ export default async function DestinationPage({ params }) {
             <div className="mb-6 flex items-center gap-3">
               <PackageIcon className="h-7 w-7 text-primary" />
               <h2 className="text-2xl font-bold text-gray-900 sm:text-3xl">
-                Paquetes en {dest.name}
+                Packages in {dest.name}
               </h2>
             </div>
             <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
@@ -276,7 +276,7 @@ export default async function DestinationPage({ params }) {
         {testimonials.length > 0 && (
           <section className="mb-12">
             <h2 className="mb-6 text-2xl font-bold text-gray-900 sm:text-3xl">
-              Testimonios
+              Testimonials
             </h2>
             <div className="grid gap-6 sm:grid-cols-2">
               {testimonials.map((t, i) => (
@@ -303,16 +303,16 @@ export default async function DestinationPage({ params }) {
         {/* CTA */}
         <section className="rounded-2xl bg-gradient-to-r from-primary to-primary/80 p-8 text-center text-white sm:p-12">
           <h2 className="mb-3 text-2xl font-bold sm:text-3xl">
-            ¿Listo para explorar {dest.name}?
+            Ready to explore {dest.name}?
           </h2>
           <p className="mb-6 text-white/80">
-            Contáctanos y diseñamos tu viaje perfecto
+            Get in touch and we will design your perfect trip
           </p>
           <DualCTA
             variant="hero"
             onlineEnabled={false}
             quoteEnabled={true}
-            quoteMessage={`Hola, estoy interesado en viajar a ${dest.name}, ${dest.country}. ¿Podrían darme más información?`}
+            quoteMessage={`Hi, I'm interested in traveling to ${dest.name}, ${dest.country}. Could you send me more information?`}
             quoteLabel="Cotizar Ahora"
           />
         </section>

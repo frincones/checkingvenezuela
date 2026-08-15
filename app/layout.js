@@ -97,7 +97,7 @@ export default async function RootLayout({ children }) {
   const maintenanceMode = envMaintenanceEnabled
     ? {
         enabled: true,
-        message: process.env.MAINTENANCE_MESSAGE || "Estamos realizando mejoras para brindarte una mejor experiencia. Volvemos pronto.",
+        message: process.env.MAINTENANCE_MESSAGE || "We are making improvements to give you a better experience. We will be back shortly.",
         endsAt: process.env.MAINTENANCE_ENDS_AT || null,
         allowlistedRoutes: ["/support", "/api"],
       }

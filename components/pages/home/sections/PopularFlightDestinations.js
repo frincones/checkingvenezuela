@@ -16,8 +16,8 @@ export function PopularFlightDestinations() {
     <section className="mx-auto mb-[80px]">
       <div className="mx-auto mb-[20px] flex items-center justify-between max-md:flex-col max-md:gap-[16px] md:mb-[40px]">
         <SectionTitle
-          title="Destinos de Vuelos Populares"
-          subTitle="Explora los destinos internacionales más buscados desde Venezuela"
+          title="Popular Flight Destinations"
+          subTitle="Explore the most sought-after international destinations from Venezuela"
           className="flex-[0_0_50%]"
         />
       </div>
@@ -67,11 +67,11 @@ export function PopularFlightDestinations() {
                   variant="card"
                   onlineEnabled={true}
                   onlinePath="/flights"
-                  onlineLabel="Buscar"
+                  onlineLabel="Search"
                   onlineComingSoon={false}
                   quoteEnabled={true}
-                  quoteMessage={`Hola, estoy interesado en vuelos a ${destination.name}, ${destination.country}. ¿Podrían ayudarme con opciones?`}
-                  quoteLabel="Cotizar"
+                  quoteMessage={`Hi, I'm interested in flights to ${destination.name}, ${destination.country}. Could you help me with the options?`}
+                  quoteLabel="Get a quote"
                 />
               </div>
             </CardContent>

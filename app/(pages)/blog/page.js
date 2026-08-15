@@ -4,15 +4,15 @@ import { createAdminClient } from "@/lib/db/supabase/server";
 import { Calendar, User, Tag, Search, Mail, ArrowRight, MessageCircle } from "lucide-react";
 
 export const metadata = {
-  title: "Blog de Viajes | Venezuela Voyages",
+  title: "Travel Blog | Venezuela Voyages",
   description:
-    "Descubre destinos, consejos, itinerarios y experiencias de viaje por Venezuela. Tips de expertos, ofertas y noticias del turismo venezolano.",
+    "Discover destinations, tips, itineraries and travel experiences across Venezuela. Expert advice, deals and news from Venezuelan tourism.",
   keywords: [
-    "blog viajes venezuela",
-    "destinos venezuela",
-    "consejos viajero",
-    "itinerarios venezuela",
-    "turismo venezuela",
+    "venezuela travel blog",
+    "venezuela destinations",
+    "traveller tips",
+    "venezuela itineraries",
+    "venezuela tourism",
     "venezuela voyages blog",
   ],
 };
@@ -22,12 +22,13 @@ export const dynamic = "force-dynamic";
 const WHATSAPP_NUMBER = "584264034052";
 
 const ALL_CATEGORIES = [
-  { key: "todos", label: "Todos" },
-  { key: "destinos", label: "Destinos" },
-  { key: "consejos", label: "Consejos" },
-  { key: "itinerarios", label: "Itinerarios" },
-  { key: "ofertas", label: "Ofertas" },
-  { key: "noticias", label: "Noticias" },
+  { key: "todos", label: "All" },
+  { key: "destinos", label: "Destinations" },
+  { key: "tips", label: "Travel Tips" },
+  { key: "consejos", label: "Advice" },
+  { key: "itinerarios", label: "Itineraries" },
+  { key: "ofertas", label: "Deals" },
+  { key: "noticias", label: "News" },
 ];
 
 async function getPublishedPosts({ query, category }) {
@@ -119,7 +120,7 @@ function PostCard({ post, featured = false }) {
         </div>
         {featured && (
           <span className="mt-4 inline-flex items-center gap-1 text-sm font-semibold text-[#0A1A44]">
-            Leer más <ArrowRight className="h-4 w-4" />
+            Read more <ArrowRight className="h-4 w-4" />
           </span>
         )}
       </div>
@@ -175,10 +176,10 @@ export default async function BlogPage(props) {
       <section className="bg-gradient-to-br from-[#0A1A44] to-[#0A1A44]/90 px-4 pb-16 pt-12 text-white md:pb-20 md:pt-16">
         <div className="mx-auto max-w-5xl text-center">
           <h1 className="text-4xl font-extrabold tracking-tight md:text-5xl lg:text-6xl">
-            Blog de Viajes
+            Travel Blog
           </h1>
           <p className="mx-auto mt-4 max-w-2xl text-lg text-white/80 md:text-xl">
-            Descubre destinos, consejos y experiencias de viaje por Venezuela
+            Discover destinations, tips and travel experiences across Venezuela
           </p>
 
           {/* Search */}
@@ -190,7 +191,7 @@ export default async function BlogPage(props) {
                 type="text"
                 name="q"
                 defaultValue={query}
-                placeholder="Buscar artículos..."
+                placeholder="Search articles..."
                 className="w-full rounded-full border-0 bg-white py-3.5 pl-12 pr-5 text-gray-900 shadow-lg placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-[#F2A93B]"
               />
             </div>
@@ -242,13 +243,13 @@ export default async function BlogPage(props) {
             <div className="mb-4 rounded-full bg-[#0A1A44]/5 p-4">
               <Search className="h-8 w-8 text-[#0A1A44]/30" />
             </div>
-            <p className="text-xl font-semibold text-gray-600">No encontramos artículos</p>
+            <p className="text-xl font-semibold text-gray-600">No articles found</p>
             <p className="mt-2 text-gray-400">
-              {query ? "Intenta con otros términos de búsqueda" : "Estamos preparando contenido increíble para ti"}
+              {query ? "Try different search terms" : "We are preparing incredible content for you"}
             </p>
             {query && (
               <Link href="/blog" className="mt-4 text-sm font-medium text-[#0A1A44] hover:underline">
-                Ver todos los artículos
+                View all articles
               </Link>
             )}
           </div>
@@ -257,7 +258,7 @@ export default async function BlogPage(props) {
             {/* ===== FEATURED POSTS ===== */}
             {featuredPosts.length > 0 && !query && category === "todos" && (
               <section className="mt-10">
-                <h2 className="mb-6 text-2xl font-bold text-gray-900">Artículos Destacados</h2>
+                <h2 className="mb-6 text-2xl font-bold text-gray-900">Featured Articles</h2>
                 <div className="grid gap-6 lg:grid-cols-2">
                   {/* First featured post — large */}
                   <div className="lg:row-span-2">
@@ -279,7 +280,7 @@ export default async function BlogPage(props) {
                   {(category !== "todos" || query ? posts : gridPosts).length > 0 ? (
                     <>
                       <h2 className="mb-6 text-2xl font-bold text-gray-900">
-                        {category !== "todos" || query ? "Resultados" : "Más Artículos"}
+                        {category !== "todos" || query ? "Results" : "More Articles"}
                       </h2>
                       <div className="grid gap-6 sm:grid-cols-2">
                         {(category !== "todos" || query ? posts : gridPosts).map((post) => (
@@ -295,7 +296,7 @@ export default async function BlogPage(props) {
                   <div className="sticky top-24 space-y-8">
                     {/* Categories */}
                     <div className="rounded-xl border border-gray-100 bg-white p-6 shadow-sm">
-                      <h3 className="mb-4 text-lg font-bold text-gray-900">Categorías</h3>
+                      <h3 className="mb-4 text-lg font-bold text-gray-900">Categories</h3>
                       <ul className="space-y-2">
                         {ALL_CATEGORIES.filter((c) => c.key === "todos" || existingCategories.includes(c.key)).map(
                           (cat) => {
@@ -340,23 +341,23 @@ export default async function BlogPage(props) {
                     {/* Subscribe */}
                     <div className="rounded-xl bg-gradient-to-br from-[#0A1A44] to-[#0A1A44]/90 p-6 text-white shadow-sm">
                       <Mail className="mb-3 h-8 w-8 text-[#F2A93B]" />
-                      <h3 className="mb-2 text-lg font-bold">Suscríbete</h3>
+                      <h3 className="mb-2 text-lg font-bold">Subscribe</h3>
                       <p className="mb-4 text-sm text-white/70">
-                        Recibe los mejores artículos de viaje directo en tu correo.
+                        Get the best travel articles straight to your inbox.
                       </p>
                       <form action="/api/blog/subscribe" method="POST">
                         <input
                           type="email"
                           name="email"
                           required
-                          placeholder="tu@email.com"
+                          placeholder="you@email.com"
                           className="mb-3 w-full rounded-lg border-0 bg-white/10 px-4 py-2.5 text-sm text-white placeholder:text-white/50 focus:outline-none focus:ring-2 focus:ring-[#F2A93B]"
                         />
                         <button
                           type="submit"
                           className="w-full rounded-lg bg-[#F2A93B] px-4 py-2.5 text-sm font-semibold text-[#0A1A44] transition-colors hover:bg-[#F2A93B]/90"
                         >
-                          Suscribirme
+                          Subscribe
                         </button>
                       </form>
                     </div>
@@ -372,10 +373,10 @@ export default async function BlogPage(props) {
       <section className="bg-gradient-to-r from-[#0A1A44] to-[#0A1A44]/95 px-4 py-16 text-center text-white md:py-20">
         <div className="mx-auto max-w-2xl">
           <h2 className="text-3xl font-extrabold md:text-4xl">
-            ¿Listo para tu próxima aventura?
+            Ready for your next adventure?
           </h2>
           <p className="mx-auto mt-4 max-w-lg text-lg text-white/70">
-            Contáctanos y diseñamos el viaje perfecto para ti por Venezuela.
+            Get in touch and we will design the perfect trip through Venezuela for you.
           </p>
           <a
             href={`https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent("Hola, me interesa planificar un viaje con Venezuela Voyages.")}`}
@@ -384,7 +385,7 @@ export default async function BlogPage(props) {
             className="mt-8 inline-flex items-center gap-2 rounded-full bg-[#F2A93B] px-8 py-3.5 text-base font-bold text-[#0A1A44] shadow-lg transition-all hover:bg-[#F2A93B]/90 hover:shadow-xl"
           >
             <MessageCircle className="h-5 w-5" />
-            Escríbenos por WhatsApp
+            Message us on WhatsApp
           </a>
         </div>
       </section>

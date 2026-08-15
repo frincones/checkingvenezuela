@@ -36,10 +36,10 @@ export default async function PackageBookingPage({ params }) {
 
       <div className="my-10">
         <h1 className="mb-2 text-3xl font-bold text-secondary">
-          Reservar Paquete
+          Book this package
         </h1>
         <p className="text-gray-600">
-          Completa tus datos para solicitar una cotización
+          Fill in your details to request a quote
         </p>
       </div>
 

@@ -14,8 +14,8 @@ export const servicesConfig = {
   services: [
     {
       id: "flights",
-      name: "Vuelos",
-      description: "Encuentra los mejores vuelos nacionales e internacionales",
+      name: "Flights",
+      description: "Find the best domestic and international flights",
       icon: "Plane",
       enabled: true,
       hasOnlinePurchase: true,
@@ -25,8 +25,8 @@ export const servicesConfig = {
     },
     {
       id: "hotels",
-      name: "Hoteles",
-      description: "Reserva alojamiento en los mejores destinos",
+      name: "Hotels",
+      description: "Book accommodation in the best destinations",
       icon: "Building2",
       enabled: true,
       hasOnlinePurchase: true,
@@ -36,8 +36,8 @@ export const servicesConfig = {
     },
     {
       id: "packages",
-      name: "Paquetes",
-      description: "Vuelo + hotel con los mejores precios combinados",
+      name: "Packages",
+      description: "Flight + hotel at the best combined prices",
       icon: "Package",
       enabled: true,
       hasOnlinePurchase: false,
@@ -47,8 +47,8 @@ export const servicesConfig = {
     },
     {
       id: "tours",
-      name: "Tours y Actividades",
-      description: "Experiencias únicas en cada destino",
+      name: "Tours & Activities",
+      description: "Unique experiences in every destination",
       icon: "Compass",
       enabled: true,
       hasOnlinePurchase: false,
@@ -58,8 +58,8 @@ export const servicesConfig = {
     },
     {
       id: "transfers",
-      name: "Traslados",
-      description: "Transporte seguro aeropuerto-hotel y más",
+      name: "Transfers",
+      description: "Safe airport-hotel transport and more",
       icon: "Car",
       enabled: true,
       hasOnlinePurchase: false,
@@ -69,8 +69,8 @@ export const servicesConfig = {
     },
     {
       id: "insurance",
-      name: "Seguro de Viaje",
-      description: "Viaja protegido con cobertura completa",
+      name: "Travel Insurance",
+      description: "Travel protected with full coverage",
       icon: "Shield",
       enabled: true,
       hasOnlinePurchase: false,
@@ -80,8 +80,8 @@ export const servicesConfig = {
     },
     {
       id: "car-rental",
-      name: "Alquiler de Autos",
-      description: "Libertad para explorar a tu ritmo",
+      name: "Car Rental",
+      description: "Freedom to explore at your own pace",
       icon: "CarFront",
       enabled: true,
       hasOnlinePurchase: false,
@@ -91,8 +91,8 @@ export const servicesConfig = {
     },
     {
       id: "cruises",
-      name: "Cruceros",
-      description: "Aventuras en altamar con todo incluido",
+      name: "Cruises",
+      description: "All-inclusive adventures on the high seas",
       icon: "Ship",
       enabled: true,
       hasOnlinePurchase: false,
@@ -102,8 +102,8 @@ export const servicesConfig = {
     },
     {
       id: "corporate",
-      name: "Plan Corporativo",
-      description: "Soluciones de viaje para empresas",
+      name: "Corporate Travel",
+      description: "Travel solutions for businesses",
       icon: "Briefcase",
       enabled: true,
       hasOnlinePurchase: false,
@@ -113,8 +113,8 @@ export const servicesConfig = {
     },
     {
       id: "all-inclusive",
-      name: "Todo Incluido",
-      description: "Paquetes premium sin preocupaciones",
+      name: "All Inclusive",
+      description: "Premium worry-free packages",
       icon: "Sparkles",
       enabled: true,
       hasOnlinePurchase: false,
@@ -127,7 +127,7 @@ export const servicesConfig = {
   // Configuración de contacto para cotizaciones
   whatsapp: {
     number: "584264034052",
-    defaultMessage: "Hola, estoy interesado en cotizar un servicio de viaje.",
+    defaultMessage: "Hi, I'm interested in getting a quote for a travel service.",
   },
 };
 
@@ -152,7 +152,7 @@ export const getActiveServices = () => {
  */
 export const getWhatsAppQuoteUrl = (serviceName = "") => {
   const message = serviceName
-    ? `Hola, estoy interesado en cotizar: ${serviceName}`
+    ? `Hi, I'd like a quote for: ${serviceName}`
     : servicesConfig.whatsapp.defaultMessage;
   return `https://wa.me/${servicesConfig.whatsapp.number}?text=${encodeURIComponent(message)}`;
 };

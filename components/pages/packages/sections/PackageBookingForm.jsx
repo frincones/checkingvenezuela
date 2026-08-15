@@ -38,8 +38,8 @@ export function PackageBookingForm({ packageData, userEmail, userId }) {
 
     if (!formData.habeasData) {
       toast({
-        title: "Autorización requerida",
-        description: "Debes autorizar el tratamiento de datos personales para continuar.",
+        title: "Authorization required",
+        description: "You must authorize the processing of personal data to continue.",
         variant: "destructive",
       });
       return;
@@ -75,8 +75,8 @@ export function PackageBookingForm({ packageData, userEmail, userId }) {
       });
 
       toast({
-        title: "¡Solicitud Enviada!",
-        description: "Hemos recibido tu solicitud. Te contactaremos pronto con los detalles de tu paquete.",
+        title: "Request sent!",
+        description: "We have received your request. We will contact you shortly with your package details.",
       });
 
       setFormData({
@@ -94,7 +94,7 @@ export function PackageBookingForm({ packageData, userEmail, userId }) {
       console.error("Error submitting booking:", error);
       toast({
         title: "Error",
-        description: "Hubo un problema al enviar tu solicitud. Por favor intenta nuevamente.",
+        description: "There was a problem sending your request. Please try again.",
         variant: "destructive",
       });
     } finally {
@@ -104,14 +104,14 @@ export function PackageBookingForm({ packageData, userEmail, userId }) {
 
   return (
     <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
-      <h2 className="mb-6 text-2xl font-bold">Solicitar Cotización</h2>
+      <h2 className="mb-6 text-2xl font-bold">Request a quote</h2>
 
       <form onSubmit={handleSubmit} className="space-y-6">
         {/* Number of People */}
         <div>
           <Label htmlFor="numberOfPeople" className="mb-2 flex items-center gap-2">
             <Users className="h-4 w-4" />
-            Número de Personas *
+            Number of travellers *
           </Label>
           <Input
             id="numberOfPeople"
@@ -122,7 +122,7 @@ export function PackageBookingForm({ packageData, userEmail, userId }) {
             required
             value={formData.numberOfPeople}
             onChange={handleChange}
-            placeholder="¿Cuántas personas viajarán?"
+            placeholder="How many people are travelling?"
           />
         </div>
 
@@ -130,7 +130,7 @@ export function PackageBookingForm({ packageData, userEmail, userId }) {
         <div>
           <Label htmlFor="travelDate" className="mb-2 flex items-center gap-2">
             <Calendar className="h-4 w-4" />
-            Fecha de Viaje Deseada *
+            Preferred travel date *
           </Label>
           <Input
             id="travelDate"
@@ -146,7 +146,7 @@ export function PackageBookingForm({ packageData, userEmail, userId }) {
         {/* Contact Name */}
         <div className="grid grid-cols-2 gap-3">
           <div>
-            <Label htmlFor="contactFirstName">Nombre *</Label>
+            <Label htmlFor="contactFirstName">First name *</Label>
             <Input
               id="contactFirstName"
               name="contactFirstName"
@@ -158,7 +158,7 @@ export function PackageBookingForm({ packageData, userEmail, userId }) {
             />
           </div>
           <div>
-            <Label htmlFor="contactLastName">Apellido *</Label>
+            <Label htmlFor="contactLastName">Last name *</Label>
             <Input
               id="contactLastName"
               name="contactLastName"
@@ -166,7 +166,7 @@ export function PackageBookingForm({ packageData, userEmail, userId }) {
               required
               value={formData.contactLastName}
               onChange={handleChange}
-              placeholder="Pérez"
+              placeholder="Smith"
             />
           </div>
         </div>
@@ -175,7 +175,7 @@ export function PackageBookingForm({ packageData, userEmail, userId }) {
         <div>
           <Label htmlFor="contactEmail" className="mb-2 flex items-center gap-2">
             <Mail className="h-4 w-4" />
-            Correo Electrónico *
+            Email *
           </Label>
           <Input
             id="contactEmail"
@@ -184,7 +184,7 @@ export function PackageBookingForm({ packageData, userEmail, userId }) {
             required
             value={formData.contactEmail}
             onChange={handleChange}
-            placeholder="tu@email.com"
+            placeholder="you@email.com"
           />
         </div>
 
@@ -192,7 +192,7 @@ export function PackageBookingForm({ packageData, userEmail, userId }) {
         <div>
           <Label htmlFor="contactPhone" className="mb-2 flex items-center gap-2">
             <Phone className="h-4 w-4" />
-            Teléfono *
+            Phone *
           </Label>
           <div className="flex gap-2">
             <select
@@ -223,7 +223,7 @@ export function PackageBookingForm({ packageData, userEmail, userId }) {
         <div>
           <Label htmlFor="specialRequests" className="mb-2 flex items-center gap-2">
             <MessageSquare className="h-4 w-4" />
-            Solicitudes Especiales
+            Special requests
           </Label>
           <Textarea
             id="specialRequests"
@@ -231,10 +231,10 @@ export function PackageBookingForm({ packageData, userEmail, userId }) {
             rows={4}
             value={formData.specialRequests}
             onChange={handleChange}
-            placeholder="¿Tienes alguna solicitud especial? (opcional)"
+            placeholder="Any special requests? (optional)"
           />
           <p className="mt-1 text-xs text-gray-500">
-            Ejemplo: Preferencias alimentarias, necesidades especiales, etc.
+            For example: dietary preferences, accessibility needs, etc.
           </p>
         </div>
 
@@ -255,7 +255,7 @@ export function PackageBookingForm({ packageData, userEmail, userId }) {
               target="_blank"
               className="font-medium text-primary underline hover:text-primary/80"
             >
-              Política de Privacidad
+              Privacy Policy
             </Link>
             . *
           </label>
@@ -268,7 +268,7 @@ export function PackageBookingForm({ packageData, userEmail, userId }) {
           size="lg"
           disabled={isSubmitting}
         >
-          {isSubmitting ? "Enviando..." : "Solicitar Cotización"}
+          {isSubmitting ? "Sending..." : "Request a quote"}
         </Button>
       </form>
     </div>

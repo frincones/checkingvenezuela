@@ -57,20 +57,20 @@ export async function generateMetadata({ params }) {
   const destination = await getDestinationBySlug(params.slug);
 
   if (!destination) {
-    return { title: "Destino no encontrado" };
+    return { title: "Destination not found" };
   }
 
   return {
-    title: `Paquetes en ${destination.name} | Venezuela Voyages`,
+    title: `Packages in ${destination.name} | Venezuela Voyages`,
     description:
       destination.short_description ||
-      `Descubre los mejores paquetes turísticos disponibles en ${destination.name}. Vuelo + hotel + actividades todo incluido.`,
-    keywords: ["paquetes", destination.name, destination.country, "venezuela voyages", "todo incluido"].filter(Boolean),
+      `Discover the best travel packages available in ${destination.name}. Flights + hotel + activities, all inclusive.`,
+    keywords: ["packages", destination.name, destination.country, "venezuela voyages", "all inclusive"].filter(Boolean),
     openGraph: {
-      title: `Paquetes en ${destination.name} | Venezuela Voyages`,
-      description: destination.short_description || `Paquetes turísticos en ${destination.name}`,
+      title: `Packages in ${destination.name} | Venezuela Voyages`,
+      description: destination.short_description || `Travel packages in ${destination.name}`,
       images: destination.image_url ? [destination.image_url] : [],
-      locale: "es_VE",
+      locale: "en_VE",
     },
   };
 }
@@ -106,12 +106,12 @@ export default async function PackagesByDestinationPage({ params }) {
             <div className="mb-4 flex items-center gap-3">
               <Package className="h-8 w-8 sm:h-10 sm:w-10" />
               <span className="text-sm font-semibold uppercase tracking-wider">
-                Paquetes Turísticos
+                Travel Packages
               </span>
             </div>
 
             <h1 className="mb-3 text-3xl font-bold sm:text-4xl lg:text-5xl">
-              Paquetes en {destination.name}
+              Packages in {destination.name}
             </h1>
 
             <div className="flex flex-wrap items-center gap-4 text-sm sm:text-base">
@@ -125,7 +125,7 @@ export default async function PackagesByDestinationPage({ params }) {
               )}
               <div className="rounded-full bg-white/20 px-4 py-1 backdrop-blur-sm">
                 {packages.length}{" "}
-                {packages.length === 1 ? "paquete disponible" : "paquetes disponibles"}
+                {packages.length === 1 ? "package available" : "packages available"}
               </div>
             </div>
           </div>
@@ -139,13 +139,13 @@ export default async function PackagesByDestinationPage({ params }) {
           <BreadcrumbUI />
           <div className="flex flex-wrap items-center gap-3">
             <ShareButtons
-              title={`Paquetes en ${destination.name}`}
+              title={`Packages in ${destination.name}`}
               url={canonicalUrl(`/packages/destino/${destination.slug}`)}
             />
             <Button asChild variant="ghost" size="sm">
               <Link href="/packages" className="flex items-center gap-2">
                 <ArrowLeft className="h-4 w-4" />
-                Todos los paquetes
+                All packages
               </Link>
             </Button>
           </div>
@@ -165,10 +165,10 @@ export default async function PackagesByDestinationPage({ params }) {
           <section>
             <div className="mb-8">
               <h2 className="text-2xl font-bold text-secondary sm:text-3xl">
-                Experiencias en {destination.name}
+                Experiences in {destination.name}
               </h2>
               <p className="mt-2 text-gray-600">
-                Selecciona el paquete que mejor se adapte a tu aventura
+                Choose the package that best fits your adventure
               </p>
             </div>
 
@@ -189,14 +189,14 @@ export default async function PackagesByDestinationPage({ params }) {
                 <Package className="mx-auto h-16 w-16 text-gray-300" />
               </div>
               <h3 className="mb-2 text-2xl font-bold text-gray-900">
-                Próximamente
+                Coming soon
               </h3>
               <p className="mb-6 text-gray-600">
-                Estamos preparando increíbles paquetes turísticos para{" "}
-                {destination.name}. ¡Vuelve pronto!
+                We are putting together incredible travel packages for{" "}
+                {destination.name}. Check back soon!
               </p>
               <Button asChild>
-                <Link href="/packages">Ver todos los paquetes</Link>
+                <Link href="/packages">View all packages</Link>
               </Button>
             </div>
           </section>

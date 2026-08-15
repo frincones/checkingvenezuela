@@ -50,3 +50,6 @@ generated
 *.dtmp
 nul
 Contexto/
+
+# volcados de BD del flip a inglés (contienen datos de contacto de proveedores)
+/backups

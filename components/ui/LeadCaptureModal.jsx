@@ -37,7 +37,7 @@ export function LeadCaptureModal({
   onOpenChange,
   onSubmit,
   trackingData = {},
-  triggerLabel = "Continuar",
+  triggerLabel = "Continue",
 }) {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
@@ -82,7 +82,7 @@ export function LeadCaptureModal({
     e.preventDefault();
 
     if (!formData.habeasData) {
-      setError("Debes autorizar el tratamiento de datos para continuar");
+      setError("You must authorize data processing to continue");
       return;
     }
 
@@ -169,10 +169,10 @@ export function LeadCaptureModal({
       <DialogContent className="max-w-[440px] p-0">
         <DialogHeader className="border-b border-border px-6 pt-6 pb-4">
           <DialogTitle className="text-lg font-bold text-foreground">
-            Datos de Contacto
+            Contact details
           </DialogTitle>
           <DialogDescription className="text-sm text-muted-foreground">
-            Completa tus datos para que un asesor pueda atenderte
+            Fill in your details so an advisor can assist you
           </DialogDescription>
         </DialogHeader>
 
@@ -184,7 +184,7 @@ export function LeadCaptureModal({
                 htmlFor="lc-firstName"
                 className="mb-1 block text-xs font-medium text-foreground"
               >
-                Nombre *
+                First name *
               </label>
               <input
                 id="lc-firstName"
@@ -193,7 +193,7 @@ export function LeadCaptureModal({
                 required
                 value={formData.firstName}
                 onChange={handleChange}
-                placeholder="Juan"
+                placeholder="John"
                 className="h-9 w-full rounded-md border border-border bg-background px-3 text-sm outline-none focus:border-primary focus:ring-1 focus:ring-primary"
               />
             </div>
@@ -202,7 +202,7 @@ export function LeadCaptureModal({
                 htmlFor="lc-lastName"
                 className="mb-1 block text-xs font-medium text-foreground"
               >
-                Apellido *
+                Last name *
               </label>
               <input
                 id="lc-lastName"
@@ -211,7 +211,7 @@ export function LeadCaptureModal({
                 required
                 value={formData.lastName}
                 onChange={handleChange}
-                placeholder="Pérez"
+                placeholder="Smith"
                 className="h-9 w-full rounded-md border border-border bg-background px-3 text-sm outline-none focus:border-primary focus:ring-1 focus:ring-primary"
               />
             </div>
@@ -232,7 +232,7 @@ export function LeadCaptureModal({
               required
               value={formData.email}
               onChange={handleChange}
-              placeholder="juan@email.com"
+              placeholder="john@email.com"
               className="h-9 w-full rounded-md border border-border bg-background px-3 text-sm outline-none focus:border-primary focus:ring-1 focus:ring-primary"
             />
           </div>
@@ -243,7 +243,7 @@ export function LeadCaptureModal({
               htmlFor="lc-phone"
               className="mb-1 block text-xs font-medium text-foreground"
             >
-              Teléfono *
+              Phone *
             </label>
             <div className="flex gap-2">
               <select
@@ -282,13 +282,13 @@ export function LeadCaptureModal({
               className="mt-0.5 h-4 w-4 shrink-0 rounded border-border text-primary focus:ring-primary"
             />
             <label htmlFor="lc-habeasData" className="text-xs text-muted-foreground leading-relaxed">
-              Autorizo el tratamiento de mis datos personales de acuerdo con la{" "}
+              I authorize the processing of my personal data in accordance with the{" "}
               <Link
                 href="/privacy-policy"
                 target="_blank"
                 className="font-medium text-primary underline hover:text-primary/80"
               >
-                Política de Privacidad
+                Privacy Policy
               </Link>
               . *
             </label>

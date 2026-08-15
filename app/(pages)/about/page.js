@@ -1,15 +1,15 @@
 import { ContactCTA } from "@/components/pages/about/ContactCTA";
 
 export const metadata = {
-  title: "Nuestra Historia | Venezuela Voyages",
+  title: "Our Story | Venezuela Voyages",
   description:
-    "Conoce la historia de Venezuela Voyages, 17 años de experiencia organizando expediciones por Venezuela. Tu agencia de viajes de confianza.",
+    "Discover the story of Venezuela Voyages: 17 years of experience organizing expeditions across Venezuela. Your trusted travel agency.",
   keywords: ["venezuela voyages", "agencia de viajes", "nuestra historia", "sobre nosotros", "viajes venezuela"],
   openGraph: {
-    title: "Nuestra Historia | Venezuela Voyages",
+    title: "Our Story | Venezuela Voyages",
     description:
-      "17 años de experiencia organizando expediciones por Venezuela. Conoce nuestra historia.",
-    locale: "es_VE",
+      "17 years of experience organizing expeditions across Venezuela. Discover our story.",
+    locale: "en_VE",
     type: "website",
   },
 };

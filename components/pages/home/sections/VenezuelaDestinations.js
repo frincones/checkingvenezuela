@@ -43,8 +43,8 @@ export async function VenezuelaDestinations() {
     <section className="mx-auto mb-[80px]">
       <div className="mb-[20px] md:mb-[40px]">
         <SectionTitle
-          title="Descubre Venezuela"
-          subTitle="El último gran secreto del Caribe te espera"
+          title="Discover Venezuela"
+          subTitle="The Caribbean's last great secret is waiting for you"
         />
       </div>
 
@@ -137,8 +137,8 @@ export async function VenezuelaDestinations() {
                         onlineEnabled={false}
                         onlineComingSoon={true}
                         quoteEnabled={true}
-                        quoteMessage={`Hola, estoy interesado en viajar a ${destination.name}, Venezuela. ¿Podrían darme más información?`}
-                        quoteLabel="Cotizar"
+                        quoteMessage={`Hi, I'm interested in traveling to ${destination.name}, Venezuela. Could you send me more information?`}
+                        quoteLabel="Get a quote"
                       />
 
                       {/* Ver Paquetes - solo si el destino viene de BD y tiene paquetes */}
@@ -151,7 +151,7 @@ export async function VenezuelaDestinations() {
                         >
                           <Link href={`/packages/destino/${destination.slug}`}>
                             <PackageIcon className="mr-2 h-4 w-4" />
-                            Ver Paquetes ({destination.packageCount})
+                            View packages ({destination.packageCount})
                           </Link>
                         </Button>
                       )}

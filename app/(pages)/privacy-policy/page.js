@@ -1,9 +1,9 @@
 import "./privacy-policy.css";
 
 export const metadata = {
-  title: "Política de Privacidad | Venezuela Voyages",
+  title: "Privacy Policy | Venezuela Voyages",
   description:
-    "Política de privacidad de Venezuela Voyages. Conoce cómo recopilamos, usamos y protegemos tu información personal.",
+    "Venezuela Voyages privacy policy. Learn how we collect, use and protect your personal information.",
 };
 
 export default function PrivacyPolicyPage() {
@@ -12,188 +12,176 @@ export default function PrivacyPolicyPage() {
       id="privacy-policy-container"
       className="mx-auto w-[90%] lg:mb-[80px] mb-[40px] mt-5"
     >
-      <h1>Política de Privacidad</h1>
+      <h1>Privacy Policy</h1>
       <p>
         <strong>Venezuela Voyages</strong>
       </p>
 
       <p>
-        En Venezuela Voyages, la protección de tu información personal es
-        fundamental. Esta política describe cómo recopilamos, utilizamos y
-        protegemos los datos que nos proporcionas al usar nuestro sitio web{" "}
+        At Venezuela Voyages, protecting your personal information is
+        fundamental. This policy describes how we collect, use and protect the
+        data you provide when using our website{" "}
         <a href="https://www.venezuelavoyages.com">
           www.venezuelavoyages.com
         </a>
         .
       </p>
 
-      <h2>1. Información que Recopilamos</h2>
+      <h2>1. Information We Collect</h2>
 
-      <h3>1.1 Información que Proporcionas</h3>
+      <h3>1.1 Information You Provide</h3>
       <ol>
         <li>
-          <b>Información de Cuenta:</b> Nombre completo, correo electrónico,
-          número de teléfono.
+          <b>Account information:</b> Full name, email address, phone number.
         </li>
         <li>
-          <b>Datos de Perfil:</b> Foto de perfil y foto de portada.
+          <b>Profile data:</b> Profile picture and cover photo.
         </li>
         <li>
-          <b>Datos de Búsqueda y Reservas:</b> Consultas de vuelos, hoteles y
-          paquetes turísticos, detalles de reservas.
+          <b>Search and booking data:</b> Flight, hotel and travel package
+          queries, booking details.
         </li>
         <li>
-          <b>Suscripción:</b> Correo electrónico proporcionado para recibir
-          actualizaciones y promociones.
+          <b>Subscription:</b> Email address provided to receive updates and
+          promotions.
         </li>
         <li>
-          <b>Documentación:</b> Nombre completo, número de pasaporte,
-          nacionalidad, edad, sexo y cualquier condición médica o preferencia
-          alimentaria necesaria para la reserva.
+          <b>Documentation:</b> Full name, passport number, nationality, age,
+          gender and any medical condition or dietary preference required for
+          the booking.
         </li>
       </ol>
 
-      <h3>1.2 Información Recopilada Automáticamente</h3>
+      <h3>1.2 Information Collected Automatically</h3>
       <ol>
         <li>
-          <b>Cookies:</b> Utilizamos cookies para rastrear la zona horaria del
-          usuario y personalizar horarios de vuelos. También se usan cookies
-          temporales para verificación de email y restablecimiento de
-          contraseña.
+          <b>Cookies:</b> We use cookies to track the user&apos;s time zone and
+          personalise flight times. Temporary cookies are also used for email
+          verification and password reset.
         </li>
         <li>
-          <b>Datos de Analítica:</b> Se recopilan datos de comportamiento de
-          visitantes mediante servicios de analítica para mejorar la experiencia
-          del usuario.
+          <b>Analytics data:</b> Visitor behaviour data is collected through
+          analytics services to improve the user experience.
         </li>
       </ol>
 
-      <h3>1.3 Servicios de Terceros</h3>
+      <h3>1.3 Third-Party Services</h3>
       <ol>
         <li>
-          <b>Resend:</b> Utilizado para el envío de correos electrónicos
-          transaccionales y comunicaciones.
+          <b>Resend:</b> Used to send transactional emails and communications.
         </li>
         <li>
-          <b>Supabase:</b> Almacenamiento de datos de usuario, reservas e
-          imágenes.
+          <b>Supabase:</b> Storage of user data, bookings and images.
         </li>
         <li>
-          <b>Stripe:</b> Procesamiento seguro de pagos.
+          <b>Stripe:</b> Secure payment processing.
         </li>
         <li>
-          <b>Vercel:</b> Hosting y analítica de la plataforma.
+          <b>Vercel:</b> Platform hosting and analytics.
         </li>
       </ol>
 
-      <h2>2. Cómo Utilizamos tu Información</h2>
+      <h2>2. How We Use Your Information</h2>
       <ol>
         <li>
-          Proporcionar y mejorar nuestros servicios de reserva de vuelos,
-          hoteles y paquetes turísticos.
+          To provide and improve our flight, hotel and travel package booking
+          services.
         </li>
         <li>
-          Enviar actualizaciones, verificaciones, cotizaciones y comunicaciones
-          relevantes.
+          To send updates, verifications, quotes and relevant communications.
         </li>
         <li>
-          Personalizar resultados de búsqueda según tus preferencias y
-          ubicación.
+          To personalise search results according to your preferences and
+          location.
         </li>
-        <li>Coordinar servicios con proveedores turísticos autorizados.</li>
+        <li>To coordinate services with authorized travel providers.</li>
       </ol>
 
-      <h2>3. Compartición de Información</h2>
+      <h2>3. Sharing of Information</h2>
       <p>
-        <b>Podemos compartir tus datos con:</b>
+        <b>We may share your data with:</b>
       </p>
       <ol>
         <li>
-          <b>Proveedores de Servicios:</b> Aerolíneas, hoteles, operadores
-          turísticos y proveedores de transporte necesarios para cumplir con tu
-          reserva.
+          <b>Service providers:</b> Airlines, hotels, tour operators and
+          transport providers required to fulfil your booking.
         </li>
         <li>
-          <b>Servicios Tecnológicos:</b> Resend, Supabase, Stripe y servicios de
-          analítica para operar nuestra plataforma.
+          <b>Technology services:</b> Resend, Supabase, Stripe and analytics
+          services used to operate our platform.
         </li>
         <li>
-          <b>Autoridades Legales:</b> Según lo requiera la ley venezolana
-          aplicable.
+          <b>Legal authorities:</b> As required by applicable Venezuelan law.
         </li>
       </ol>
 
-      <h2>4. Cookies y Seguimiento</h2>
+      <h2>4. Cookies and Tracking</h2>
       <p>
-        Utilizamos cookies para rastrear la zona horaria del usuario, mostrar
-        horarios locales y gestionar procesos de verificación de correo
-        electrónico y restablecimiento de contraseña. Puedes controlar las
-        cookies a través de la configuración de tu navegador.
+        We use cookies to track the user&apos;s time zone, display local times
+        and manage email verification and password reset processes. You can
+        control cookies through your browser settings.
       </p>
       <p>
-        Además, utilizamos herramientas de análisis de terceros para entender
-        cómo se usa nuestro sitio y mejorar la experiencia:
+        We also use third-party analytics tools to understand how our site is
+        used and to improve the experience:
       </p>
       <ol>
         <li>
-          <b>Google Analytics 4:</b> registra visitas, páginas vistas y eventos
-          agregados de navegación. Los datos se procesan por Google. Puedes
-          consultar la{" "}
+          <b>Google Analytics 4:</b> records visits, page views and aggregated
+          navigation events. Data is processed by Google. You can review{" "}
           <a
             href="https://policies.google.com/privacy"
             target="_blank"
             rel="noopener noreferrer"
           >
-            política de privacidad de Google
+            Google&apos;s privacy policy
           </a>
           .
         </li>
         <li>
-          <b>Microsoft Clarity:</b> registra interacciones anónimas
-          (movimientos del cursor, clicks y scrolls) para generar mapas de
-          calor y grabaciones agregadas que nos ayudan a detectar problemas de
-          usabilidad. Los datos se procesan por Microsoft. Puedes consultar la{" "}
+          <b>Microsoft Clarity:</b> records anonymous interactions (cursor
+          movement, clicks and scrolls) to generate heatmaps and aggregated
+          recordings that help us detect usability problems. Data is processed
+          by Microsoft. You can review{" "}
           <a
-            href="https://privacy.microsoft.com/es-es/privacystatement"
+            href="https://privacy.microsoft.com/en-us/privacystatement"
             target="_blank"
             rel="noopener noreferrer"
           >
-            política de privacidad de Microsoft
+            Microsoft&apos;s privacy policy
           </a>
-          . Configuramos Clarity para enmascarar automáticamente el texto de
-          los campos de formulario, de modo que datos sensibles como emails,
-          contraseñas o información de pago no queden registrados.
+          . We configure Clarity to automatically mask form field text, so that
+          sensitive data such as emails, passwords or payment information is
+          never recorded.
         </li>
         <li>
-          <b>Vercel Analytics:</b> mide métricas de rendimiento (Core Web
-          Vitals) del sitio, sin recopilar información personal.
+          <b>Vercel Analytics:</b> measures site performance metrics (Core Web
+          Vitals) without collecting personal information.
         </li>
       </ol>
       <p>
-        Puedes deshabilitar estas herramientas mediante extensiones de bloqueo
-        de rastreadores en tu navegador o mediante la configuración de
-        &ldquo;Do Not Track&rdquo; del mismo.
+        You can disable these tools using tracker-blocking extensions in your
+        browser or through its &ldquo;Do Not Track&rdquo; setting.
       </p>
 
-      <h2>5. Seguridad de Datos</h2>
+      <h2>5. Data Security</h2>
       <p>
-        Tomamos medidas razonables para proteger tu información personal.
-        Utilizamos tecnologías de cifrado avanzadas, incluyendo SSL para datos
-        en tránsito y AES-256 para datos en reposo. Para más información,
-        consulta nuestras{" "}
-        <a href="/security-policy">Políticas de Seguridad</a>.
+        We take reasonable measures to protect your personal information. We use
+        advanced encryption technologies, including SSL for data in transit and
+        AES-256 for data at rest. For more information, see our{" "}
+        <a href="/security-policy">Security Policies</a>.
       </p>
 
-      <h2>6. Derechos del Usuario</h2>
+      <h2>6. Your Rights</h2>
       <ol>
-        <li>Acceder, corregir o eliminar tus datos personales.</li>
-        <li>Retirar el consentimiento para comunicaciones por correo.</li>
+        <li>Access, correct or delete your personal data.</li>
+        <li>Withdraw consent for email communications.</li>
         <li>
-          Solicitar información sobre cómo se procesan tus datos personales.
+          Request information about how your personal data is processed.
         </li>
       </ol>
       <p>
-        Para solicitudes, contáctanos en:{" "}
+        For requests, contact us at:{" "}
         <strong>
           <a href="mailto:info@venezuelavoyages.com">
             info@venezuelavoyages.com
@@ -201,16 +189,15 @@ export default function PrivacyPolicyPage() {
         </strong>
       </p>
 
-      <h2>7. Actualizaciones de esta Política</h2>
+      <h2>7. Updates to This Policy</h2>
       <p>
-        Nos reservamos el derecho de actualizar esta Política de Privacidad.
-        Cualquier cambio será publicado en esta página con la fecha de vigencia
-        actualizada.
+        We reserve the right to update this Privacy Policy. Any change will be
+        published on this page with an updated effective date.
       </p>
 
-      <h2>8. Contacto</h2>
+      <h2>8. Contact</h2>
       <p>
-        Para consultas relacionadas con privacidad, contáctanos en:{" "}
+        For privacy-related enquiries, contact us at:{" "}
         <strong>
           <a href="mailto:info@venezuelavoyages.com">
             info@venezuelavoyages.com
@@ -218,7 +205,7 @@ export default function PrivacyPolicyPage() {
         </strong>
       </p>
       <p>
-        Teléfono:{" "}
+        Phone:{" "}
         <strong>
           <a href="tel:+584264034052">+58 426 4034052</a>
         </strong>

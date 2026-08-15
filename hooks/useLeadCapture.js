@@ -13,7 +13,7 @@ const WHATSAPP_NUMBER = "584264034052";
  *   // When user clicks a CTA:
  *   requestCapture({
  *     action: "whatsapp",
- *     whatsappMessage: "Hola...",
+ *     whatsappMessage: "Hi...",
  *     trackingData: { interest_type: "package", ... }
  *   });
  *
@@ -44,7 +44,7 @@ export function useLeadCapture() {
     const { action, whatsappMessage, navigateTo, onComplete } = config;
 
     if (action === "whatsapp") {
-      const message = whatsappMessage || "Hola, estoy interesado en sus servicios de viajes.";
+      const message = whatsappMessage || "Hi, I'm interested in your travel services.";
       const url = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(message)}`;
       window.open(url, "_blank", "noopener,noreferrer");
     } else if (action === "navigate" && navigateTo) {
@@ -102,13 +102,13 @@ function buildWhatsAppMessage(baseMessage, contactData) {
   if (baseMessage) {
     lines.push(baseMessage);
   } else {
-    lines.push("Hola, estoy interesado en sus servicios de viajes.");
+    lines.push("Hi, I'm interested in your travel services.");
   }
 
   lines.push("");
-  if (contactName) lines.push(`Nombre: ${contactName}`);
+  if (contactName) lines.push(`Name: ${contactName}`);
   if (email) lines.push(`Email: ${email}`);
-  if (phone) lines.push(`Tel: ${phone}`);
+  if (phone) lines.push(`Phone: ${phone}`);
 
   return lines.join("\n");
 }

@@ -17,8 +17,8 @@ export function PopularHotelDestinations() {
     <section className="mx-auto mb-[80px]">
       <div className="mx-auto mb-[20px] flex items-center justify-between max-md:flex-col max-md:gap-[16px] md:mb-[40px]">
         <SectionTitle
-          title="Destinos de Hoteles Populares"
-          subTitle="Descubre los mejores lugares para hospedarte en tu próximo viaje"
+          title="Popular Hotel Destinations"
+          subTitle="Discover the best places to stay on your next trip"
           className="flex-[0_0_50%]"
         />
       </div>
@@ -70,11 +70,11 @@ export function PopularHotelDestinations() {
                   variant="card"
                   onlineEnabled={true}
                   onlinePath="/hotels"
-                  onlineLabel="Buscar"
+                  onlineLabel="Search"
                   onlineComingSoon={false}
                   quoteEnabled={true}
-                  quoteMessage={`Hola, estoy interesado en hoteles en ${destination.name}, ${destination.country}. ¿Podrían ayudarme con opciones?`}
-                  quoteLabel="Cotizar"
+                  quoteMessage={`Hi, I'm interested in hotels in ${destination.name}, ${destination.country}. Could you help me with the options?`}
+                  quoteLabel="Get a quote"
                 />
               </div>
             </CardContent>

@@ -21,7 +21,7 @@ export const heroConfig = {
       language: "en",
       targetAudience: "international",
       angle: "exclusivity-mystery",
-      description: "Genera curiosidad y sensación de exclusividad; evita turismo masivo"
+      description: "Sparks curiosity and a sense of exclusivity; avoids mass tourism"
     },
     "adventure-paradise": {
       headline: "Discover Venezuela: Where Adventure Meets Paradise.",
@@ -30,7 +30,7 @@ export const heroConfig = {
       language: "en",
       targetAudience: "international",
       angle: "adventure",
-      description: "Enfoque en aventura y destino paradisíaco"
+      description: "Focus on adventure and a paradise destination"
     },
     "untold-stories": {
       headline: "Venezuela: A Story Waiting to Be Told.",
@@ -39,7 +39,7 @@ export const heroConfig = {
       language: "en",
       targetAudience: "international",
       angle: "storytelling",
-      description: "Apela a viajeros que buscan historias que contar"
+      description: "Appeals to travellers looking for stories to tell"
     },
     "hidden-gem": {
       headline: "Venezuela: The Caribbean's Best Hidden Gem Awaits You.",
@@ -48,7 +48,7 @@ export const heroConfig = {
       language: "en",
       targetAudience: "international",
       angle: "discovery",
-      description: "Enfatiza el descubrimiento de un tesoro oculto"
+      description: "Emphasises the discovery of a hidden treasure"
     }
   }
 };
