@@ -167,10 +167,21 @@ const nextConfig = {
       ],
     ];
 
+    // `statusCode: 301` en vez de `permanent: true`.
+    //
+    // `permanent: true` emite 308, no 301 — es el comportamiento por defecto de
+    // Next.js. Google trata 308 y 301 igual a efectos de traspasar
+    // posicionamiento, así que funcionalmente daría igual, pero:
+    //   · 308 conserva el método HTTP (un POST sigue siendo POST). Aquí solo
+    //     hay páginas servidas por GET, así que no aporta nada.
+    //   · herramientas de auditoría SEO y crawlers antiguos siguen esperando
+    //     301, y verificar con redirect-checker devolvería "308" en vez del
+    //     "301 Moved Permanently" que pide la especificación de SEO.
+    // Sin ventaja en dejar el 308, se emite el 301 literal.
     return pairs.map(([source, destination]) => ({
       source,
       destination,
-      permanent: true,
+      statusCode: 301,
     }));
   },
   async headers() {
