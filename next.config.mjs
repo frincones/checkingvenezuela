@@ -116,6 +116,31 @@ const nextConfig = {
       ["/destinos/isla-la-tortuga", "/destinos/la-tortuga-island"],
       ["/destinos/catatumbo", "/destinos/catatumbo-lightning-venezuela"],
 
+      // ── Paquetes por destino ──
+      //
+      // Esta familia se pasó por alto en la primera tanda. La ruta
+      // /packages/destino/[slug] resuelve contra destinations.is_active, así que
+      // al archivar los slugs españoles en el flip pasó a devolver 404 igual que
+      // /destinos/. Yandex reportó dos; probando en producción, las cinco daban
+      // 404, así que se cierra la familia entera y no solo lo reportado.
+      //
+      // El destino es el LISTADO inglés, no la ficha de destino: mantener el
+      // tipo de contenido (listado → listado) conserva la intención de búsqueda.
+      // Un salto listado → ficha Google puede leerlo como redirección
+      // irrelevante y no traspasar autoridad. Los cinco destinos tienen al menos
+      // un paquete publicado, así que ninguno cae en la pantalla "Coming soon".
+      //
+      // Ojo: si algún día se reactiva un destino con slug español desde el CMS,
+      // estas reglas lo taparían. Los gemelos ingleses son los vigentes.
+      ["/packages/destino/canaima", "/packages/destino/en-canaima-national-park"],
+      ["/packages/destino/los-roques", "/packages/destino/los-roques-archipelago"],
+      ["/packages/destino/roraima", "/packages/destino/mount-roraima"],
+      ["/packages/destino/isla-la-tortuga", "/packages/destino/la-tortuga-island"],
+      [
+        "/packages/destino/catatumbo",
+        "/packages/destino/catatumbo-lightning-venezuela",
+      ],
+
       // ── Paquetes ──
       [
         "/packages/trekking-al-tepuy-roraima-el-mundo-perdido-10-d-9-n",
@@ -147,6 +172,14 @@ const nextConfig = {
       [
         "/packages/canaima-y-salto-angel-4d-3n",
         "/packages/canaima-national-park-standard-comfort-package",
+      ],
+
+      // Huérfano detectado en el barrido de contenido archivado: no estaba en
+      // ninguna lista de SEO y daba 404. Su hermano publicado cubre el mismo
+      // destino y producto.
+      [
+        "/packages/relampago-del-catatumbo-ruta-del-cacao",
+        "/packages/relampago-del-catatumbo",
       ],
 
       // ── Blog ──
