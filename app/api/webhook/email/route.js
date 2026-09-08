@@ -60,6 +60,54 @@ async function fetchAttachments(emailId) {
 }
 
 /**
+ * Full record of an email we SENT. Only used on bounce.
+ *
+ * The `email.bounced` webhook payload carries bounce.{type,subType,message} but
+ * NOT diagnosticCode, and the raw SMTP line is the only part that tells apart
+ * "this mailbox does not exist" (550 5.4.1) from "the server deferred us today".
+ * Bounces are rare enough (4 out of ~500 sends) that one extra API call costs
+ * nothing.
+ */
+async function fetchSentEmail(emailId) {
+  const res = await fetch(`https://api.resend.com/emails/${emailId}`, {
+    headers: { Authorization: `Bearer ${RESEND_API_KEY}` },
+  });
+  if (!res.ok) return null;
+  return res.json();
+}
+
+/**
+ * Flattens Resend's bounce object into something the CRM can render and query.
+ *
+ * `type` is what drives the decision:
+ *   Permanent    -> the address is dead. Retrying burns sender reputation.
+ *   Transient    -> mailbox full / greylisting / temporary filter. Retriable.
+ *   Undetermined -> the provider gave nothing useful.
+ */
+function buildBounceMeta(bounce) {
+  if (!bounce) return null;
+
+  const codes = Array.isArray(bounce.diagnosticCode)
+    ? bounce.diagnosticCode
+    : bounce.diagnosticCode
+      ? [bounce.diagnosticCode]
+      : [];
+
+  // "smtp; 550 5.4.1 Recipient address rejected: ..." -> "550 5.4.1"
+  const smtp = codes.join(" ").match(/\b[45]\d{2}(?:\s+\d\.\d\.\d+)?/);
+
+  return {
+    type: bounce.type || "Undetermined",
+    sub_type: bounce.subType || bounce.sub_type || null,
+    message: bounce.message || null,
+    diagnostic_code: codes,
+    smtp_code: smtp ? smtp[0] : null,
+    permanent: bounce.type === "Permanent",
+    recorded_at: new Date().toISOString(),
+  };
+}
+
+/**
  * Download one attachment from Resend (authenticated) and push it to Storage.
  * Returns a metadata object suitable for emails.attachments JSONB.
  *
@@ -263,12 +311,38 @@ export async function POST(request) {
           "email.opened": "opened",
         };
         const emailId = data.email_id || data.id;
-        if (emailId) {
-          await supabase
-            .from("emails")
-            .update({ status: statusMap[type], updated_at: new Date().toISOString() })
-            .eq("resend_id", emailId);
+        if (!emailId) break;
+
+        const patch = {
+          status: statusMap[type],
+          updated_at: new Date().toISOString(),
+        };
+
+        if (type === "email.bounced") {
+          // Enrich from the API to get diagnosticCode; fall back to whatever the
+          // payload carried so a failed lookup costs us detail, not the reason.
+          let bounce = data.bounce || null;
+          try {
+            const full = await fetchSentEmail(emailId);
+            if (full?.bounce) bounce = full.bounce;
+          } catch (e) {
+            console.error("[webhook/email] bounce enrich failed", e.message);
+          }
+
+          const bounceMeta = buildBounceMeta(bounce);
+          if (bounceMeta) {
+            // Read-modify-write. metadata already holds quotation_id on mail sent
+            // from a quotation; assigning a fresh object would blank that link.
+            const { data: row } = await supabase
+              .from("emails")
+              .select("metadata")
+              .eq("resend_id", emailId)
+              .maybeSingle();
+            patch.metadata = { ...(row?.metadata || {}), bounce: bounceMeta };
+          }
         }
+
+        await supabase.from("emails").update(patch).eq("resend_id", emailId);
         break;
       }
 

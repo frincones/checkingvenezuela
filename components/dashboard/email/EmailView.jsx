@@ -234,6 +234,56 @@ function ToolbarButton({ onClick, label, children, danger }) {
   );
 }
 
+/**
+ * Motivo del rebote.
+ *
+ * Sin esto el CRM solo dice "Rebotado" y no hay forma de distinguir un buzon
+ * muerto de un rechazo temporal, que son decisiones opuestas: el permanente
+ * hay que sacarlo de la lista, el temporal se puede reintentar. El dato lo
+ * guarda el webhook en metadata.bounce.
+ */
+function BounceNotice({ bounce }) {
+  const permanent = bounce.permanent ?? bounce.type === "Permanent";
+  const codes = Array.isArray(bounce.diagnostic_code) ? bounce.diagnostic_code : [];
+
+  return (
+    <div
+      className={`mb-4 rounded-md border p-3 ${
+        permanent ? "border-red-200 bg-red-50" : "border-amber-200 bg-amber-50"
+      }`}
+    >
+      <p
+        className={`text-xs font-semibold ${
+          permanent ? "text-red-800" : "text-amber-800"
+        }`}
+      >
+        {permanent
+          ? "Rebote permanente \u2014 no reintentar"
+          : "Rebote temporal \u2014 se puede reintentar"}
+        {bounce.smtp_code ? ` \u00b7 SMTP ${bounce.smtp_code}` : ""}
+      </p>
+
+      {bounce.message && (
+        <p className="mt-1 text-xs leading-relaxed text-gray-700">{bounce.message}</p>
+      )}
+
+      {codes.length > 0 && (
+        <p className="mt-1.5 break-all font-mono text-[0.6875rem] leading-relaxed text-gray-500">
+          {codes.join(" ")}
+        </p>
+      )}
+
+      {permanent && (
+        <p className="mt-2 text-xs leading-relaxed text-gray-700">
+          Recomendado: quitar esta dirección de la lista. Seguir enviando a
+          direcciones que rebotan en duro daña la reputación del dominio y
+          empuja el resto del correo a spam.
+        </p>
+      )}
+    </div>
+  );
+}
+
 export default function EmailView({ email, onReply, onForward, onDelete, onArchive, onBack }) {
   const [showFullHeaders, setShowFullHeaders] = useState(false);
 
@@ -358,6 +408,10 @@ export default function EmailView({ email, onReply, onForward, onDelete, onArchi
               </span>
             )}
           </div>
+
+          {email.status === "bounced" && email.metadata?.bounce && (
+            <BounceNotice bounce={email.metadata.bounce} />
+          )}
 
           {/* Attachments shown above the body (Outlook layout) */}
           {attachments.length > 0 && (
