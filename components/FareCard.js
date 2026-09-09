@@ -8,6 +8,7 @@ import { multiRoomCombinedFareBreakDown } from "@/lib/helpers/hotels/priceCalcul
 import { useDispatch, useSelector } from "react-redux";
 import { setRooms } from "@/reduxStore/features/hotelRoomSelectorSlice";
 import { EmptyResult } from "./EmptyResult";
+import { readStorageJSON } from "@/lib/utils/safeStorage";
 
 export function FareCard({
   segments = [],
@@ -118,9 +119,9 @@ export function HotelFareCard({ searchState, className = "" }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const selectedRooms = JSON.parse(
-      sessionStorage.getItem("selectedRooms") || "[]",
-    );
+    // readStorageJSON tolera almacenamiento bloqueado y JSON corrupto; ambos
+    // casos caen al array vacio en vez de lanzar dentro del efecto.
+    const selectedRooms = readStorageJSON("selectedRooms", [], { session: true });
 
     dispatch(setRooms(selectedRooms));
     setTimeout(() => setLoading(false), 500);

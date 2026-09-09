@@ -1,16 +1,42 @@
 import { join, resolve } from "path";
+/**
+ * Content-Security-Policy del sitio publico.
+ *
+ * Google Analytics 4 y Microsoft Clarity estaban montados en app/layout.js pero
+ * el navegador los bloqueaba en TODAS las paginas, porque sus dominios no
+ * estaban en esta cabecera. GA4 no midio nada mientras eso duro. Hubo cuatro
+ * intentos previos de arreglarlo moviendo el script de sitio y cambiando de
+ * libreria (#87, #88, #89, d6b0211); ninguno toco la CSP, que era la causa.
+ *
+ * Para que un tag de analitica funcione hacen falta TRES directivas, no una:
+ *   script-src   de donde se descarga el codigo
+ *   connect-src  a donde manda los eventos (fetch / sendBeacon)
+ *   img-src      beacons de respaldo por pixel, que ambos usan como fallback
+ * Permitir solo script-src carga la libreria y luego bloquea cada evento en
+ * silencio, que se parece mucho a "esta puesto pero no reporta".
+ *
+ * Dominios y por que cada uno:
+ *   googletagmanager.com          script de gtag.js
+ *   google-analytics.com          endpoint clasico de recogida
+ *   *.google-analytics.com        region1..regionN, GA4 enruta por region
+ *   analytics.google.com          recogida directa de GA4
+ *   *.analytics.google.com        propagacion a Google Signals
+ *   www.google.com                sincronizacion de conversiones de Google Signals
+ *   clarity.ms / *.clarity.ms     script de Clarity y su ingesta
+ *   c.bing.com                    Clarity sincroniza ahi, es de Microsoft
+ */
 const cspHeader = `
     default-src 'self';
-    script-src 'self' 'unsafe-eval' 'unsafe-inline' https://js.stripe.com https://va.vercel-scripts.com https://*.vercel-scripts.com;
+    script-src 'self' 'unsafe-eval' 'unsafe-inline' https://js.stripe.com https://va.vercel-scripts.com https://*.vercel-scripts.com https://www.googletagmanager.com https://www.google-analytics.com https://www.clarity.ms https://*.clarity.ms;
     style-src 'self' 'unsafe-inline';
-    img-src 'self' blob: data: https://images.unsplash.com/ https://images.pexels.com/ https://platform-lookaside.fbsbx.com/ https://api.dicebear.com/ https://*.supabase.co/;
+    img-src 'self' blob: data: https://images.unsplash.com/ https://images.pexels.com/ https://platform-lookaside.fbsbx.com/ https://api.dicebear.com/ https://*.supabase.co/ https://www.googletagmanager.com https://www.google-analytics.com https://*.google-analytics.com https://c.bing.com https://*.clarity.ms;
     font-src 'self' data:;
     object-src 'self';
     frame-src 'self' https://www.openstreetmap.org/ https://js.stripe.com https://www.google.com/;
     base-uri 'self';
     form-action 'self';
     frame-ancestors 'none';
-    connect-src 'self' https://va.vercel-scripts.com https://*.vercel-scripts.com https://*.supabase.co;
+    connect-src 'self' https://va.vercel-scripts.com https://*.vercel-scripts.com https://*.supabase.co https://www.googletagmanager.com https://www.google-analytics.com https://*.google-analytics.com https://*.analytics.google.com https://analytics.google.com https://www.google.com https://www.clarity.ms https://*.clarity.ms https://c.bing.com;
     upgrade-insecure-requests;
 `;
 /** @type {import('next').NextConfig} */
