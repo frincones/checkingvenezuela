@@ -10,6 +10,7 @@ import { useFormState } from "react-dom";
 import mailbox from "@/public/images/mailbox.svg";
 import { subscribeAction } from "@/lib/actions";
 import { SubmitBtn } from "./local-ui/SubmitBtn";
+import { readStorage, writeStorage } from "@/lib/utils/safeStorage";
 
 export function SubscribeNewsletter({ isSubscribed }) {
   const [state, dispatch] = useFormState(subscribeAction);
@@ -22,7 +23,11 @@ export function SubscribeNewsletter({ isSubscribed }) {
   // Handle client-side mounting to prevent hydration mismatch
   useEffect(() => {
     setIsMounted(true);
-    const storedSubscribed = localStorage.getItem("subscribed");
+    // readStorage no lanza si el almacenamiento esta bloqueado. Antes esto era
+    // localStorage.getItem directo y, con las cookies de sitio denegadas,
+    // localStorage es null: el TypeError subia al error boundary de la raiz y
+    // tumbaba la pagina entera, no solo el footer.
+    const storedSubscribed = readStorage("subscribed");
     if (storedSubscribed) {
       setSubscribed(true);
     }
@@ -54,7 +59,9 @@ export function SubscribeNewsletter({ isSubscribed }) {
     if (state?.success === true) {
       setError();
       setSubscribed(true);
-      localStorage.setItem("subscribed", true);
+      // Si no se puede persistir, el visitante ve igualmente la confirmacion;
+      // solo se pierde el recuerdo entre visitas.
+      writeStorage("subscribed", true);
     } else {
       setError(state?.error);
     }

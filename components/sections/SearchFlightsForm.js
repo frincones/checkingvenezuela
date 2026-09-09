@@ -33,6 +33,12 @@ import Jumper, { jumpTo } from "../local-ui/Jumper";
 import { Skeleton } from "../ui/skeleton";
 import { Loader } from "lucide-react";
 import addToSearchHistoryAction from "@/lib/actions/addToSearchHistoryAction";
+import {
+  readStorage,
+  writeStorage,
+  writeStorageJSON,
+  removeStorage,
+} from "@/lib/utils/safeStorage";
 
 const DatePickerCustomInput = forwardRef(
   ({ loading, open, setOpen, value, onClick, className }, ref) => {
@@ -126,7 +132,7 @@ function SearchFlightsForm({ params = {} }) {
     const controller = new AbortController();
     async function getAvailableFlightDateRange() {
       setIsLoadingDateRange(true);
-      const getCachedFlight = sessionStorage.getItem("flightDateRange");
+      const getCachedFlight = readStorage("flightDateRange", { session: true });
       if (getCachedFlight) {
         const { from, to, expireAt } = JSON.parse(getCachedFlight);
         if (Date.now() < expireAt) {
@@ -148,13 +154,10 @@ function SearchFlightsForm({ params = {} }) {
         const data = await res.json();
         if (data.success === true) {
           const { from, to } = data.data;
-          sessionStorage.setItem(
+          writeStorageJSON(
             "flightDateRange",
-            JSON.stringify({
-              from,
-              to,
-              expireAt: Date.now() + 10 * 60 * 1000,
-            }),
+            { from, to, expireAt: Date.now() + 10 * 60 * 1000 },
+            { session: true },
           );
           dispatch(setFlightForm({ availableFlightDateRange: { from, to } }));
         }
@@ -204,7 +207,7 @@ function SearchFlightsForm({ params = {} }) {
       return;
     }
 
-    const sessionTimeout = localStorage.getItem("sessionTimeoutAt") || 0;
+    const sessionTimeout = readStorage("sessionTimeoutAt") || 0;
     const currTime = Date.now();
 
     const areTheySame = objDeepCompare(dFForm, dSState);
@@ -215,7 +218,7 @@ function SearchFlightsForm({ params = {} }) {
     if (shouldPreventFromSubmitting) {
       jumpTo("flightResult");
       const newSessionTimeoutAt = Date.now() + 1200 * 1000;
-      localStorage.setItem("sessionTimeoutAt", newSessionTimeoutAt);
+      writeStorage("sessionTimeoutAt", newSessionTimeoutAt);
       const event = new CustomEvent("customStorage", {
         detail: {
           key: "sessionTimeoutAt",
@@ -239,7 +242,7 @@ function SearchFlightsForm({ params = {} }) {
       return;
     }
     if (res.success === true) {
-      localStorage.setItem("sessionTimeoutAt", res.data.sessionTimeoutAt);
+      writeStorage("sessionTimeoutAt", res.data.sessionTimeoutAt);
       const event = new CustomEvent("customStorage", {
         detail: {
           key: "sessionTimeoutAt",
@@ -251,7 +254,7 @@ function SearchFlightsForm({ params = {} }) {
       await addToSearchHistoryAction("flight", dFForm);
 
       // clear passengersDetails if it exists for previous search
-      sessionStorage.removeItem("passengersDetails");
+      removeStorage("passengersDetails", { session: true });
 
       window.dispatchEvent(event);
       dispatch(setFlightForm({ errors: {} }));
