@@ -246,6 +246,29 @@ const nextConfig = {
   async headers() {
     return [
       {
+        /**
+         * Estaticos de public/images: se revalidaban en CADA visita
+         * (max-age=0, must-revalidate), asi que el navegador volvia a pedirlos
+         * siempre aunque no hubieran cambiado.
+         *
+         * Next acumula las cabeceras de todas las reglas que hacen match, y
+         * Cache-Control no colisiona con las claves de la regla de abajo (CSP,
+         * X-Content-Type-Options, X-Pathname), asi que esta regla solo anade.
+         *
+         * Contrapartida: reemplazar una imagen conservando el nombre no se vera
+         * hasta que expire la cache. Para estas imagenes de marca, que cambian
+         * muy rara vez, compensa. Si hiciera falta forzarlo, se renombra el
+         * fichero.
+         */
+        source: "/images/:path*",
+        headers: [
+          {
+            key: "Cache-Control",
+            value: "public, max-age=2592000, stale-while-revalidate=86400",
+          },
+        ],
+      },
+      {
         source: "/:path*",
         headers: [
           {
