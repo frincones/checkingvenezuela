@@ -62,10 +62,52 @@ const nextConfig = {
     return config;
   },
   images: {
-    // Desactiva el Image Optimization API de Vercel (que devuelve 402 al exceder
-    // la cuota del plan). Las imágenes se sirven directo desde sus CDNs de origen
-    // (Supabase Storage, Unsplash, etc.), que ya entregan contenido optimizado.
-    unoptimized: true,
+    /**
+     * Optimización de imágenes REACTIVADA.
+     *
+     * Se desactivó en bed72b8 por errores 402 al agotar la cuota, con la
+     * justificación de que los CDN de origen ya servían contenido optimizado.
+     * Eso es cierto para Unsplash y Supabase, pero NO para public/: esos
+     * ficheros se sirven tal cual, y ahí vivía un hero de 9,89 MB.
+     *
+     * Se reactiva porque el límite gratuito de Hobby son 5.000
+     * transformaciones/mes y este sitio necesita ~470 (140 imágenes en BD + 16
+     * estáticas, por 2-3 anchos). Comprobado contra un despliegue real: el
+     * optimizador responde 200, no 402.
+     *
+     * Ojo: el equipo tiene ~30 proyectos compartiendo esa cuota. Si vuelven los
+     * 402, revertir es poner `unoptimized: true` otra vez; el hero recortado
+     * sigue dando el 94% de la mejora por sí solo.
+     */
+    unoptimized: false,
+
+    // AVIF primero: en el hero da 81 KB a 640px frente a los 578 KB del fichero
+    // servido tal cual. WebP queda de respaldo para navegadores sin AVIF.
+    formats: ["image/avif", "image/webp"],
+
+    // Por defecto son 8 anchos. Cada ancho usado es una transformación, así que
+    // recortar a 5 baja el consumo ~37% sin efecto visible: cubren desde móvil
+    // hasta retina.
+    deviceSizes: [640, 828, 1200, 1920, 2560],
+
+    // Un año. Cada imagen se transforma una vez y luego sale de caché, que es
+    // lo que mantiene el consumo lejos del límite.
+    minimumCacheTTL: 31536000,
+
+    /**
+     * SVG: sin esto el optimizador responde 400 y los iconos DESAPARECEN.
+     * Hay 33 ficheros que pasan SVG por next/image, incluidos los botones de
+     * Google, Facebook y Apple del login. Esta es, muy probablemente, la
+     * regresión real que provocó el commit bed72b8.
+     *
+     * "dangerously" porque un SVG puede llevar <script>. Aquí es seguro: los 64
+     * SVG son nuestros y viven en public/; ninguno viene de la BD ni de subidas
+     * de usuario (auditadas las 143 URLs de imagen en BD: solo jpg/png). Aun
+     * así se sirven aislados y sin capacidad de ejecutar scripts.
+     */
+    dangerouslyAllowSVG: true,
+    contentDispositionType: "attachment",
+    contentSecurityPolicy: "default-src 'self'; script-src 'none'; sandbox;",
     remotePatterns: [
       {
         protocol: "https",
