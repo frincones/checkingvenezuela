@@ -1,29 +1,16 @@
 "use client";
 
-import { useLeadCapture } from "@/hooks/useLeadCapture";
-import { LeadCaptureModal } from "@/components/ui/LeadCaptureModal";
+import { useState } from "react";
+import { BookingRequestModal } from "@/components/ui/BookingRequestModal";
 
 export function ContactCTA() {
-  const { modalOpen, setModalOpen, trackingData, requestCapture, handleLeadSubmit } =
-    useLeadCapture();
-
-  function handleClick(e) {
-    e.preventDefault();
-    requestCapture({
-      action: "whatsapp",
-      whatsappMessage: "Hi, I'm reaching out from the About page. I'm interested in your travel services.",
-      trackingData: {
-        source: "web_form",
-        interest_type: "other",
-        interest_details: { origin: "about_page" },
-      },
-    });
-  }
+  // Sin producto: el modal muestra su variante genérica.
+  const [open, setOpen] = useState(false);
 
   return (
     <>
       <button
-        onClick={handleClick}
+        onClick={() => setOpen(true)}
         className="inline-flex items-center gap-2 rounded-full bg-white px-8 py-3 text-lg font-semibold text-primary transition-transform hover:scale-105"
       >
         <svg
@@ -36,12 +23,11 @@ export function ContactCTA() {
         Contact Us Now!
       </button>
 
-      <LeadCaptureModal
-        open={modalOpen}
-        onOpenChange={setModalOpen}
-        onSubmit={handleLeadSubmit}
-        trackingData={trackingData}
-        triggerLabel="Continue to WhatsApp"
+      <BookingRequestModal
+        open={open}
+        onOpenChange={setOpen}
+        origin="about_page"
+        whatsappMessage="Hi, I'm reaching out from the About page."
       />
     </>
   );

@@ -97,6 +97,8 @@ export async function ServicesSection() {
                 {/* Dual CTA */}
                 <DualCTA
                   variant="compact"
+                  productType="service"
+                  productName={service.name}
                   onlineEnabled={service.hasOnlinePurchase}
                   onlinePath={service.href}
                   onlineLabel={service.name}

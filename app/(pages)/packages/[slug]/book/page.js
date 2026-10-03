@@ -1,10 +1,9 @@
-import { notFound, redirect } from "next/navigation";
+import { notFound } from "next/navigation";
 import { auth } from "@/lib/auth";
 import { BreadcrumbUI } from "@/components/local-ui/breadcrumb";
 import { PackageBookingForm } from "@/components/pages/packages/sections/PackageBookingForm";
 import { PackageBookingSummary } from "@/components/pages/packages/sections/PackageBookingSummary";
 import { findPackageBySlug } from "@/lib/packages/slug";
-import routes from "@/data/routes.json";
 
 async function getPackageBySlug(slug) {
   return findPackageBySlug(slug, {
@@ -17,13 +16,20 @@ async function getPackageBySlug(slug) {
 }
 
 export default async function PackageBookingPage({ params }) {
+  // Sin muro de login.
+  //
+  // Antes esta página redirigía a /user/login, y como además no estaba
+  // enlazada desde ningún sitio, el formulario completo que vive aquí era
+  // inalcanzable: nadie podía llegar nunca.
+  //
+  // Ahora es el paso 2 opcional al que invita la confirmación del modal.
+  // Para entonces el visitante ya ha enviado su solicitud y existe un lead,
+  // así que exigirle crear una cuenta para ampliar sus datos solo serviría
+  // para perderlo.
+  //
+  // La sesión se sigue leyendo, pero solo para precargar el email de quien ya
+  // ha iniciado sesión. El formulario ya contemplaba su ausencia.
   const session = await auth();
-
-  // Redirect to login if not authenticated
-  if (!session?.user) {
-    redirect(`${routes.login.path}?callbackUrl=/packages/${params.slug}/book`);
-  }
-
   const packageData = await getPackageBySlug(params.slug);
 
   if (!packageData) {
@@ -48,8 +54,8 @@ export default async function PackageBookingPage({ params }) {
         <div className="lg:col-span-2">
           <PackageBookingForm
             packageData={packageData}
-            userEmail={session.user.email}
-            userId={session.user.id}
+            userEmail={session?.user?.email}
+            userId={session?.user?.id}
           />
         </div>
 

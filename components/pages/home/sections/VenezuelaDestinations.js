@@ -134,6 +134,9 @@ export async function VenezuelaDestinations() {
                       {/* Dual CTA */}
                       <DualCTA
                         variant="card"
+                        productType="destination"
+                        productName={destination.name}
+                        productSlug={destination.slug}
                         onlineEnabled={false}
                         onlineComingSoon={true}
                         quoteEnabled={true}
