@@ -309,11 +309,13 @@ export default async function DestinationPage({ params }) {
             Get in touch and we will design your perfect trip
           </p>
           <DualCTA
-            variant="hero"
+            productType="destination"
+            productName={dest.name}
+            productSlug={dest.slug}
             onlineEnabled={false}
             quoteEnabled={true}
             quoteMessage={`Hi, I'm interested in traveling to ${dest.name}, ${dest.country}. Could you send me more information?`}
-            quoteLabel="Cotizar Ahora"
+            quoteLabel="Get a quote"
           />
         </section>
       </main>
