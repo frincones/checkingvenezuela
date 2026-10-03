@@ -130,6 +130,7 @@ export default async function PackageDetailPage({ params }) {
 
           <PackageActions
             packageName={packageData.name}
+            packageSlug={params.slug}
             whatsappMessage={`Hi! I'm interested in the "${packageData.name}" package. I'd like more information and a quote. Price shown: ${formatCurrency(displayPrice)}`}
             shareUrl={shareUrl}
             displayPrice={displayPrice}
@@ -218,7 +219,11 @@ export default async function PackageDetailPage({ params }) {
         <p className="mb-6 text-gray-600">
           Book now and secure your place on this unique experience
         </p>
-        <PackageBottomCTA packageName={packageData.name} displayPrice={displayPrice} />
+        <PackageBottomCTA
+          packageName={packageData.name}
+          packageSlug={params.slug}
+          displayPrice={displayPrice}
+        />
       </div>
     </main>
   );

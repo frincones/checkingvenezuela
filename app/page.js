@@ -11,8 +11,10 @@ import { getActiveHeroContent } from "@/data/heroConfig";
 // HU-003 + HU-004: Nuevas secciones
 import { ServicesSection } from "@/components/pages/home/sections/ServicesSection";
 import { VenezuelaDestinations } from "@/components/pages/home/sections/VenezuelaDestinations";
-import { PopularFlightDestinations } from "@/components/pages/home/sections/PopularFlightDestinations";
-import { PopularHotelDestinations } from "@/components/pages/home/sections/PopularHotelDestinations";
+// Secciones ocultas: los imports se comentan con ellas para que el bundle no
+// arrastre componentes que no se renderizan.
+// import { PopularFlightDestinations } from "@/components/pages/home/sections/PopularFlightDestinations";
+// import { PopularHotelDestinations } from "@/components/pages/home/sections/PopularHotelDestinations";
 import { FeaturedPackages } from "@/components/pages/home/sections/FeaturedPackages";
 import { BannersHero, BannersSection } from "@/components/pages/home/sections/BannersSection";
 import { LatestBlogPosts } from "@/components/pages/home/sections/LatestBlogPosts";
@@ -82,11 +84,16 @@ export default async function HomePage() {
         {/* HU-003: Destinos de Venezuela */}
         <VenezuelaDestinations />
 
-        {/* HU-004: Destinos Populares de Vuelos */}
-        <PopularFlightDestinations />
+        {/* Vuelos y hoteles populares: ocultos a petición del equipo comercial.
+            Se comentan en vez de borrarse porque la decisión es de presentación
+            y puede revertirse.
 
-        {/* HU-004: Destinos Populares de Hoteles */}
-        <PopularHotelDestinations />
+            Ojo: ocultar la sección NO desindexa /flights ni /hotels, que siguen
+            en el sitemap y accesibles. Y /flights renderiza una pantalla de
+            error en producción, así que seguirá rastreándose así hasta que se
+            arregle por separado. */}
+        {/* <PopularFlightDestinations /> */}
+        {/* <PopularHotelDestinations /> */}
 
         {/* Banners tipo Sección: promocionales dentro del contenido */}
         <BannersSection />

@@ -41,17 +41,21 @@ export function useLeadCapture() {
    * @param {Object} [config.trackingData] - Data for lead tracking
    */
   const requestCapture = useCallback((config) => {
-    const { action, whatsappMessage, navigateTo, onComplete } = config;
-
-    if (action === "whatsapp") {
-      const message = whatsappMessage || "Hi, I'm interested in your travel services.";
-      const url = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(message)}`;
-      window.open(url, "_blank", "noopener,noreferrer");
-    } else if (action === "navigate" && navigateTo) {
-      window.location.href = navigateTo;
-    } else if (action === "custom" && onComplete) {
-      onComplete({});
-    }
+    // Solo abre el modal y recuerda qué hacer al enviar.
+    //
+    // Antes ejecutaba la acción aquí mismo —abría WhatsApp nada más pulsar el
+    // botón, con el formulario todavía vacío— y handleLeadSubmit la volvía a
+    // ejecutar al enviar, así que se abrían dos pestañas. Pasaba inadvertido
+    // porque ambas iban al mismo sitio.
+    //
+    // Con el canal de respuesta a elección del visitante dejaría de ser
+    // inofensivo: elegir "Email" abriría WhatsApp igualmente.
+    //
+    // Además nunca guardaba pendingAction ni abría el modal, de modo que
+    // handleLeadSubmit salía por su guarda inicial y la captura no ocurría.
+    setPendingAction(config);
+    setTrackingData(config.trackingData || {});
+    setModalOpen(true);
   }, []);
 
   /**

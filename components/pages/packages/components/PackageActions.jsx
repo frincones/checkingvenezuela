@@ -3,14 +3,12 @@
 import { Button } from "@/components/ui/button";
 import { Share2 } from "lucide-react";
 import { useState } from "react";
-import { useLeadCapture } from "@/hooks/useLeadCapture";
-import { LeadCaptureModal } from "@/components/ui/LeadCaptureModal";
+import { BookingRequestModal } from "@/components/ui/BookingRequestModal";
 import { PaymentBadge } from "@/components/ui/PaymentBadge";
 
-export function PackageActions({ packageName, whatsappMessage, shareUrl, displayPrice }) {
+export function PackageActions({ packageName, packageSlug, whatsappMessage, shareUrl, displayPrice }) {
   const [copied, setCopied] = useState(false);
-  const { modalOpen, setModalOpen, trackingData, requestCapture, handleLeadSubmit } =
-    useLeadCapture();
+  const [open, setOpen] = useState(false);
 
   const handleShare = async () => {
     if (navigator.share) {
@@ -35,20 +33,7 @@ export function PackageActions({ packageName, whatsappMessage, shareUrl, display
   };
 
   function handleReserve() {
-    requestCapture({
-      action: "whatsapp",
-      whatsappMessage:
-        whatsappMessage ||
-        `Hi! I'm interested in the "${packageName}" package. I'd like more information and a quote.`,
-      trackingData: {
-        source: "web_form",
-        interest_type: "package",
-        interest_details: {
-          package_name: packageName,
-          price: displayPrice,
-        },
-      },
-    });
+    setOpen(true);
   }
 
   return (
@@ -74,12 +59,15 @@ export function PackageActions({ packageName, whatsappMessage, shareUrl, display
 
       <PaymentBadge variant="inline" className="mt-3" />
 
-      <LeadCaptureModal
-        open={modalOpen}
-        onOpenChange={setModalOpen}
-        onSubmit={handleLeadSubmit}
-        trackingData={trackingData}
-        triggerLabel="Continue to WhatsApp"
+      <BookingRequestModal
+        open={open}
+        onOpenChange={setOpen}
+        productType="package"
+        productName={packageName}
+        productSlug={packageSlug}
+        productPrice={displayPrice}
+        origin="package_actions"
+        whatsappMessage={whatsappMessage}
       />
     </>
   );

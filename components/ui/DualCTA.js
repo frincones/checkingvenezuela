@@ -2,9 +2,8 @@
 
 import { Button } from "@/components/ui/button";
 import { ShoppingCart, MessageCircle } from "lucide-react";
-import Link from "next/link";
-import { useLeadCapture } from "@/hooks/useLeadCapture";
-import { LeadCaptureModal } from "@/components/ui/LeadCaptureModal";
+import { useState } from "react";
+import { BookingRequestModal } from "@/components/ui/BookingRequestModal";
 
 /**
  * DualCTA - Componente reutilizable para doble llamada a la acción
@@ -16,7 +15,6 @@ import { LeadCaptureModal } from "@/components/ui/LeadCaptureModal";
 export function DualCTA({
   // Configuración de compra online
   onlineEnabled = true,
-  onlinePath = "#",
   onlineLabel = "Book now",
   onlineComingSoon = false,
 
@@ -25,36 +23,52 @@ export function DualCTA({
   quoteMessage = "Hi, I'm interested in getting a quote for this service.",
   quoteLabel = "Get a quote",
 
-  // Tracking data for lead capture
+  // Contexto para el modal. Opcional: si no llega nada, el modal usa su
+  // variante genérica, que es lo correcto para un CTA sin producto.
+  productType = null,
+  productName = null,
+  productSlug = null,
+  productPrice = null,
+
+  // Se mantiene por compatibilidad con los usos existentes.
   trackingData = null,
 
   // Estilo
   variant = "default", // "default" | "compact" | "card"
   className = "",
 }) {
-  const { modalOpen, setModalOpen, trackingData: modalTrackingData, requestCapture, handleLeadSubmit } =
-    useLeadCapture();
+  const [open, setOpen] = useState(false);
 
-  function handleQuoteClick(e) {
-    e.preventDefault();
-    requestCapture({
-      action: "whatsapp",
-      whatsappMessage: quoteMessage,
-      trackingData: {
-        source: "web_form",
-        interest_type: trackingData?.interest_type || "other",
-        interest_details: trackingData?.interest_details || {},
-        ...(trackingData || {}),
-      },
-    });
+  // Tanto "Book now" como "Get a quote" abren el modal. Antes el primero era
+  // un <Link> que navegaba: en la home llevaba a /flights y /hotels, y
+  // /flights está rota en producción, así que además de lo pedido esto evita
+  // que alguien aterrice en una pantalla de error.
+  function openModal(e) {
+    if (e) e.preventDefault();
+    setOpen(true);
   }
+
+  // Un único modal para las tres variantes: antes estaba repetido en las tres
+  // ramas del return, con el mismo riesgo de divergencia tres veces.
+  const modal = (
+    <BookingRequestModal
+      open={open}
+      onOpenChange={setOpen}
+      productType={productType}
+      productName={productName}
+      productSlug={productSlug}
+      productPrice={productPrice}
+      origin="dual_cta"
+      whatsappMessage={quoteMessage}
+    />
+  );
 
   const quoteButton = (size, variantStyle, extraClass, children) => (
     <Button
       size={size}
       variant={variantStyle}
       className={extraClass}
-      onClick={handleQuoteClick}
+      onClick={openModal}
     >
       {children}
     </Button>
@@ -66,22 +80,14 @@ export function DualCTA({
       <div className={`flex items-center gap-2 ${className}`}>
         {onlineEnabled && (
           <Button
-            asChild={!onlineComingSoon}
             size="icon"
             variant="default"
             className="h-8 w-8"
             disabled={onlineComingSoon}
             title={onlineComingSoon ? "Coming soon" : onlineLabel}
+            onClick={openModal}
           >
-            {onlineComingSoon ? (
-              <span>
-                <ShoppingCart className="h-4 w-4" />
-              </span>
-            ) : (
-              <Link href={onlinePath}>
-                <ShoppingCart className="h-4 w-4" />
-              </Link>
-            )}
+            <ShoppingCart className="h-4 w-4" />
           </Button>
         )}
         {quoteEnabled &&
@@ -89,13 +95,7 @@ export function DualCTA({
             <MessageCircle className="h-4 w-4" />
           ))}
 
-        <LeadCaptureModal
-          open={modalOpen}
-          onOpenChange={setModalOpen}
-          onSubmit={handleLeadSubmit}
-          trackingData={modalTrackingData}
-          triggerLabel="Continue to WhatsApp"
-        />
+        {modal}
       </div>
     );
   }
@@ -106,23 +106,16 @@ export function DualCTA({
       <div className={`flex items-center gap-2 ${className}`}>
         {onlineEnabled && (
           <Button
-            asChild={!onlineComingSoon}
             size="sm"
             variant="default"
             className="flex-1 text-xs"
             disabled={onlineComingSoon}
+            onClick={openModal}
           >
-            {onlineComingSoon ? (
-              <span className="flex items-center gap-1">
-                <ShoppingCart className="h-3 w-3" />
-                Coming soon
-              </span>
-            ) : (
-              <Link href={onlinePath} className="flex items-center gap-1">
-                <ShoppingCart className="h-3 w-3" />
-                {onlineLabel}
-              </Link>
-            )}
+            <span className="flex items-center gap-1">
+              <ShoppingCart className="h-3 w-3" />
+              {onlineComingSoon ? "Coming soon" : onlineLabel}
+            </span>
           </Button>
         )}
         {quoteEnabled &&
@@ -133,13 +126,7 @@ export function DualCTA({
             </span>
           ))}
 
-        <LeadCaptureModal
-          open={modalOpen}
-          onOpenChange={setModalOpen}
-          onSubmit={handleLeadSubmit}
-          trackingData={modalTrackingData}
-          triggerLabel="Continue to WhatsApp"
-        />
+        {modal}
       </div>
     );
   }
@@ -148,22 +135,11 @@ export function DualCTA({
   return (
     <div className={`flex flex-wrap items-center gap-3 ${className}`}>
       {onlineEnabled && (
-        <Button
-          asChild={!onlineComingSoon}
-          variant="default"
-          disabled={onlineComingSoon}
-        >
-          {onlineComingSoon ? (
-            <span className="flex items-center gap-2">
-              <ShoppingCart className="h-4 w-4" />
-              Coming soon
-            </span>
-          ) : (
-            <Link href={onlinePath} className="flex items-center gap-2">
-              <ShoppingCart className="h-4 w-4" />
-              {onlineLabel}
-            </Link>
-          )}
+        <Button variant="default" disabled={onlineComingSoon} onClick={openModal}>
+          <span className="flex items-center gap-2">
+            <ShoppingCart className="h-4 w-4" />
+            {onlineComingSoon ? "Coming soon" : onlineLabel}
+          </span>
         </Button>
       )}
       {quoteEnabled &&
@@ -174,13 +150,7 @@ export function DualCTA({
           </span>
         ))}
 
-      <LeadCaptureModal
-        open={modalOpen}
-        onOpenChange={setModalOpen}
-        onSubmit={handleLeadSubmit}
-        trackingData={modalTrackingData}
-        triggerLabel="Continue to WhatsApp"
-      />
+      {modal}
     </div>
   );
 }

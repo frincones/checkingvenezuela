@@ -15,6 +15,7 @@ import { MaintenanceNotice } from "./MaintenanceNotice";
 import SetNecessaryCookies from "./SetNecessaryCookies";
 import { BannersSidebar } from "@/components/pages/home/sections/BannersSection";
 import { AnnouncementBar } from "@/components/sections/AnnouncementBar";
+import { EmailBar } from "@/components/sections/EmailBar";
 import { ChatWidget } from "@/components/ChatWidget/ChatWidget";
 import { getOneDoc } from "@/lib/db/getOperationDB";
 import { headers } from "next/headers";
@@ -147,6 +148,7 @@ gtag('config', '${GA_ID}');`,
           <StoreProvider>
             <div className="mx-auto max-w-[1440px]">
               <AnnouncementBar />
+              <EmailBar />
               <Notice />
               <MaintenanceNotice maintenanceMode={maintenanceMode} />
               {children}

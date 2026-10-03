@@ -281,8 +281,11 @@ export default async function BlogPostPage(props) {
           </p>
           <div className="mt-6 flex justify-center">
             <DualCTA
+              productType="blog"
+              productName={post.title}
+              productSlug={post.slug}
               onlineEnabled={false}
-              quoteLabel="Planificar mi viaje"
+              quoteLabel="Plan my trip"
               quoteMessage="Hi, I just read an article on your blog and I'd like to plan a trip."
               trackingData={{
                 interest_type: "blog_cta",

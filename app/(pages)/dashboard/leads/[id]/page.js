@@ -161,28 +161,44 @@ export default function LeadDetailPage() {
             </dl>
           </div>
 
-          {/* Interest */}
-          {lead.interest && (
+          {/* Interés.
+
+              Antes leía `lead.interest` y `lead.metadata`, dos columnas que no
+              existen en la tabla: los datos viven en `interest_type` e
+              `interest_details`. Los guardas && evitaban el error, así que no
+              rompía nada — simplemente el asesor nunca veía qué había pedido
+              el cliente. */}
+          {lead.interest_type && (
             <div className="rounded-lg bg-white p-6 shadow-md">
               <h2 className="mb-4 text-lg font-semibold text-gray-900">Interes</h2>
-              <p className="text-gray-700">{lead.interest}</p>
+              <p className="text-gray-700 capitalize">
+                {String(lead.interest_type).replace(/_/g, " ")}
+              </p>
             </div>
           )}
 
-          {/* Metadata */}
-          {lead.metadata && Object.keys(lead.metadata).length > 0 && (
-            <div className="rounded-lg bg-white p-6 shadow-md">
-              <h2 className="mb-4 text-lg font-semibold text-gray-900">Detalles Adicionales</h2>
-              <dl className="grid gap-4 sm:grid-cols-2">
-                {Object.entries(lead.metadata).map(([key, value]) => (
-                  <div key={key}>
-                    <dt className="text-sm font-medium text-gray-500 capitalize">{key.replace(/_/g, " ")}</dt>
-                    <dd className="mt-1 text-sm text-gray-900">{String(value)}</dd>
-                  </div>
-                ))}
-              </dl>
-            </div>
-          )}
+          {lead.interest_details &&
+            Object.keys(lead.interest_details).length > 0 && (
+              <div className="rounded-lg bg-white p-6 shadow-md">
+                <h2 className="mb-4 text-lg font-semibold text-gray-900">Detalles Adicionales</h2>
+                <dl className="grid gap-4 sm:grid-cols-2">
+                  {Object.entries(lead.interest_details)
+                    .filter(([, value]) => value !== null && value !== "")
+                    .map(([key, value]) => (
+                      <div key={key}>
+                        <dt className="text-sm font-medium text-gray-500 capitalize">
+                          {key.replace(/_/g, " ")}
+                        </dt>
+                        <dd className="mt-1 text-sm text-gray-900">
+                          {typeof value === "object"
+                            ? JSON.stringify(value)
+                            : String(value)}
+                        </dd>
+                      </div>
+                    ))}
+                </dl>
+              </div>
+            )}
 
           {/* Notes */}
           <div className="rounded-lg bg-white p-6 shadow-md">
