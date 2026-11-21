@@ -24,8 +24,21 @@ export default async function PagesLayout({ children }) {
     currentPathname.startsWith(path)
   );
 
+  // `currentPathname.startsWith(path)` y no al reves.
+  //
+  // La version anterior comparaba `path.startsWith(currentPathname)`, con los
+  // operandos invertidos. Daba el resultado correcto en todas las rutas reales
+  // (verificado una por una), asi que el fallo era invisible, pero se rompia en
+  // un caso concreto: cuando `currentPathname` es la cadena vacia.
+  //
+  // Y esa cadena vacia no es hipotetica: la linea de arriba hace `|| ""`. Si
+  // X-Pathname no llegara, toda ruta cumpliria `path.startsWith("")` -> true,
+  // `isNavAllowed` seria false, y la cabecera y el pie DESAPARECERIAN de todo
+  // el sitio publico sin que nada fallara de forma visible.
+  //
+  // Con el orden correcto ese caso degrada al lado seguro: se muestran.
   const isNavAllowed = !isDashboard && !navNotAllowedPaths.some((path) =>
-    path.startsWith(currentPathname)
+    currentPathname.startsWith(path)
   );
 
   return (

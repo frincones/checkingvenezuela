@@ -134,11 +134,19 @@ gtag('config', '${GA_ID}');`,
         )}
       </head>
       <body className={monse.className}>
+        {/* `currentPathname?.` y no `currentPathname.`: la cabecera X-Pathname
+            podria no llegar en alguna peticion, y sin el optional chaining esto
+            lanzaria un TypeError DENTRO del layout raiz, es decir, un 500 en
+            todas las paginas del sitio a la vez.
+
+            Ademas solo ocurriria con el modo mantenimiento activo: justo cuando
+            se quiere mostrar una pagina de aviso, se serviria un error. Las
+            lineas 162-163 ya usaban `?.`; esta se habia quedado sin el. */}
         {maintenanceMode.enabled === true &&
         !alloweRoutesWhileMaintenance.some(
           (path) =>
             path === currentPathname ||
-            (path !== "/" && currentPathname.startsWith(path)),
+            (path !== "/" && currentPathname?.startsWith(path)),
         ) ? (
           <MaintenancePage
             message={maintenanceMode.message}
