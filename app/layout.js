@@ -20,6 +20,7 @@ import { ChatWidget } from "@/components/ChatWidget/ChatWidget";
 import { getOneDoc } from "@/lib/db/getOperationDB";
 import { headers } from "next/headers";
 import { Analytics } from "@vercel/analytics/next";
+import { WebVitalsReporter } from "@/components/observability/WebVitalsReporter";
 
 const GA_ID = process.env.NEXT_PUBLIC_GA_ID || "G-ZP34JNKX19";
 const CLARITY_ID = process.env.NEXT_PUBLIC_CLARITY_ID || "xiaowbmnuh";
@@ -161,6 +162,11 @@ gtag('config', '${GA_ID}');`,
         {!currentPathname?.startsWith("/dashboard") && <BannersSidebar />}
         {!currentPathname?.startsWith("/dashboard") && <ChatWidget />}
         <Analytics />
+        {/* Core Web Vitals de usuarios reales -> /api/observability/ingest.
+            Complementa <Analytics/>: ese panel no es consultable por API en el
+            plan Hobby, así que guardamos los valores en nuestra propia base
+            para poder correlacionarlos con el consumo de CPU por ruta. */}
+        <WebVitalsReporter />
         {/* Microsoft Clarity — session recordings + heatmaps. The IIFE
             self-injects the loader <script> at runtime. */}
         {CLARITY_ID && (

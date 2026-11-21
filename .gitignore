@@ -53,3 +53,6 @@ Contexto/
 
 # volcados de BD del flip a inglés (contienen datos de contacto de proveedores)
 /backups
+
+# Capturas locales de consumo y observabilidad (no se versionan)
+.observability/
