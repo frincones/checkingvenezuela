@@ -69,12 +69,21 @@ Todas con RLS activada y sin políticas: solo el rol de servicio entra, igual qu
 | Nombre | Cuándo | Qué hace |
 |---|---|---|
 | `obs-hourly-report` | `5 * * * *` | llama al endpoint de reporte |
-| `obs-db-snapshot` | `*/15 * * * *` | foto de `pg_stat_statements` |
+| `obs-db-snapshot` | `*/30 * * * *` | foto de `pg_stat_statements` |
 | `obs-purge` | `10 4 * * *` | purga según retención |
 
-El snapshot va cada 15 min y no cada hora a propósito: corre dentro de Postgres,
-no cuesta nada, y esa resolución permite ubicar un pico en su franja real en
-lugar de diluirlo en una hora entera.
+El snapshot va cada 30 min y no cada hora para poder ubicar un pico en su franja
+real en lugar de diluirlo en una hora entera.
+
+**Esa frecuencia está calibrada, no elegida al azar.** La primera versión corría
+cada 15 min guardando 200 consultas, y al medirse a sí misma apareció como el
+mayor consumidor de la base: 234 ms por captura, 11,2 min de CPU al mes, sobre un
+total histórico de 42,4 min en 312 días. Una herramienta de medición que figura
+entre los mayores consumidores del sistema que mide está mal calibrada.
+
+Ajustado a 30 min y 120 consultas: **132 ms por captura, 3,2 min/mes, un 72%
+menos**. No se pierde nada: 165 consultas concentran el 99,1% del tiempo de
+ejecución y la cola larga es ruido.
 
 El secreto se guarda en **Supabase Vault**, no en la definición del cron:
 `cron.job` es legible y dejarlo ahí lo expondría. Verificado: cero trabajos con

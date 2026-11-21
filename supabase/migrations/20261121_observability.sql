@@ -308,10 +308,18 @@ BEGIN
     s.total_exec_time,
     s.rows
   FROM public.pg_stat_statements_proxy s
-  -- Solo las 200 más costosas: la cola larga son miles de consultas
-  -- irrelevantes que multiplicarían el tamaño del histórico sin aportar.
+  -- Solo las 120 más costosas.
+  --
+  -- Medido sobre datos reales: 165 consultas concentran el 99,1% del tiempo de
+  -- ejecución, y la cola larga son miles de consultas triviales. Guardarlas
+  -- multiplicaría el histórico sin cambiar ninguna conclusión.
+  --
+  -- El límite importa más de lo que parece: leer pg_stat_statements no es
+  -- gratis, y con 200 filas cada captura costaba ~234 ms. Una herramienta de
+  -- medición que aparece entre los mayores consumidores del sistema que mide
+  -- es una herramienta mal calibrada.
   ORDER BY s.total_exec_time DESC
-  LIMIT 200
+  LIMIT 120
   ON CONFLICT (captured_at, queryid) DO NOTHING;
 
   GET DIAGNOSTICS v_count = ROW_COUNT;
