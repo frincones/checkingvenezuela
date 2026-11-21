@@ -289,6 +289,65 @@ const nextConfig = {
     return [
       {
         /**
+         * Cachea la home en el CDN de Vercel durante 5 minutos.
+         *
+         * EL PROBLEMA
+         * -----------
+         * La home es la ruta mas cara del sitio: ~263 ms de Active CPU por
+         * visita y el 73% del consumo total, medido en produccion. Es lo que
+         * agoto el limite del plan y pauso el sitio.
+         *
+         * POR QUE ESTA CABECERA Y NO `revalidate`
+         * ---------------------------------------
+         * Next solo deja de emitir `no-store` cuando la pagina es estatica, y
+         * para eso habria que eliminar CUATRO lecturas de datos de peticion
+         * repartidas por el arbol: `headers()` en app/layout.js, `auth()` en
+         * Footer.js, y los `createClient()` de lib/cms.js que usan
+         * ServicesSection y VenezuelaDestinations. Verificado con tres builds:
+         * tocar solo una o dos no basta, la home sigue dinamica.
+         *
+         * `Vercel-CDN-Cache-Control` evita todo ese refactor. Segun la doc de
+         * Vercel tiene la MAXIMA prioridad, por encima del `Cache-Control` que
+         * emite la funcion, incluido el `private` que Next pone en las paginas
+         * dinamicas. Es decir: la pagina se sigue renderizando dinamicamente,
+         * pero su respuesta se guarda en el CDN y las visitas siguientes no
+         * invocan la funcion.
+         *
+         * `Cache-Control` a secas NO vale aqui: en Vercel la cabecera que
+         * devuelve la funcion gana a la de este fichero. Por eso se usa la
+         * variante especifica de Vercel.
+         *
+         * `source: "/"` EXACTO, nunca un comodin
+         * --------------------------------------
+         * Un `/(.*)` o `/:path*` alcanzaria a las rutas con ISR y a los
+         * estaticos inmutables, y romperia su cacheo. Esta regla debe tocar
+         * una sola ruta.
+         *
+         * CONTRAPARTIDA CONOCIDA
+         * ----------------------
+         * `revalidatePath("/")` invalida la cache de Next, pero NO purga el
+         * CDN. Una edicion del CMS puede tardar hasta 5 minutos en verse en la
+         * home. Es el motivo de que el TTL sea corto. Si hiciera falta
+         * inmediato, un redeploy purga el CDN.
+         *
+         * COMO SE VERIFICA
+         * ----------------
+         * La senal real es `x-vercel-cache`, no `cache-control` (Vercel
+         * consume la directiva y no la reenvia al navegador):
+         *   curl -sI https://www.venezuelavoyages.com/ | grep -i x-vercel-cache
+         * La primera peticion da MISS; la segunda debe dar HIT con `Age`
+         * creciendo. Si siempre da MISS, esta regla no funciono.
+         */
+        source: "/",
+        headers: [
+          {
+            key: "Vercel-CDN-Cache-Control",
+            value: "max-age=300",
+          },
+        ],
+      },
+      {
+        /**
          * Estaticos de public/images: se revalidaban en CADA visita
          * (max-age=0, must-revalidate), asi que el navegador volvia a pedirlos
          * siempre aunque no hubieran cambiado.
