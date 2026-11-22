@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/db/supabase/server";
 import { createAdminClient } from "@/lib/db/supabase/server";
 
@@ -92,6 +93,10 @@ export async function POST(request) {
       return NextResponse.json({ error: "Error al crear servicio" }, { status: 500 });
     }
 
+    // Invalida la cache de las paginas que muestran servicios (seccion de la home).
+    // Sin esto, una edicion en el CMS no se veria hasta que expirase
+    // el TTL de la pagina, y el editor creeria que no se guardo.
+    revalidatePath("/");
     return NextResponse.json(data, { status: 201 });
   } catch (err) {
     console.error("Error in POST service:", err);

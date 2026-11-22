@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { revalidatePath } from "next/cache";
 import { createClient, createAdminClient } from "@/lib/db/supabase/server";
 
 export async function GET(request) {
@@ -62,6 +63,10 @@ export async function POST(request) {
       .single();
 
     if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+    // Invalida la cache de las paginas que muestran banners (aparecen en la home y en la barra lateral).
+    // Sin esto, una edicion en el CMS no se veria hasta que expirase
+    // el TTL de la pagina, y el editor creeria que no se guardo.
+    revalidatePath("/");
     return NextResponse.json({ data }, { status: 201 });
   } catch (err) {
     return NextResponse.json({ error: "Error interno" }, { status: 500 });

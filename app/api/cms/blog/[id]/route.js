@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { revalidatePath } from "next/cache";
 import { createClient, createAdminClient } from "@/lib/db/supabase/server";
 
 // Normaliza el slug para evitar tildes, mayúsculas o caracteres especiales
@@ -79,6 +80,11 @@ export async function PATCH(request, { params }) {
       if (error.code === "23505") return NextResponse.json({ error: "Ya existe un post con ese slug" }, { status: 409 });
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
+    // Invalida la cache de las paginas que muestran blog.
+    // Sin esto, una edicion en el CMS no se veria hasta que expirase
+    // el TTL de la pagina, y el editor creeria que no se guardo.
+    revalidatePath("/");
+    revalidatePath("/blog");
     return NextResponse.json({ data });
   } catch (err) {
     return NextResponse.json({ error: "Error interno" }, { status: 500 });
@@ -95,6 +101,10 @@ export async function DELETE(request, { params }) {
     const admin = createAdminClient();
     const { error } = await admin.from("blog_posts").delete().eq("id", id);
     if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+    // Tambien al BORRAR: la pagina sigue mostrando el elemento
+    // eliminado hasta que se invalide la cache.
+    revalidatePath("/");
+    revalidatePath("/blog");
     return NextResponse.json({ success: true });
   } catch (err) {
     return NextResponse.json({ error: "Error interno" }, { status: 500 });
