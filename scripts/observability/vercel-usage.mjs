@@ -34,12 +34,19 @@
  *   node scripts/observability/vercel-usage.mjs --window 25   # minutos (máx 29)
  *   node scripts/observability/vercel-usage.mjs --json
  *
- * Token: VERCEL_TOKEN del entorno o de los .env. Un token de ámbito de proyecto
- * sirve, siempre que se pase `--scope` (lo hace este script). Lo que NO acepta
- * un token de proyecto es `vercel billing`, que es de cuenta.
+ * Token: VERCEL_TOKEN del entorno o de los .env. Tiene que ser de ámbito de
+ * CUENTA (se crea en vercel.com/account/tokens).
  *
- * El `--scope` es obligatorio y no opcional: la cuenta pertenece a dos equipos
- * y, en modo no interactivo, la CLI se niega a elegir y sale con error.
+ * Un token de ámbito de PROYECTO (`vcp_`) NO sirve: `vercel metrics` opera a
+ * nivel de cuenta y responde `api_error: User not found`, incluso pasando
+ * `--scope`. Comprobado contra la CLI real el 2026-11-23. (Una versión
+ * anterior de este comentario afirmaba lo contrario; era falso, y las medidas
+ * que parecían confirmarlo en realidad usaban una sesión local de la CLI que
+ * ya había caducado.)
+ *
+ * El `--scope` sigue siendo obligatorio y no opcional: la cuenta pertenece a
+ * dos equipos y, en modo no interactivo, la CLI se niega a elegir y sale con
+ * error.
  */
 
 import { spawn } from "node:child_process";
@@ -186,14 +193,15 @@ async function main() {
   const token = process.env.VERCEL_TOKEN || readEnvLocal("VERCEL_TOKEN");
   const capturedAt = new Date().toISOString();
 
-  // Nota sobre el token, comprobada empíricamente:
+  // Nota sobre el token, comprobada empíricamente el 2026-11-23:
   //
-  // El token `vcp_` (ámbito de proyecto) SÍ funciona con `vercel metrics`
-  // siempre que se pase `--scope`. Lo que falla con él es `/v2/user` y
-  // `vercel billing usage`, que son de cuenta y devuelven "User not found".
+  // Hace falta un token de ámbito de CUENTA. El token `vcp_` (ámbito de
+  // proyecto) falla con `api_error: User not found` aunque se pase `--scope`,
+  // porque `vercel metrics` es un comando de cuenta.
   //
-  // Es decir: "User not found" aquí no significa token inválido, significa que
-  // el comando pedía ámbito de cuenta. No se bloquea por el prefijo.
+  // No se bloquea por el prefijo de todos modos: si algún día Vercel amplía lo
+  // que acepta un token de proyecto, esto seguirá funcionando sin cambios. El
+  // mensaje de error de la CLI ya es suficientemente claro por sí solo.
   log(`  autenticacion: ${token ? `token ${token.slice(0, 4)}… de ${process.env.VERCEL_TOKEN ? "entorno" : ".env.local"}` : "sesion local de la CLI"}`);
 
   log("Consumo real de CPU — observabilidad de Vercel");

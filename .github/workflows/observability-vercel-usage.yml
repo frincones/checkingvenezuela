@@ -1,0 +1,104 @@
+name: Observability — capture Vercel CPU usage
+
+# POR QUE ESTE WORKFLOW EXISTE
+#
+# La observabilidad de Vercel en el plan Hobby solo expone una VENTANA
+# DESLIZANTE DE 30 MINUTOS. Pasado ese rato, el dato de Active CPU se pierde
+# para siempre (mas atras exige Observability Plus, que es de pago).
+#
+# Active CPU es justo la metrica que agoto el limite del plan y provoco que
+# Vercel pausara el sitio. Sin capturarla no hay forma de saber si una
+# optimizacion funciono ni de ver venir el siguiente pico.
+#
+# Capturando cada 20 minutos se construye el historico que Vercel cobra. Y se
+# hace aqui, en GitHub Actions, porque:
+#
+#   - El dato solo lo entrega la CLI de Vercel. La API REST
+#     (/v2/observability/query) devuelve 402 en Hobby.
+#   - Una funcion de Supabase (pg_cron + pg_net) solo puede hacer HTTP, no
+#     ejecutar una CLI. Por eso el reporte horario que ya corre en la base NO
+#     puede capturar esto por si mismo: solo lee lo que alguien haya guardado.
+#   - Depender de una terminal abierta en el portatil de alguien significaba,
+#     en la practica, un dato real por cada 43 reportes con dato viejo. El
+#     reporte horario estuvo 23 horas marcando "critical" con una cifra
+#     congelada, que es peor que no tener alerta: parece informacion.
+#
+# Cada 20 min y no cada 30: si una ejecucion se retrasa o falla, la siguiente
+# aun entra dentro de la ventana y no se pierde el tramo. Son ~2160 ejecuciones
+# al mes de ~40 s, holgadamente dentro del plan gratuito de Actions (y en
+# repositorio publico Actions no consume cuota).
+#
+# IMPORTANTE — cron de GitHub no es puntual. En horas de mucha carga las
+# ejecuciones programadas se retrasan, y pueden saltarse. El script calcula la
+# ventana a partir de la hora REAL de captura, no de la programada, asi que un
+# retraso no falsea el calculo por hora: solo deja un hueco en el historico.
+
+on:
+  schedule:
+    - cron: '3,23,43 * * * *'
+  workflow_dispatch:
+    inputs:
+      window:
+        description: 'Ventana a consultar en minutos (5-29)'
+        required: false
+        default: '25'
+
+# Si una ejecucion anterior aun corre, se cancela. Dos capturas simultaneas
+# escribirian ventanas solapadas y el consumo saldria inflado al sumarlas.
+concurrency:
+  group: observability-vercel-usage
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  capture:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      # No hay `npm ci` a proposito: el script no usa ninguna dependencia del
+      # proyecto (solo modulos nativos de node y `npx vercel`). Instalar todo
+      # node_modules aqui serian varios minutos por ejecucion, cada 20 minutos,
+      # sin ningun beneficio.
+      - name: Capturar Active CPU y guardar en Supabase
+        env:
+          # Token de ambito de CUENTA, creado en vercel.com/account/tokens.
+          #
+          # Un token de PROYECTO (vcp_) NO sirve aqui: `vercel metrics` opera a
+          # nivel de cuenta y responde `api_error: User not found`, incluso
+          # pasando --scope. Verificado el 2026-11-23 contra la CLI real.
+          VERCEL_TOKEN: ${{ secrets.VERCEL_ACCOUNT_TOKEN }}
+          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.OBS_SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.OBS_SUPABASE_SERVICE_ROLE_KEY }}
+        run: |
+          set -euo pipefail
+
+          if [ -z "${VERCEL_TOKEN:-}" ]; then
+            echo "::error::Falta el secret VERCEL_ACCOUNT_TOKEN."
+            echo "Crear un token de CUENTA en https://vercel.com/account/tokens"
+            echo "y guardarlo en Settings > Secrets and variables > Actions."
+            exit 1
+          fi
+
+          node scripts/observability/vercel-usage.mjs \
+            --window "${{ github.event.inputs.window || '25' }}"
+
+      # La captura local en .observability/ se adjunta solo cuando algo falla.
+      # Sirve para diagnosticar sin tener que reproducirlo: el JSON incluye el
+      # mensaje de error exacto que devolvio la CLI.
+      - name: Adjuntar captura si fallo
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: captura-fallida-${{ github.run_id }}
+          path: .observability/
+          retention-days: 7
+          if-no-files-found: ignore
