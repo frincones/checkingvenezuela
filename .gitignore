@@ -56,3 +56,7 @@ Contexto/
 
 # Capturas locales de consumo y observabilidad (no se versionan)
 .observability/
+
+.env*
+.rescate-imagenes/
+.rescue-*.json

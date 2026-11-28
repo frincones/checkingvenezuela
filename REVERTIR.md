@@ -90,12 +90,73 @@ bloque comentado y dejar el código original:
 | `lib/auth-supabase.js` | la llamada a `getTempGateSession()` dentro de `auth()` y su import |
 | `app/(pages)/dashboard/layout.js` | el `if (isTempGateEnabled()) redirect("/temp-login")` y su import |
 | `vercel.json` | la entrada de `crons` |
+| `lib/cms.js` | el helper `createCmsReadClient()` y sus dos imports; volver a `createClient()` en las cuatro funciones |
+
+### Qué NO revertir de `lib/cms.js` y compañía
+
+El commit que arregla la sección de destinos trae, además del helper temporal,
+tres correcciones que **deben quedarse**. No son contingencia: son defectos que
+ya existían y que se encontraron al validar.
+
+| Cambio | Por qué se queda |
+|---|---|
+| `lib/cms.js`: `.neq("status", "discontinued")` en el conteo de paquetes | Replica la política RLS `Public read available inventory`. Sin él, un paquete descontinuado al que se olvide quitar `is_published` se cuenta y el botón "View packages (N)" miente. Es correcto con y sin adaptador. |
+| `components/.../VenezuelaDestinations.js`: iconos `Plane` y `Building2` | Faltaban en `categoryIcons`. La categoría "International Destinations" usa `Plane` y mostraba un círculo vacío **desde antes de la contingencia**. |
+| `lib/db/pg/restShim.js`: candidato de clave foránea por alias | Permite resolver `category:destination_categories(...)`, cuya FK es `category_id`. Solo añade un candidato al final; no altera los embeds que ya funcionaban. Si el adaptador se borra entero, se va con él. |
+
+El helper `createCmsReadClient()` **se desactiva solo**: sin
+`PG_FALLBACK_ENABLED` vuelve a `createClient()`. Quitarlo del código es
+limpieza, no urgencia.
 
 Alternativa más limpia si no hubo otros cambios encima:
 
 ```bash
 git revert <hash-del-commit-de-contingencia>
 ```
+
+## PASO 4-BIS — Devolver las imágenes a Supabase Storage
+
+Durante la restricción, 221 imágenes se rescataron de la caché del optimizador
+de Vercel y se copiaron a `public/cms-rescate/`. La base apunta a ellas.
+
+**Por qué hizo falta:** los `og:image` —la foto que se ve al compartir un enlace
+en WhatsApp o Facebook— apuntan directo a Supabase, sin pasar por el
+optimizador, así que ninguna caché los salvaba. 68 de 79 páginas se compartían
+sin imagen.
+
+Para deshacerlo, cuando Storage vuelva a responder:
+
+```bash
+# 1. Comprobar que Storage ya sirve (debe dar 200, no 402)
+curl -o /dev/null -w "%{http_code}\n" \
+  "https://stbbckupkuxasfthlsys.supabase.co/storage/v1/object/public/cms-images/destinations/1790167515928-f9i0g1.jpg"
+
+# 2. Devolver las URLs a Supabase (restaura las 70 filas originales)
+node scripts/rescate/aplicar-urls-locales.mjs --revertir
+
+# 3. Borrar las copias y el script
+rm -rf public/cms-rescate scripts/rescate .rescate-imagenes
+```
+
+| Archivo | Qué es |
+|---|---|
+| `public/cms-rescate/` | las 221 imágenes rescatadas (6,9 MB, AVIF) |
+| `scripts/rescate/respaldo-urls.json` | **los valores originales de las 70 filas.** Sin esto no hay vuelta atrás |
+| `scripts/rescate/manifiesto.json` | qué fichero local corresponde a cada URL de Supabase |
+| `scripts/rescate/aplicar-urls-locales.mjs` | aplica y revierte |
+
+**El respaldo está versionado en git a propósito.** `.rescate-imagenes/` está
+excluido, así que si el respaldo viviera solo ahí, borrar esa carpeta dejaría la
+base sin forma de revertir.
+
+**No se tocaron** `quotations.items` ni `chat_messages.tool_calls`: son
+registros históricos de operaciones ya hechas. Reescribirlos falsearía datos de
+negocio y no arregla ninguna página pública.
+
+Quedan 59 imágenes apuntando a Supabase (54 en 15 productos, de los que solo 6
+están publicados, y 5 portadas de blog en borrador). No se pudieron rescatar
+porque nunca llegaron a la caché. **Vuelven solas** al levantarse la
+restricción; no hay que hacer nada con ellas.
 
 ## PASO 5 — Quitar las dependencias si no se usan
 
