@@ -36,6 +36,16 @@ export async function GET(request) {
     const adminClient = createAdminClient();
     let query = adminClient
       .from("emails")
+      // `body_text` se pide aqui SOLO para el fragmento de vista previa de la
+      // lista (EmailList.jsx usa los primeros 100 caracteres). Se recorta mas
+      // abajo, antes de responder, porque devolver el cuerpo entero de 50
+      // correos cada 30 s fue lo que agoto la cuota de egress de Supabase
+      // (6,65 GB de 5,5 GB el 2026-11-27).
+      //
+      // No se puede quitar de este SELECT: la busqueda de texto libre filtra
+      // con `body_text.ilike` (lib/email/searchQuery.js). Ese filtro es un
+      // WHERE en Postgres y funcionaria igual sin la columna, pero el recorte
+      // en servidor es lo que evita mandarla por la red al navegador.
       .select("id, resend_id, direction, folder, from_email, from_name, to_emails, subject, body_text, status, is_read, is_starred, thread_id, attachments, mailbox_id, created_at", { count: "exact" })
       .eq("folder", folder)
       .order("created_at", { ascending: false })
@@ -78,25 +88,45 @@ export async function GET(request) {
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
 
-    // Count unread per folder (filtered by mailbox if specified)
-    let unreadQuery = adminClient
-      .from("emails")
-      .select("folder")
-      .eq("is_read", false)
-      .not("folder", "eq", "trash");
+    // No-leidos por carpeta.
+    //
+    // Antes esto descargaba UNA FILA POR CADA correo no leido (solo la columna
+    // `folder`) y las contaba en JavaScript. Con la bandeja recargandose cada
+    // 30 s, eso es trafico que crece con el numero de no leidos y que no hacia
+    // falta: Postgres sabe contar.
+    //
+    // Ahora se pide un `count` con `head: true`, que NO devuelve filas, solo la
+    // cifra en la cabecera Content-Range. El resultado es identico: un objeto
+    // { carpeta: numero } con las mismas claves que antes.
+    //
+    // Se excluye `trash`, igual que la version anterior. Una carpeta sin no
+    // leidos simplemente no aparece en el objeto, que es como se comportaba
+    // antes y lo que EmailSidebar ya maneja (`unread?.[f.key] || 0`).
+    const UNREAD_FOLDERS = ["inbox", "sent", "drafts", "archive"];
 
-    if (mailboxId === "unassigned") {
-      unreadQuery = unreadQuery.is("mailbox_id", null);
-    } else if (mailboxId) {
-      unreadQuery = unreadQuery.eq("mailbox_id", mailboxId);
-    }
+    const unreadEntries = await Promise.all(
+      UNREAD_FOLDERS.map(async (f) => {
+        let q = adminClient
+          .from("emails")
+          .select("id", { count: "exact", head: true })
+          .eq("is_read", false)
+          .eq("folder", f);
 
-    const { data: unreadCounts } = await unreadQuery;
+        if (mailboxId === "unassigned") {
+          q = q.is("mailbox_id", null);
+        } else if (mailboxId) {
+          q = q.eq("mailbox_id", mailboxId);
+        }
+
+        const { count: c } = await q;
+        return [f, c || 0];
+      }),
+    );
 
     const unreadByFolder = {};
-    (unreadCounts || []).forEach((e) => {
-      unreadByFolder[e.folder] = (unreadByFolder[e.folder] || 0) + 1;
-    });
+    for (const [folderKey, c] of unreadEntries) {
+      if (c > 0) unreadByFolder[folderKey] = c;
+    }
 
     // Does the user have any inbound row without a mailbox? Used to surface
     // the "Sin asignar" option in the dropdown only when relevant.
@@ -106,8 +136,26 @@ export async function GET(request) {
       .eq("direction", "inbound")
       .is("mailbox_id", null);
 
+    // Recorte del cuerpo antes de responder.
+    //
+    // La lista solo pinta los primeros 100 caracteres (getPreview en
+    // EmailList.jsx). Mandar el cuerpo completo de 50 correos, cada 30 s y por
+    // cada pestana abierta, consumia del orden de 1 GB al dia.
+    //
+    // Se recortan 200 y no 100 para dejar margen si algun dia el fragmento se
+    // alarga, y porque `EmailView` NO usa estos datos: al abrir un correo se
+    // pide /api/email/[id], que hace `select("*")` y sigue trayendo el cuerpo
+    // entero. Responder y reenviar tambien parten de ahi, asi que no se
+    // pierde nada.
+    const PREVIEW_CHARS = 200;
+    const trimmed = (emails || []).map((e) =>
+      typeof e.body_text === "string" && e.body_text.length > PREVIEW_CHARS
+        ? { ...e, body_text: e.body_text.slice(0, PREVIEW_CHARS) }
+        : e,
+    );
+
     return NextResponse.json({
-      emails: emails || [],
+      emails: trimmed,
       total: count || 0,
       page,
       limit,

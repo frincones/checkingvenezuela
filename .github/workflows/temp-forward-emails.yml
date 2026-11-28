@@ -1,0 +1,103 @@
+name: Temporal — reenviar correos entrantes a Gmail
+
+# POR QUE ESTE WORKFLOW EXISTE Y POR QUE ES TEMPORAL
+#
+# El 2026-11-27 Supabase restringio el proyecto por exceder la cuota de egress
+# (6,65 GB de 5,5 GB; recarga el 2026-12-04). Todos sus servicios HTTP
+# devuelven 402, Auth incluido, asi que el buzon del CRM quedo inaccesible.
+#
+# Los correos NO se pierden: Resend los almacena integros y los expone por API.
+# Este workflow los reenvia a una cuenta de Gmail para que el equipo pueda
+# leerlos y responder mientras el CRM no esta disponible.
+#
+# POR QUE AQUI Y NO EN UN CRON DE VERCEL
+#
+# El plan Hobby de Vercel limita los cron jobs a UNA EJECUCION AL DIA, y una
+# expresion mas frecuente hace FALLAR EL DEPLOY ("Hobby accounts are limited to
+# daily cron jobs"). Un reenvio de correo cada 24 h no sirve: un cliente que
+# escribe no puede esperar un dia. GitHub Actions permite cada 10 minutos y en
+# repositorio publico no consume cuota.
+#
+# El cron de vercel.json se mantiene como red de seguridad diaria.
+#
+# CADUCIDAD — RETIRAR DESPUES DEL 2026-12-04
+# El script se niega a actuar pasada su fecha limite (FORWARD_UNTIL), asi que si
+# este workflow se queda olvidado no reenvia nada: solo registra que caduco.
+# Aun asi, hay que borrarlo. Ver REVERTIR.md.
+
+on:
+  schedule:
+    - cron: '*/10 * * * *'
+  workflow_dispatch:
+    inputs:
+      desde:
+        description: 'Reenviar desde esta fecha (YYYY-MM-DD). Vacio = ultimas horas.'
+        required: false
+      dry_run:
+        description: 'true = no envia, solo lista'
+        required: false
+        default: 'false'
+
+# Dos ejecuciones a la vez reenviarian los mismos correos por duplicado.
+concurrency:
+  group: temp-forward-emails
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  forward:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      # El script necesita el SDK de resend. Se instala solo ese paquete en vez
+      # de todo node_modules: son segundos en lugar de minutos, cada 10 min.
+      - name: Instalar dependencias minimas
+        run: npm install resend@6.41.0 --no-audit --no-fund --no-save
+
+      - name: Reenviar correos pendientes
+        env:
+          RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
+          FORWARD_TO: ${{ secrets.FORWARD_TO }}
+        run: |
+          set -euo pipefail
+
+          if [ -z "${RESEND_API_KEY:-}" ]; then
+            echo "::error::Falta el secret RESEND_API_KEY."
+            exit 1
+          fi
+          if [ -z "${FORWARD_TO:-}" ]; then
+            echo "::error::Falta el secret FORWARD_TO (destino del reenvio)."
+            exit 1
+          fi
+
+          ARGS=""
+          if [ -n "${{ github.event.inputs.desde }}" ]; then
+            ARGS="--desde ${{ github.event.inputs.desde }}"
+          fi
+          if [ "${{ github.event.inputs.dry_run }}" = "true" ]; then
+            ARGS="$ARGS --dry-run"
+          fi
+
+          node scripts/email/forward-to-gmail.mjs $ARGS
+
+      # El registro de lo ya reenviado vive en .observability/, que no se
+      # persiste entre ejecuciones de Actions. Se guarda como artefacto para
+      # poder auditar que se envio, y el propio script filtra por ventana de
+      # tiempo para no reenviar el historico completo en cada pasada.
+      - name: Guardar registro de reenvios
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: reenvios-${{ github.run_id }}
+          path: .observability/
+          retention-days: 7
+          if-no-files-found: ignore
