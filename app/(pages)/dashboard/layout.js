@@ -1,6 +1,9 @@
 import { auth } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import Link from "next/link";
+// TEMPORAL — puerta de contingencia mientras Supabase Auth esta restringido.
+// Caduca el 2026-12-04. Ver REVERTIR.md.
+import { isTempGateEnabled } from "@/lib/auth/tempGate";
 
 const sidebarLinks = [
   // --- CRM ---
@@ -231,6 +234,21 @@ export default async function DashboardLayout({ children }) {
   const isLoggedIn = !!session?.user?.id;
 
   if (!isLoggedIn) {
+    // TEMPORAL — CADUCA EL 2026-12-04
+    //
+    // El inicio de sesion normal pasa por Supabase Auth, que devuelve 402 desde
+    // el 2026-11-27 (restriccion por cuota de egress). Mandar a /user/login
+    // durante la contingencia es mandar a una pantalla que no puede funcionar,
+    // asi que mientras la puerta temporal este activa se redirige a ella.
+    //
+    // isTempGateEnabled() ya comprueba la caducidad: pasada la fecha, esta rama
+    // deja de aplicarse por si sola y se vuelve al login normal.
+    //
+    // Se retira quitando TEMP_GATE_ENABLED (ver REVERTIR.md).
+    if (isTempGateEnabled()) {
+      redirect("/temp-login");
+    }
+
     redirect("/user/login?callbackPath=/dashboard");
   }
 
