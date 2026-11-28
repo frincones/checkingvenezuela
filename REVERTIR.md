@@ -114,6 +114,50 @@ Alternativa más limpia si no hubo otros cambios encima:
 git revert <hash-del-commit-de-contingencia>
 ```
 
+## PASO 4-BIS — Devolver las imágenes a Supabase Storage
+
+Durante la restricción, 221 imágenes se rescataron de la caché del optimizador
+de Vercel y se copiaron a `public/cms-rescate/`. La base apunta a ellas.
+
+**Por qué hizo falta:** los `og:image` —la foto que se ve al compartir un enlace
+en WhatsApp o Facebook— apuntan directo a Supabase, sin pasar por el
+optimizador, así que ninguna caché los salvaba. 68 de 79 páginas se compartían
+sin imagen.
+
+Para deshacerlo, cuando Storage vuelva a responder:
+
+```bash
+# 1. Comprobar que Storage ya sirve (debe dar 200, no 402)
+curl -o /dev/null -w "%{http_code}\n" \
+  "https://stbbckupkuxasfthlsys.supabase.co/storage/v1/object/public/cms-images/destinations/1790167515928-f9i0g1.jpg"
+
+# 2. Devolver las URLs a Supabase (restaura las 70 filas originales)
+node scripts/rescate/aplicar-urls-locales.mjs --revertir
+
+# 3. Borrar las copias y el script
+rm -rf public/cms-rescate scripts/rescate .rescate-imagenes
+```
+
+| Archivo | Qué es |
+|---|---|
+| `public/cms-rescate/` | las 221 imágenes rescatadas (6,9 MB, AVIF) |
+| `scripts/rescate/respaldo-urls.json` | **los valores originales de las 70 filas.** Sin esto no hay vuelta atrás |
+| `scripts/rescate/manifiesto.json` | qué fichero local corresponde a cada URL de Supabase |
+| `scripts/rescate/aplicar-urls-locales.mjs` | aplica y revierte |
+
+**El respaldo está versionado en git a propósito.** `.rescate-imagenes/` está
+excluido, así que si el respaldo viviera solo ahí, borrar esa carpeta dejaría la
+base sin forma de revertir.
+
+**No se tocaron** `quotations.items` ni `chat_messages.tool_calls`: son
+registros históricos de operaciones ya hechas. Reescribirlos falsearía datos de
+negocio y no arregla ninguna página pública.
+
+Quedan 59 imágenes apuntando a Supabase (54 en 15 productos, de los que solo 6
+están publicados, y 5 portadas de blog en borrador). No se pudieron rescatar
+porque nunca llegaron a la caché. **Vuelven solas** al levantarse la
+restricción; no hay que hacer nada con ellas.
+
 ## PASO 5 — Quitar las dependencias si no se usan
 
 ```bash

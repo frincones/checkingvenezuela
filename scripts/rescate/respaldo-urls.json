@@ -1,0 +1,1266 @@
+{
+  "creado": "2026-11-28T17:10:27.507Z",
+  "filas": [
+    {
+      "tabla": "destinations",
+      "columna": "image_url",
+      "tipo": "text",
+      "id": "3707d96d-2ecc-4b63-ada5-744debf97bbb",
+      "antes": "https://stbbckupkuxasfthlsys.supabase.co/storage/v1/object/public/cms-images/destinations/1772067322240-uywwwv.jpg"
+    },
+    {
+      "tabla": "destinations",
+      "columna": "image_url",
+      "tipo": "text",
+      "id": "d35bb729-111f-4feb-a574-98a7b2a60df8",
+      "antes": "https://stbbckupkuxasfthlsys.supabase.co/storage/v1/object/public/cms-images/destinations/1772067809237-s0iere.jpg"
+    },
+    {
+      "tabla": "destinations",
+      "columna": "image_url",
+      "tipo": "text",
+      "id": "63855c8a-d6b9-4357-8004-02f07f38f83a",
+      "antes": "https://stbbckupkuxasfthlsys.supabase.co/storage/v1/object/public/cms-images/destinations/1772068053056-e1rirt.jpg"
+    },
+    {
+      "tabla": "destinations",
+      "columna": "image_url",
+      "tipo": "text",
+      "id": "44aba6ff-96e8-45e2-b8b2-14ee154312b8",
+      "antes": "https://stbbckupkuxasfthlsys.supabase.co/storage/v1/object/public/cms-images/destinations/1772068225444-6jmgkl.jpg"
+    },
+    {
+      "tabla": "destinations",
+      "columna": "image_url",
+      "tipo": "text",
+      "id": "c3deae7c-1f6a-4167-9ed1-ce1dbd1834ff",
+      "antes": "https://stbbckupkuxasfthlsys.supabase.co/storage/v1/object/public/cms-images/destinations/1772068448827-9moedt.jpg"
+    },
+    {
+      "tabla": "destinations",
+      "columna": "image_url",
+      "tipo": "text",
+      "id": "18f7abaa-553b-4db2-b076-11b9e25661cc",
+      "antes": "https://stbbckupkuxasfthlsys.supabase.co/storage/v1/object/public/cms-images/destinations/1772068818090-ig86y5.jpg"
+    },
+    {
+      "tabla": "destinations",
+      "columna": "image_url",
+      "tipo": "text",
+      "id": "0f5a2931-e22e-4183-ac57-20e31561f39d",
+      "antes": "https://stbbckupkuxasfthlsys.supabase.co/storage/v1/object/public/cms-images/destinations/1772068995859-w521p7.jpg"
+    },
+    {
+      "tabla": "destinations",
+      "columna": "image_url",
+      "tipo": "text",
+      "id": "1306f530-b26a-48ec-a0a7-7d6e19ff5fbe",
+      "antes": "https://stbbckupkuxasfthlsys.supabase.co/storage/v1/object/public/cms-images/destinations/1772069391398-dolpof.jpg"
+    },
+    {
+      "tabla": "destinations",
+      "columna": "image_url",
+      "tipo": "text",
+      "id": "ce9fcc33-ea70-4dcb-81f5-29803ad6e6f3",
+      "antes": "https://stbbckupkuxasfthlsys.supabase.co/storage/v1/object/public/cms-images/destinations/1772069243168-5jzedh.jpg"
+    },
+    {
+      "tabla": "destinations",
+      "columna": "image_url",
+      "tipo": "text",
+      "id": "046f8349-d83b-4263-9ea9-f8af4fe272ac",
+      "antes": "https://stbbckupkuxasfthlsys.supabase.co/storage/v1/object/public/cms-images/destinations/1788268550410-hg8ken.jpg"
+    },
+    {
+      "tabla": "destinations",
+      "columna": "image_url",
+      "tipo": "text",
+      "id": "11f2bea6-ae78-4db3-b480-22ae8b51820b",
+      "antes": "https://stbbckupkuxasfthlsys.supabase.co/storage/v1/object/public/cms-images/destinations/1772063614755-3iaj4v.jpg"
+    },
+    {
+      "tabla": "destinations",
+      "columna": "image_url",
+      "tipo": "text",
+      "id": "bddffece-c2de-4448-90e7-8e2f4344e38f",
+      "antes": "https://stbbckupkuxasfthlsys.supabase.co/storage/v1/object/public/cms-images/destinations/1786022954683-gor5rw.jpg"
+    },
+    {
+      "tabla": "destinations",
+      "columna": "image_url",
+      "tipo": "text",
+      "id": "748ba259-453f-442d-bdd0-43f92216c57f",
+      "antes": "https://stbbckupkuxasfthlsys.supabase.co/storage/v1/object/public/cms-images/destinations/1774491019068-801c7z.jpg"
+    },
+    {
+      "tabla": "destinations",
+      "columna": "image_url",
+      "tipo": "text",
+      "id": "b873cf29-2468-4d28-b343-72004f4168df",
+      "antes": "https://stbbckupkuxasfthlsys.supabase.co/storage/v1/object/public/cms-images/destinations/1772063954156-dq5yfi.jpg"
+    },
+    {
+      "tabla": "destinations",
+      "columna": "image_url",
+      "tipo": "text",
+      "id": "84688e51-2f28-41b2-94f9-71345e4ffb0f",
+      "antes": "https://stbbckupkuxasfthlsys.supabase.co/storage/v1/object/public/cms-images/destinations/1790167515928-f9i0g1.jpg"
+    },
+    {
+      "tabla": "destinations",
+      "columna": "image_url",
+      "tipo": "text",
+      "id": "87253ffc-d2e6-46c0-8d13-003e4d53d5a1",
+      "antes": "https://stbbckupkuxasfthlsys.supabase.co/storage/v1/object/public/cms-images/destinations/1781369872394-nkcslj.jpg"
+    },
+    {
+      "tabla": "destinations",
+      "columna": "image_url",
+      "tipo": "text",
+      "id": "ddd8b845-1b64-47ac-bbf7-56be1dffeffb",
+      "antes": "https://stbbckupkuxasfthlsys.supabase.co/storage/v1/object/public/cms-images/destinations/1781558956234-vu751b.jpg"
+    },
+    {
+      "tabla": "destinations",
+      "columna": "image_url",
+      "tipo": "text",
+      "id": "ebfff23e-cbe8-4973-a370-69623ac5cdf4",
+      "antes": "https://stbbckupkuxasfthlsys.supabase.co/storage/v1/object/public/cms-images/destinations/1793915547423-tuiou5.jfif"
+    },
+    {
+      "tabla": "destinations",
+      "columna": "gallery",
+      "tipo": "jsonb",
+      "id": "87253ffc-d2e6-46c0-8d13-003e4d53d5a1",
+      "antes": [
+        "https://stbbckupkuxasfthlsys.supabase.co/storage/v1/object/public/cms-images/destinations/1781375033640-je89kd.jpg",
+        "https://stbbckupkuxasfthlsys.supabase.co/storage/v1/object/public/cms-images/destinations/1781375060442-dc91zz.jpg",
+        "https://stbbckupkuxasfthlsys.supabase.co/storage/v1/object/public/cms-images/destinations/1781375089811-nohbe8.jpg",
+        "https://stbbckupkuxasfthlsys.supabase.co/storage/v1/object/public/cms-images/destinations/1781375115780-hzdqlq.jpg",
+        "https://stbbckupkuxasfthlsys.supabase.co/storage/v1/object/public/cms-images/destinations/1781375139501-28mc0i.jpg",
+        "https://stbbckupkuxasfthlsys.supabase.co/storage/v1/object/public/cms-images/destinations/1781375176926-i7wdj9.jpg"
+      ]
+    },
+    {
+      "tabla": "destinations",
+      "columna": "gallery",
+      "tipo": "jsonb",
+      "id": "ebfff23e-cbe8-4973-a370-69623ac5cdf4",
+      "antes": [
+        "https://stbbckupkuxasfthlsys.supabase.co/storage/v1/object/public/cms-images/destinations/1793917301561-sn855c.jfif",
+        "https://stbbckupkuxasfthlsys.supabase.co/storage/v1/object/public/cms-images/destinations/1793918149479-iqsmyi.jfif",
+        "https://stbbckupkuxasfthlsys.supabase.co/storage/v1/object/public/cms-images/destinations/1793917333406-lj7iid.jpg",
+        "https://stbbckupkuxasfthlsys.supabase.co/storage/v1/object/public/cms-images/destinations/1793918185617-wlimy4.jfif",
+        "https://stbbckupkuxasfthlsys.supabase.co/storage/v1/object/public/cms-images/destinations/1793918488279-52uwgh.jfif",
+        "https://stbbckupkuxasfthlsys.supabase.co/storage/v1/object/public/cms-images/destinations/1793917407432-17a3kf.jfif"
+      ]
+    },
+    {
+      "tabla": "destinations",
+      "columna": "gallery",
+      "tipo": "jsonb",
+      "id": "046f8349-d83b-4263-9ea9-f8af4fe272ac",
+      "antes": [
+        "https://stbbckupkuxasfthlsys.supabase.co/storage/v1/object/public/cms-images/destinations/1781042633201-coztfk.jpg",
+        "https://stbbckupkuxasfthlsys.supabase.co/storage/v1/object/public/cms-images/destinations/1781041897394-4fcdc4.jpg",
+        "https://stbbckupkuxasfthlsys.supabase.co/storage/v1/object/public/cms-images/destinations/1781042646431-k6u31m.jpg",
+        "https://stbbckupkuxasfthlsys.supabase.co/storage/v1/object/public/cms-images/destinations/1781042662942-ob0y58.jpg",
+        "https://stbbckupkuxasfthlsys.supabase.co/storage/v1/object/public/cms-images/destinations/1781042672999-v3wt7d.jpg",
+        "https://stbbckupkuxasfthlsys.supabase.co/storage/v1/object/public/cms-images/destinations/1781042684354-8uq9cv.jpg",
+        "https://stbbckupkuxasfthlsys.supabase.co/storage/v1/object/public/cms-images/destinations/1781042704758-epq911.jpg",
+        "https://stbbckupkuxasfthlsys.supabase.co/storage/v1/object/public/cms-images/destinations/1781042717829-w75tpw.jpg",
+        "https://stbbckupkuxasfthlsys.supabase.co/storage/v1/object/public/cms-images/destinations/1781042735656-eo5bl4.jpg"
+      ]
+    },
+    {
+      "tabla": "destinations",
+      "columna": "gallery",
+      "tipo": "jsonb",
+      "id": "11f2bea6-ae78-4db3-b480-22ae8b51820b",
+      "antes": [
+        "https://stbbckupkuxasfthlsys.supabase.co/storage/v1/object/public/cms-images/destinations/1774202383038-uzhpf5.jpg",
+        "https://stbbckupkuxasfthlsys.supabase.co/storage/v1/object/public/cms-images/destinations/1774202405030-qw4e77.jpg",
+        "https://stbbckupkuxasfthlsys.supabase.co/storage/v1/object/public/cms-images/destinations/1774202427406-3w8xhy.jpg",
+        "https://stbbckupkuxasfthlsys.supabase.co/storage/v1/object/public/cms-images/destinations/1774202441555-s0vis2.jpg",
+        "https://stbbckupkuxasfthlsys.supabase.co/storage/v1/object/public/cms-images/destinations/1774202456850-paadhb.jpg",
+        "https://stbbckupkuxasfthlsys.supabase.co/storage/v1/object/public/cms-images/destinations/1774202490498-fai1av.jpg"
+      ]
+    },
+    {
+      "tabla": "destinations",
+      "columna": "gallery",
+      "tipo": "jsonb",
+      "id": "bddffece-c2de-4448-90e7-8e2f4344e38f",
+      "antes": [
+        "https://stbbckupkuxasfthlsys.supabase.co/storage/v1/object/public/cms-images/destinations/1786026837620-d6v4u0.jpg",
+        "https://stbbckupkuxasfthlsys.supabase.co/storage/v1/object/public/cms-images/destinations/1786026849512-8nighl.jpg",
+        "https://stbbckupkuxasfthlsys.supabase.co/storage/v1/object/public/cms-images/destinations/1786026859800-qo865x.jpg",
+        "https://stbbckupkuxasfthlsys.supabase.co/storage/v1/object/public/cms-images/destinations/1786026874732-jhff3t.jpg",
+        "https://stbbckupkuxasfthlsys.supabase.co/storage/v1/object/public/cms-images/destinations/1786026892167-0qmnkb.jpg",
+        "https://stbbckupkuxasfthlsys.supabase.co/storage/v1/object/public/cms-images/destinations/1786026936047-39lvak.jpg"
+      ]
+    },
+    {
+      "tabla": "destinations",
+      "columna": "gallery",
+      "tipo": "jsonb",
+      "id": "748ba259-453f-442d-bdd0-43f92216c57f",
+      "antes": [
+        "https://stbbckupkuxasfthlsys.supabase.co/storage/v1/object/public/cms-images/destinations/1774489405119-baxy9k.jpg",
+        "https://stbbckupkuxasfthlsys.supabase.co/storage/v1/object/public/cms-images/destinations/1774489467822-u56r7t.jpg",
+        "https://stbbckupkuxasfthlsys.supabase.co/storage/v1/object/public/cms-images/destinations/1774489496826-ww9rrq.jpg",
+        "https://stbbckupkuxasfthlsys.supabase.co/storage/v1/object/public/cms-images/destinations/1774489514348-xndh9h.jpg",
+        "https://stbbckupkuxasfthlsys.supabase.co/storage/v1/object/public/cms-images/destinations/1774489670773-ueo8hl.jpg",
+        "https://stbbckupkuxasfthlsys.supabase.co/storage/v1/object/public/cms-images/destinations/1774489683238-xhhlgt.jpg"
+      ]
+    },
+    {
+      "tabla": "destinations",
+      "columna": "gallery",
+      "tipo": "jsonb",
+      "id": "7bcdc3b2-f612-4ae7-b021-b38ee570d254",
+      "antes": [
+        "https://stbbckupkuxasfthlsys.supabase.co/storage/v1/object/public/cms-images/destinations/1774323677956-6n3xox.jpg",
+        "https://stbbckupkuxasfthlsys.supabase.co/storage/v1/object/public/cms-images/destinations/1774323692896-e9bs3y.jpg",
+        "https://stbbckupkuxasfthlsys.supabase.co/storage/v1/object/public/cms-images/destinations/1774323723733-9ajv8a.jpg",
+        "https://stbbckupkuxasfthlsys.supabase.co/storage/v1/object/public/cms-images/destinations/1774325285923-luxr5n.jpg",
+        "https://stbbckupkuxasfthlsys.supabase.co/storage/v1/object/public/cms-images/destinations/1774323794231-y9vxqq.jpg",
+        "https://stbbckupkuxasfthlsys.supabase.co/storage/v1/object/public/cms-images/destinations/1774323814869-hogsnm.jpg"
+      ]
+    },
+    {
+      "tabla": "destinations",
+      "columna": "gallery",
+      "tipo": "jsonb",
+      "id": "b873cf29-2468-4d28-b343-72004f4168df",
+      "antes": [
+        "https://stbbckupkuxasfthlsys.supabase.co/storage/v1/object/public/cms-images/destinations/1774478259711-44poon.jpg",
+        "https://stbbckupkuxasfthlsys.supabase.co/storage/v1/object/public/cms-images/destinations/1774478272959-ihsvrv.jpg",
+        "https://stbbckupkuxasfthlsys.supabase.co/storage/v1/object/public/cms-images/destinations/1774478292489-oskxjq.jpg",
+        "https://stbbckupkuxasfthlsys.supabase.co/storage/v1/object/public/cms-images/destinations/1774478312008-u1jnb0.jpg",
+        "https://stbbckupkuxasfthlsys.supabase.co/storage/v1/object/public/cms-images/destinations/1774478335654-9q99em.jpg",
+        "https://stbbckupkuxasfthlsys.supabase.co/storage/v1/object/public/cms-images/destinations/1774478352630-7536iq.jpg"
+      ]
+    },
+    {
+      "tabla": "destinations",
+      "columna": "gallery",
+      "tipo": "jsonb",
+      "id": "84688e51-2f28-41b2-94f9-71345e4ffb0f",
+      "antes": [
+        "https://stbbckupkuxasfthlsys.supabase.co/storage/v1/object/public/cms-images/destinations/1780283962108-nm85od.jpg",
+        "https://stbbckupkuxasfthlsys.supabase.co/storage/v1/object/public/cms-images/destinations/1780283971491-6csmi4.jpg",
+        "https://stbbckupkuxasfthlsys.supabase.co/storage/v1/object/public/cms-images/destinations/1780283978992-wks5rv.jpg",
+        "https://stbbckupkuxasfthlsys.supabase.co/storage/v1/object/public/cms-images/destinations/1780283988167-ikwn0r.jpg",
+        "https://stbbckupkuxasfthlsys.supabase.co/storage/v1/object/public/cms-images/destinations/1780284000509-jq21ap.jpg",
+        "https://stbbckupkuxasfthlsys.supabase.co/storage/v1/object/public/cms-images/destinations/1780284029129-9f742n.jpg",
+        "https://stbbckupkuxasfthlsys.supabase.co/storage/v1/object/public/cms-images/destinations/1781128470587-xpyrgv.jpg",
+        "https://stbbckupkuxasfthlsys.supabase.co/storage/v1/object/public/cms-images/destinations/1781128483612-kkwv6w.jpg",
+        "https://stbbckupkuxasfthlsys.supabase.co/storage/v1/object/public/cms-images/destinations/1781128495732-liqrn5.jpg"
+      ]
+    },
+    {
+      "tabla": "destinations",
+      "columna": "gallery",
+      "tipo": "jsonb",
+      "id": "ddd8b845-1b64-47ac-bbf7-56be1dffeffb",
+      "antes": [
+        "https://stbbckupkuxasfthlsys.supabase.co/storage/v1/object/public/cms-images/destinations/1781559913424-h0y3es.jpg",
+        "https://stbbckupkuxasfthlsys.supabase.co/storage/v1/object/public/cms-images/destinations/1781559927081-mmwv6j.jpg",
+        "https://stbbckupkuxasfthlsys.supabase.co/storage/v1/object/public/cms-images/destinations/1781559935633-ddg4uo.jpg",
+        "https://stbbckupkuxasfthlsys.supabase.co/storage/v1/object/public/cms-images/destinations/1781559957209-cpvdm2.jpg",
+        "https://stbbckupkuxasfthlsys.supabase.co/storage/v1/object/public/cms-images/destinations/1781559990402-aic5ae.jpg",
+        "https://stbbckupkuxasfthlsys.supabase.co/storage/v1/object/public/cms-images/destinations/1781560009724-vudb2j.jpg"
+      ]
+    },
+    {
+      "tabla": "destinations",
+      "columna": "metadata",
+      "tipo": "jsonb",
+      "id": "87253ffc-d2e6-46c0-8d13-003e4d53d5a1",
+      "antes": {
+        "lodging": "Accommodation\nHigh-mountain tents with thermal gear included to guarantee your rest.",
+        "gastronomy": "Gastronomy\n Mountain Dining: Menus designed for high energy, prepared by our specialized guides.",
+        "experiences": [
+          {
+            "title": "Ascent Trekking",
+            "description": "A guided route from Paraitepuy, crossing the Tek and Kukenán rivers under the gaze of stone giants."
+          },
+          {
+            "title": "Nights on the Tepuy",
+            "description": "Strategic campsites in the \"Hoteles\" (natural caves) to protect you from extreme weather."
+          },
+          {
+            "title": "Summit Exploration",
+            "description": "A full day dedicated to discovering the black rock labyrinths and endemic flora."
+          },
+          {
+            "title": "",
+            "description": ""
+          }
+        ],
+        "testimonials": [
+          {
+            "role": "United States",
+            "text": "An unforgettable journey! Reaching the summit of Mount Roraima felt like stepping onto another planet. The trekking was demanding, but the team at Venezuela Voyages made it seamless. From the incredible meals to the premium high-mountain tents, their logistics and expert guides gave us total peace of mind. Truly a world-class experience!",
+            "author": " Sarah M"
+          }
+        ],
+        "practical_info": {
+          "climate": "Weather\nSunny in the Gran Sabana, but at the summit, the temperature drops down to 5°C (41°F) with sudden rains.",
+          "currency": "Currency\n\n USD cash.",
+          "useful_tips": "Useful Tips:\nDifficulty level: High. Good physical condition and an adventurous spirit are required.",
+          "local_transport": "",
+          "how_to_get_there": "How to get there\n\nExclusive departure from Santa Elena de Uairén in 4x4 vehicles."
+        },
+        "must_see_places": [
+          {
+            "name": "Triple Point",
+            "image": "https://stbbckupkuxasfthlsys.supabase.co/storage/v1/object/public/cms-images/destinations/1781373751228-ttoqb7.jpg",
+            "description": "The geographical landmark where the borders of Venezuela, Brazil, and Guyana meet."
+          },
+          {
+            "name": "The Jacuzzis",
+            "image": "https://stbbckupkuxasfthlsys.supabase.co/storage/v1/object/public/cms-images/destinations/1781374086875-odi5h7.jpg",
+            "description": "Natural pools of crystal-clear, cold water on the summit, perfect for renewing your energy."
+          },
+          {
+            "name": "Window to the Abyss",
+            "image": "https://stbbckupkuxasfthlsys.supabase.co/storage/v1/object/public/cms-images/destinations/1781374672282-jgienb.jpg",
+            "description": "A dizzying view toward the Guyana jungle that will take your breath away."
+          },
+          {
+            "name": "Crystal Valley",
+            "image": "https://stbbckupkuxasfthlsys.supabase.co/storage/v1/object/public/cms-images/destinations/1781374643215-hwrpbs.jpg",
+            "description": "A brilliant expanse covered with natural quartz formations."
+          }
+        ],
+        "cultural_description": "Discover Mount Roraima\nYour adventure to the 'Lost World' begins here! Mount Roraima is not just a mountain; it is one of the oldest formations on Earth and the inspiration behind great adventure stories. This 8-night, 9-day expedition is designed for those who wish to completely disconnect and immerse themselves in a prehistoric landscape of black rocks, natural crystal pools, and a mystical mist that envelops everything.\nWith Venezuela Voyages, you don't have to worry about the technical logistics. Our team of expert guides will accompany you from Santa Elena de Uairén, taking care of the campsites in the 'Hoteles' (natural caves at the summit) and providing nutritious meals designed for the mountain. We will hike across the Gran Sabana, cross the Tek and Kukenán rivers, and finally ascend through 'La Rampa' to touch the sky.\nIt is an experience of personal growth where every step brings you closer to unique views, such as the Window to the Abyss or the Crystal Valley. If you are looking for a journey that combines a physical challenge with the absolute peace of pristine nature, Roraima is waiting for you."
+      }
+    },
+    {
+      "tabla": "destinations",
+      "columna": "metadata",
+      "tipo": "jsonb",
+      "id": "ebfff23e-cbe8-4973-a370-69623ac5cdf4",
+      "antes": {
+        "lodging": "A curated selection of charming boutique posadas and elegant waterfront retreats in nearby coastal areas.",
+        "gastronomy": "Fresh local seafood like red snapper and grouper, expertly prepared with unique coastal flavors.",
+        "experiences": [
+          {
+            "title": "Dolphin Watching",
+            "description": "Navigating with wild dolphins in the protected bay, a frequent and magical experience."
+          },
+          {
+            "title": "Beach Hopping",
+            "description": "Tailored yacht tours to secluded coves like Playa Blanca and Isla de Plata, avoiding the crowds."
+          },
+          {
+            "title": "Underwater Exploration",
+            "description": "Snorkeling and Scuba diving to discover vibrant coral reefs at islands like Arapo and Caracas."
+          },
+          {
+            "title": "Sunset Cocktails",
+            "description": "Exclusive sailing in Mochima Bay to watch stunning golden sunsets over the mountains."
+          }
+        ],
+        "testimonials": [
+          {
+            "role": "(United Kingdom)",
+            "text": "Exploring Mochima National Park on a private boat was hands down the highlight of our trip to Venezuela. Swimming alongside wild dolphins in calm, turquoise waters and enjoying lunch on a quiet beach felt like having our own secluded paradise. The logistics, transfers, and service provided by Venezuela Voyages were seamless and top-tier. We couldn’t have asked for a better coastal escape!",
+            "author": "Marcus & Sarah Thompson"
+          }
+        ],
+        "practical_info": {
+          "climate": "Tropical sunshine year-round with warm average temperatures of 28°C. Dry season Dec to May.",
+          "currency": "Use of USD and Euros is standard for tourism, along with electronic payment methods.",
+          "useful_tips": "Biodegradable sunscreen is recommended. Remember the strict park rules: taking shells or corals is prohibited.",
+          "local_transport": "Access to the islands is via private yacht charters, standardized motorboats (peñeros), and water taxis.",
+          "how_to_get_there": "Domestic flights and Private transfers"
+        },
+        "must_see_places": [
+          {
+            "name": "Unwinding at Playa Blanca and Isla de Plata",
+            "image": "https://stbbckupkuxasfthlsys.supabase.co/storage/v1/object/public/cms-images/destinations/1793915907778-hryxl4.jpeg",
+            "description": "ailing toward these iconic bays of calm turquoise waters and golden sand, ideal for relaxing under the shade of palm trees or enjoying fresh local seafood in complete comfort."
+          },
+          {
+            "name": "Navigating with Dolphins in Mochima Bay",
+            "image": "https://stbbckupkuxasfthlsys.supabase.co/storage/v1/object/public/cms-images/destinations/1793916027979-98jl2f.jfif",
+            "description": "Cruising the calm waters of the bay aboard a private boat, experiencing the unique moment of watching wild dolphins play freely in their natural habitat against dramatic mountain landscapes."
+          },
+          {
+            "name": "Exploring the Crystal Waters of Arapo & Caracas Islands",
+            "image": "https://stbbckupkuxasfthlsys.supabase.co/storage/v1/object/public/cms-images/destinations/1793916165850-hb08sa.jfif",
+            "description": "Diving into the protected coral reefs of this less crowded archipelago, discovering fascinating marine biodiversity under exceptional visibility conditions."
+          },
+          {
+            "name": "Sunset Cocktails at Mochima Village",
+            "image": "https://stbbckupkuxasfthlsys.supabase.co/storage/v1/object/public/cms-images/destinations/1793916540327-04s9r5.jfif",
+            "description": "Savoring a golden sunset with panoramic views of the bay from the dock of the historic fishing village, combining local warmth with an atmosphere of absolute peace."
+          }
+        ],
+        "cultural_description": "Mochima National Park is far more than a beach getaway; it is a protected marine-coastal ecosystem combining dramatic coastal mountain ranges with calm, turquoise bays. Designed for travelers who value privacy and elegance, this paradise provides memorable experiences backed by top safety standards: \n\nMarine Sanctuary & Dolphin Encounters: One of Mochima’s highlights is navigating alongside wild dolphins that frequently play near private boats, surrounded by vibrant underwater life perfect for snorkeling at the best beaches in Mochima Venezuela.\n\nPristine Beaches & Secluded Coves: The park features iconic destinations like Playa Blanca Mochima tour highlights and Isla de Plata Venezuela, as well as quiet, uncrowded islets accessible through our curated Mochima full day tour options and private Mochima bay boat rental services.\n\nBreathtaking Sunsets: Evenings in Mochima Bay display striking golden and violet skies—best enjoyed with a glass of champagne aboard a yacht or from a private coastal retreat.\n\nSafety & Peace of Mind: Mochima is a controlled, serene region operating with certified private logistics to guarantee a seamless, safe, and stress-free stay for international guests.\n\nRecognized Excellence: Frequently highlighted in top Venezuela beach vacation packages, Mochima stands out as an exclusive, eco-rich destination far from mass tourism."
+      }
+    },
+    {
+      "tabla": "destinations",
+      "columna": "metadata",
+      "tipo": "jsonb",
+      "id": "046f8349-d83b-4263-9ea9-f8af4fe272ac",
+      "antes": {
+        "lodging": "Accommodation\n\nThe true experience is lived in Boutique Posadas in Gran Roque, which offer personalized service, minimalist nautical decor, and terraces with views of the lighthouse.",
+        "gastronomy": "Gastronomy\n\nYou cannot leave without trying the Los Roques Lobster (in season from November to April) or a fresh ceviche prepared on the spot right on the boat.",
+        "experiences": [
+          {
+            "title": "Kitesurfing and Windsurfing",
+            "description": "Thanks to its steady winds, Los Roques is a world-class destination for these sports, especially at Cayo Francisquí"
+          },
+          {
+            "title": "The Hawksbill Route",
+            "description": "A boat tour through the most remote keys to observe marine wildlife and migratory birds."
+          },
+          {
+            "title": "Wall Diving",
+            "description": "Explore the outer reefs where the continental shelf drops into the abyss, ideal for spotting black corals and large marine species"
+          },
+          {
+            "title": "Dining Under the Stars",
+            "description": "Private gastronomic experiences set directly on the sand at sunset on the nearby keys."
+          }
+        ],
+        "testimonials": [
+          {
+            "role": "Chicago, USA",
+            "text": "An Absolute Paradise!\"\nOur trip to Los Roques with Venezuela Voyages was flawless. Walking on the Cayo de Agua Cay sandbar felt surreal, and the boutique posada in Gran Roque offered the perfect mix of local charm and personalized comfort. The team handled every detail perfectly. We will definitely book our next Venezuelan adventure with them!",
+            "author": "Sarah & Mark T"
+          }
+        ],
+        "practical_info": {
+          "climate": "Weather\n\nSunny all year round. Average temperature of 28°C.",
+          "currency": "Currency\n\nThe use of foreign currency (USD/Euros) and electronic payment methods is recommended.",
+          "useful_tips": "Useful Tips\n\nDon't forget biodegradable sunscreen and remember it is a National Park: taking shells or corals is strictly prohibited.",
+          "local_transport": "Local Transportation\n\nWalking in Gran Roque; for the keys, speedboats (peñeros) or private catamarans are used.",
+          "how_to_get_there": "How to get there\n\nCommercial or charter flights of 35-45 minutes from Maiquetía Airport (Caracas) ."
+        },
+        "must_see_places": [
+          {
+            "name": "Walking the Cayo de Agua Cay Sandbar:",
+            "image": "https://stbbckupkuxasfthlsys.supabase.co/storage/v1/object/public/cms-images/destinations/1781038903171-a0wx8t.jpg",
+            "description": "Walking along a narrow, pristine path of white sand with the Caribbean Sea gently crashing on both sides of your feet. It is a surreal, once-in-a-lifetime feeling of walking on water."
+          },
+          {
+            "name": "🐢Adopting a Baby Turtle at Dos Mosquises",
+            "image": "https://stbbckupkuxasfthlsys.supabase.co/storage/v1/object/public/cms-images/destinations/1781039006342-0j6aj7.jpg",
+            "description": "Having the unique privilege of visiting the marine research center, learning about conservation, and physically releasing a newborn sea turtle back into the wild ocean."
+          },
+          {
+            "name": "The Golden Hour at El Faro (The Lighthouse)",
+            "image": "https://stbbckupkuxasfthlsys.supabase.co/storage/v1/object/public/cms-images/destinations/1781039576305-pwiy6a.jpg",
+            "description": "Hiking up to the historic Dutch lighthouse on Gran Roque just before 6:00 PM. Watching the sun dip below the horizon, painting the entire archipelago in shades of gold, pink, and violet, is an unforgettable ritual."
+          },
+          {
+            "name": "💕Dining Barefoot in the Sand",
+            "image": "https://stbbckupkuxasfthlsys.supabase.co/storage/v1/object/public/cms-images/destinations/1781040297404-nfnxw7.png",
+            "description": "Enjoying a world-class, freshly caught lobster dinner right on the beach, with your feet in the cool night sand, lit only by candles and a blanket of infinite Caribbean stars."
+          },
+          {
+            "name": "🤿Snorkeling the Fringing Reefs",
+            "image": "https://stbbckupkuxasfthlsys.supabase.co/storage/v1/object/public/cms-images/destinations/1781040653431-0090fo.jpg",
+            "description": "Diving straight off the boat into a living aquarium. Floating effortlessly over massive coral gardens while swimming alongside friendly stingrays, nurse sharks, and schools of neon tropical fish."
+          }
+        ],
+        "cultural_description": "🌴A Living Coral Sanctuary in the Caribbean\nLos Roques is not just a destination; it is one of the most spectacular marine ecosystems on Earth. Established as a National Park in 1972, it proudly stands as the largest marine park in South America. This coral archipelago is a geographical wonder, consisting of over 50 keys and 300 sandbanks that create a massive, calm turquoise lagoon protected from open ocean currents.\n\nAward-Winning Paradise\nRecognized globally for its untouched beauty, Los Roques has earned prestigious international nominations and awards as one of the world's top beaches and best-kept secrets. Its strict environmental regulations have preserved a level of exclusivity and pristine nature that has completely vanished from the rest of the commercial Caribbean.\n\nA Classroom of Biodiversity and Conservation\nVisiting Los Roques is a deeply enriching experience where you will connect firsthand with vital marine conservation:\n\n🐢The Sea Turtle Sanctuary: The archipelago is a critical nesting ground for endangered species like the Green, Loggerhead, and Hawksbill turtles. Travelers can visit the local scientific research station on Dos Mosquises key to learn about the preservation programs and witness the magical release of baby turtles into the wild.\n\nA Living Reef: As part of the barrier reef system, it is a mecca for snorkeling and diving. You will swim alongside vibrant coral gardens, majestic queen conchs, stingrays, and thousands of colorful tropical fish species.\n\nBirdwatcher's Haven: It serves as a vital refuge for migratory and resident seabirds, including large colonies of brown pelicans, boobies, and scarlet flamingos.\n\nLos Roques challenges the traditional concept of luxury. Here, true luxury means walking barefoot on sand that never gets hot, diving into waters with 30-meter visibility, and discovering the profound peace of a world where nature still rules."
+      }
+    },
+    {
+      "tabla": "destinations",
+      "columna": "metadata",
+      "tipo": "jsonb",
+      "id": "11f2bea6-ae78-4db3-b480-22ae8b51820b",
+      "antes": {
+        "lodging": "You'll stay in high-end Hatos Ecoturísticos. These colonial mansions feature comfortable rooms, a pool, and personalized service, where animals literally walk through the garden.",
+        "gastronomy": "Here the star is Carne en Vara. Enjoy premium cuts grilled over wood fire, served with yuca, handmade cheese, and the traditional \"palo a pique\" (rice with beans and seasonings).",
+        "experiences": [
+          {
+            "title": "Photographic Safari in 4x4",
+            "description": "Tours through the grasslands and savannas to spot anteaters, foxes, deer, and the elusive jaguar."
+          },
+          {
+            "title": "Boat Tour for Pink Dolphin Sighting",
+            "description": "Close encounters with freshwater pink dolphins in the local rivers."
+          },
+          {
+            "title": "Piranha Fishing",
+            "description": "A traditional and exciting activity carried out in the streams and rivers. Using rustic rods, travelers can try to catch these famous specimens. Important note: Sport fishing with catch-and-release is promoted to preserve the ecosystem's balance. It's the perfect moment for a striking photo!"
+          },
+          {
+            "title": "Anaconda Search",
+            "description": "A traditional and exciting activity carried out in the streams and rivers. Using rustic rods, travelers can try to catch these famous specimens. Important note: Sport fishing with catch-and-release is promoted to preserve the ecosystem's balance. It's the perfect moment for a striking photo!"
+          },
+          {
+            "title": "Llanos Chores",
+            "description": "Participate in or witness milking, cattle herding, and work songs, activities declared UNESCO Cultural Heritage that show the essence of the llanero."
+          }
+        ],
+        "testimonials": [
+          {
+            "role": "Nature traveler. --- Puerto Rico",
+            "text": "\"I never thought I'd see so many animals together in one place. The llanero sunset is something that cannot be described in words. Venezuela Voyages' logistics were flawless from start to finish.\"",
+            "author": "Sophia Ruiz."
+          }
+        ],
+        "practical_info": {
+          "climate": "It is a tropical savanna ecosystem with two very distinct seasons.\n\nDry Season (Summer: January to April): The heat is intense, but it is the best time to see wildlife (jaguars, caimans, birds) concentrated in the few remaining water pools.\n\nRainy Season (Winter: June to October): The landscape turns emerald green and the plain floods, allowing boat transfers across the savannas. It is the most photogenic period.",
+          "currency": "Being remote areas, it is recommended to use USD in cash (low-denomination bills) for tips or purchases of local handicrafts. Tourist services and agency fees are usually prepaid or handled via bank transfer/Zelle.",
+          "useful_tips": "Don't forget strong insect repellent, sunscreen, and light-colored clothing that covers arms and legs to protect yourself from mosquitoes (\"plagues\") at sunset.",
+          "local_transport": "Open safari-type trucks for wildlife viewing and small boats (bongos) to navigate the streams and lagoons.",
+          "how_to_get_there": "Commercial flights to Barinas or San Fernando de Apure. From there, the transfer is overland in the agency's 4x4 units to the hatos (aprox. 3 to 5 hours by road, depending on the destination)."
+        },
+        "must_see_places": [
+          {
+            "name": "Hatos Ecoturísticos",
+            "image": "https://stbbckupkuxasfthlsys.supabase.co/storage/v1/object/public/cms-images/destinations/1774193563362-zxic0w.jpg",
+            "description": "Former cattle ranches turned into wildlife reserves (such as Hato El Cedral or El Frío), where conservation is a priority."
+          },
+          {
+            "name": "Rivers and Lagoons",
+            "image": "https://stbbckupkuxasfthlsys.supabase.co/storage/v1/object/public/cms-images/destinations/1774193832970-gejwin.jpg",
+            "description": "Authentic water sanctuaries where river dolphins (toninas), Orinoco caimans, and capybaras live."
+          },
+          {
+            "name": "Forest Galleries",
+            "image": "https://stbbckupkuxasfthlsys.supabase.co/storage/v1/object/public/cms-images/destinations/1774194016491-8tv6th.jpg",
+            "description": "Strips of dense vegetation along the riverbanks that serve as refuge for howler monkeys and hundreds of bird species."
+          },
+          {
+            "name": "Endless Horizon",
+            "image": "https://stbbckupkuxasfthlsys.supabase.co/storage/v1/object/public/cms-images/destinations/1774194180232-kqvvpp.jpg",
+            "description": "It is not a place, but the experience of watching a llanero sunset where the sun merges with the plain without obstacles."
+          }
+        ],
+        "cultural_description": "Culture and Tradition: The Soul of the Plains\nThe Llanos are not just land, they are a way of life that has shaped Venezuela's identity. This region was the birthplace of the \"Lanceros de Páez\", indomitable horsemen who were key in the War of Independence. Today, that heritage lives on in their customs, which have been recognized by UNESCO as humanity's heritage.\n\n**Work Songs: Listen to the melancholic milking and herding songs, improvised melodies that the llaneros use to calm the livestock. It is a mystical connection between man and animal.\n\n**The Joropo: Let yourself be caught by the sound of the harp, cuatro, and maracas. The joropo dance is a display of skill and gallantry that defines the llanera party.\n\n**Legends and Myths: By the night, around the bonfire, it is tradition to tell tales of \"El Silbón\" or \"La Sayona\", stories that are part of the region's magical-religious folklore.\n\n**Daily Chores: Observe how the llanero masters the horse and lasso with a skill passed down from generation to generation."
+      }
+    },
+    {
+      "tabla": "destinations",
+      "columna": "metadata",
+      "tipo": "jsonb",
+      "id": "bddffece-c2de-4448-90e7-8e2f4344e38f",
+      "antes": {
+        "lodging": "Accommodation:\nWe have selected the finest overwater stilt houses, equipped with fine mosquito netting, comfortable beds, and social areas designed for nighttime sky watching in complete safety and exclusivity.",
+        "gastronomy": "Gastronomy:\nAuthentic flavors of Zulia and the lake. Highlights include fresh fried fish (curvina or bocachico), plantains prepared in various styles (patacones), and coconut-infused dishes.",
+        "experiences": [
+          {
+            "title": "Nighttime Photographic Expedition",
+            "description": "Night boat departures with specialized guides to capture the electrical display from the best angles on the lake."
+          },
+          {
+            "title": "Life in the Palafitos",
+            "description": "Cultural immersion in the communities of Ologá or Congo Mirador, sleeping over the water in traditional structures equipped with all amenities."
+          },
+          {
+            "title": "Water and Jungle Route",
+            "description": "Navigation through the Catatumbo River channels for wildlife spotting (pink river dolphins, monkeys, and exotic birds) before the evening spectacle."
+          },
+          {
+            "title": "Dinner Under the Lightning",
+            "description": "A private dining experience on deck while the sky lights up relentlessly."
+          }
+        ],
+        "testimonials": [
+          {
+            "role": "Frequent Traveler",
+            "text": "Visiting Catatumbo was on my bucket list for years, and Venezuela Voyages exceeded all expectations. The logistics were flawless, from the smooth transfer to Puerto Concha to our comfortable stay at the stilt houses in Ologá. Seeing the night sky light up with silent lightning for hours was truly unforgettable—an absolute dream for photography enthusiasts. Highly recommended!\"",
+            "author": "Mark Stevens, United States"
+          },
+          {
+            "role": "Frequent Traveler",
+            "text": "An extraordinary experience from start to finish! Sleeping over the lake and taking the nighttime boat route to witness the Catatumbo Lightning up close felt like being on another planet. The local guides were extremely knowledgeable, the food was delicious, and the team made us feel safe and cared for throughout the entire journey. Easily the highlight of our trip to Venezuela.",
+            "author": "Sarah & David Miller, United Kingdom"
+          }
+        ],
+        "practical_info": {
+          "climate": "Climate:\nWarm and humid (typical of the Zulia region). Temperatures range between 28°C and 35°C. Light, breathable clothing is recommended, as well as long-sleeved shirts to protect against mosquitoes at sunset. Peak electrical activity occurs between August and November.",
+          "currency": "Currency:\nPayments in USD (cash) for local expenses. Agency logistics are fully prepaid.",
+          "useful_tips": "Useful Tips:\nSunscreen, insect repellent (essential), camera with a tripod for long-exposure photography, and portable power banks.",
+          "local_transport": "Local Transport:\nSpeedboats / Motorized boats",
+          "how_to_get_there": "Getting There:\nPrivate ground transfer from Maracaibo to the port of Encontrados or Puerto Concha, followed by a speedboat journey to the overwater stilt houses (palafitos)."
+        },
+        "must_see_places": [
+          {
+            "name": "Stilt Villages (Palafitos)",
+            "image": "https://stbbckupkuxasfthlsys.supabase.co/storage/v1/object/public/cms-images/destinations/1786024144078-fih0qi.jpg",
+            "description": "Sleep in overwater stilt houses in Ologá, the best vantage point for observing the lightning directly overhead."
+          },
+          {
+            "name": "Catatumbo Swamps National Park (Ciénagas del Catatumbo)",
+            "image": "https://stbbckupkuxasfthlsys.supabase.co/storage/v1/object/public/cms-images/destinations/1786024673921-z7osyi.jpg",
+            "description": "An ecosystem of swamps and mangroves, home to incredible biodiversity that serves as the backdrop for the phenomenon."
+          },
+          {
+            "name": "Nighttime Photographic expedition",
+            "image": "https://stbbckupkuxasfthlsys.supabase.co/storage/v1/object/public/cms-images/destinations/1786026098893-1t4dh4.jpg",
+            "description": "Boat routes specifically designed to capture the majesty of the lightning without the common sound of thunder."
+          },
+          {
+            "name": "Wildlife Spotting",
+            "image": "https://stbbckupkuxasfthlsys.supabase.co/storage/v1/object/public/cms-images/destinations/1786025527260-8bxpfx.jpg",
+            "description": "During the day, the region offers encounters with freshwater dolphins, howler monkeys, and spectacular birdlife."
+          }
+        ],
+        "cultural_description": "Catatumbo Lightning: NASA-Verified Atmospheric Wonder\n\nOverview & Scientific Recognition\n\nFollowing 16 years of satellite data analysis, NASA officially recognized the Lake Maracaibo basin as the ultimate lightning hotspot on Earth. Holding the official Guinness World Record with an average of 250 lightning flashes per square kilometer each year, this natural spectacle occurs where the Catatumbo River meets the lake, creating a continuous, silent electrical display visible from hundreds of miles away.\n\nThe Expedition Experience & Real Logistics\n\nThis journey takes travelers into the heart of authentic water villages like Ologá and Congo Mirador. Expect a true wilderness immersion: navigate calm basin waters with expert local captains, learn about the lake's unique ecosystem, and rest in traditional stilt houses (palafitos) over the water. While accommodation is rustic and focused on nature rather than modern luxury, our specialized logistics ensure safe transfers, local guides, and seamless field planning.\n\nKey Activities During the Expedition\n\nNocturnal Lightning Observation: Spend the night on open-air platforms or boats capturing long-exposure photography of the storm.\n\nWildlife & Dolphin Watching: Explore surrounding mangroves to spot freshwater dolphins (toninas), howler monkeys, and native bird species.\n\nCultural Immersion in Palafitos: Connect with local fishing communities living in traditional houses built entirely over the lake.\n\nBest Time & Seasonality\n\nWhile electrical discharges occur throughout most of the year, multi-year satellite lightning detection data highlights clear seasonal windows:\n\nPeak Activity (October): The absolute highest concentration of night storms, averaging around 89,000 electrical discharges per month.\n\nSecondary Peak (May): A strong early-season window with frequent electrical displays.\n\nExtended High Season (August to November): High overall lightning frequency and optimal conditions for night observation.\n\nLow Activity Window (June to July): The calmest period of the year with significantly reduced storm frequency.\n\nWhat to Pack & Travel Prep\n\nGear: Fast-lens cameras, sturdy tripods, waterproof dry bags, and high-capacity power banks.\n\nAttire: Lightweight, quick-dry clothing, long sleeves for nighttime insect protection, and breathable rain gear.\n\nEssentials: Eco-friendly insect repellent and personal hydration solutions.\n\nReady to Experience the Catatumbo Lightning?\n\nPlan your expedition around the best seasonal window with our specialized local team. Request a tailored itinerary and secure your spot today.\n\nAlso explore our packages to Los Roques, another exclusive Venezuelan destination. Los Roques: Considered the second-largest marine park in Latin America, it houses the most extensive reef system in the Southern Caribbean.\nhttps://www.venezuelavoyages.com/packages/los-roques-2d-1n"
+      }
+    },
+    {
+      "tabla": "destinations",
+      "columna": "metadata",
+      "tipo": "jsonb",
+      "id": "748ba259-453f-442d-bdd0-43f92216c57f",
+      "antes": {
+        "lodging": "From restored historic haciendas with luxury to mountain boutique hotels with fireplace and panoramic views of the peaks.",
+        "gastronomy": "A must-try is the Andean Pizca at breakfast, garlic trout, Andean pastries, and the famous \"abrillantadas\" (typical sweets).",
+        "experiences": [
+          {
+            "title": "Ascent to the Roof of Venezuela:",
+            "description": "Guided route through the cable car stations with strategic stops for acclimatization and high-altitude photography."
+          },
+          {
+            "title": "Route of the Páramos",
+            "description": "Private journey to Eagle Peak and Mucubají Lagoon, visiting stone chapels and handicraft markets."
+          },
+          {
+            "title": "Ice Cream and Trout Tour",
+            "description": "A gastronomic route through the city's most famous flavors, including the famous ice cream shop of a thousand flavors."
+          },
+          {
+            "title": "Condor Observation",
+            "description": "Visit to the conservation center in the páramo to learn about the reintroduction efforts of this majestic bird."
+          }
+        ],
+        "testimonials": [
+          {
+            "role": "Adventure traveler.",
+            "text": "Climbing Pico Espejo with Venezuela Voyages was a magical experience. The organization was impeccable, from the hotel with fireplace to the guide who took us through the páramo. Seeing snow in Venezuela is something I will never forget. Totally recommended!",
+            "author": "Andrés Guzmán"
+          }
+        ],
+        "practical_info": {
+          "climate": "From temperate to very cold. In the city it ranges from 15°C to 22°C; on the peaks and páramos it can drop below 0°C.",
+          "currency": "USD in cash and digital payments. It is advisable to carry cash for stops in small páramo towns.",
+          "useful_tips": "Pack quality thermal clothing (\"onion layers\"). To avoid altitude sickness (soroche), stay hydrated and take the cable car calmly.",
+          "local_transport": "4x4 vehicles for mountain routes and private agency transfers for greater comfort.",
+          "how_to_get_there": "Flights to El Vigía Airport (1.5 hours from Mérida) or directly to Alberto Carnevalli Airport (subject to commercial flight availability). Or by land."
+        },
+        "must_see_places": [
+          {
+            "name": "Pico Espejo (Mukumbarí)",
+            "image": "https://stbbckupkuxasfthlsys.supabase.co/storage/v1/object/public/cms-images/destinations/1774488255735-mjtboi.jpg",
+            "description": "The final station of the cable car, where the view of the glaciers and the Sierra Nevada is simply breathtaking."
+          },
+          {
+            "name": "Laguna de Mucubají",
+            "image": "https://stbbckupkuxasfthlsys.supabase.co/storage/v1/object/public/cms-images/destinations/1774488622382-uxr5by.jpg",
+            "description": "A glacial-origin jewel surrounded by frailejones, ideal for gentle walks or horseback rides in the páramo"
+          },
+          {
+            "name": "Pueblo de Los Nevados",
+            "image": "https://stbbckupkuxasfthlsys.supabase.co/storage/v1/object/public/cms-images/destinations/1774488814272-9opxkg.jpg",
+            "description": "A timeless corner at 2.700 msnm, accessible only by 4x4, where authentic rural Andean life is lived."
+          },
+          {
+            "name": "Catedral de Mérida",
+            "image": "https://stbbckupkuxasfthlsys.supabase.co/storage/v1/object/public/cms-images/destinations/1774489076261-bb5xyd.jpg",
+            "description": "One of Venezuela's architectural jewels, located opposite Bolívar Square, a symbol of local fervor and history."
+          }
+        ],
+        "cultural_description": "Discover Mérida and the Sierra Nevada\nMérida is the roof of Venezuela, a region where the majesty of the Andean Cordillera reaches its maximum splendor. Founded under the name of \"Santiago de los Caballeros\", this city combines a rich university heritage with the tradition of its mountain towns. Here, adventure begins at the Mukumbarí Cable Car, an engineering feat that lifts you to touch the clouds at more than 4.700 meters above sea level.\nHistorically, Mérida has been a bulwark of culture and resistance; its páramos witnessed Bolívar's passage in the Admirable Campaign. Today, the Sierra Nevada not only protects the country's highest peaks, such as Bolívar and Humboldt, but also offers a complete sensory experience: from the aroma of freshly brewed coffee to the view of frailejones in the mist. With Venezuela Voyages, you will experience Mérida from a luxury perspective, staying in exclusive lodgings that respect Andean architecture and enjoying private routes through the region's most beautiful valleys."
+      }
+    },
+    {
+      "tabla": "destinations",
+      "columna": "metadata",
+      "tipo": "jsonb",
+      "id": "7bcdc3b2-f612-4ae7-b021-b38ee570d254",
+      "antes": {
+        "lodging": "Premium Stay: Partnerships with the best hotel chains \"All Inclusive\" and luxury boutique inns.",
+        "gastronomy": "Island Flavor: Enjoy the famous \"Pastel de Chucho\" and fresh fish right on the shore in Pampatar.",
+        "experiences": [
+          {
+            "title": "Full Day to Isla de Coche",
+            "description": "Catamaran cruise with open bar, music, and the clearest waters of Nueva Esparta state."
+          },
+          {
+            "title": "Shopping Tour",
+            "description": "Tour of the best shopping centers taking advantage of the Free Port (tax-free)."
+          },
+          {
+            "title": "Sunset in Juan Griego",
+            "description": "A mandatory tradition to bid farewell to the sun with a panoramic view of the fort."
+          }
+        ],
+        "testimonials": [
+          {
+            "role": "Family Trip",
+            "text": "Margarita exceeded all my expectations. Venezuela Voyages' service was impeccable, from the private transfer with air conditioning to the catamaran excursion to Coche. The fresh food and personalized attention made our family vacation perfect. We will definitely return!",
+            "author": "Mariana V."
+          }
+        ],
+        "practical_info": {
+          "climate": "Dry tropical climate, almost always sunny with an average temperature of 27°C.",
+          "currency": "All our packages are expressed in $ (USD) for your convenience.",
+          "useful_tips": "Sun Protection: The Caribbean sun is intense. Use high-SPF sunscreen, even on cloudy days, and don't forget your hat or cap.\nHydration: Stay hydrated at all times. We recommend drinking bottled water, which we include in all our private transfers.\nShopping with Ease: Take advantage of the Free Port, but remember that the best deals on technology and perfumes are usually found in the shopping centers of Pampatar and Porlamar.\nCash: Although we accept digital payments and international cards at many establishments, it's always useful to carry low-denomination bills (USD) for tips or small purchases at beach stalls.\nConnectivity: Most hotels offer Wi-Fi, but if you need to stay connected all the time, consult with us to assist you with a local SIM.",
+          "local_transport": "Venezuela Voyages manages your transfers in private air-conditioned vehicles, from airport pickup to 4x4 tours in Macanao and exclusive boats to the nearby islands.",
+          "how_to_get_there": "Direct flights from Caracas or ferry from Puerto La Cruz."
+        },
+        "must_see_places": [
+          {
+            "name": "El Yaque Beach",
+            "image": "https://stbbckupkuxasfthlsys.supabase.co/storage/v1/object/public/cms-images/destinations/1774322715695-xx1gdt.jpg",
+            "description": "World-renowned for its ideal conditions for water sports."
+          },
+          {
+            "name": "La Restinga",
+            "image": "https://stbbckupkuxasfthlsys.supabase.co/storage/v1/object/public/cms-images/destinations/1774322908644-r0c4r6.jpg",
+            "description": "A mangrove labyrinth where you'll boat through channels with romantic names."
+          },
+          {
+            "name": "Península de Macanao",
+            "image": "https://stbbckupkuxasfthlsys.supabase.co/storage/v1/object/public/cms-images/destinations/1774323026121-6l6cwu.jpg",
+            "description": "The wild and untouched side of the island, with deserts that meet the sea."
+          },
+          {
+            "name": "Castillo de San Carlos Borromeo",
+            "image": "https://stbbckupkuxasfthlsys.supabase.co/storage/v1/object/public/cms-images/destinations/1774323219636-lxh134.jpg",
+            "description": "Colonial history with stunning views of the Bahía de Pampatar."
+          }
+        ],
+        "cultural_description": "Welcome to the Pearl of the Caribbean! Isla de Margarita is Venezuela's most complete destination, where the luxury of the best hotels meets the warmth of its people. Whether you're seeking the adrenaline of kitesurfing at El Yaque, a day of shopping at top-tier malls, or an unforgettable sunset in Juan Griego, Margarita has it all.\n\nWith Venezuela Voyages, your stay is guaranteed with the best logistics. We offer private transfers, exclusive excursions to Isla de Coche, and boat rides through the Laguna de La Restinga National Park. Margarita is not just a beach; it's a gastronomic and cultural experience that blends modernity with the charm of a fishing village. Get ready to experience the Caribbean sun like never before!"
+      }
+    },
+    {
+      "tabla": "destinations",
+      "columna": "metadata",
+      "tipo": "jsonb",
+      "id": "b873cf29-2468-4d28-b343-72004f4168df",
+      "antes": {
+        "lodging": "Selection of Posadas Boutique with Mediterranean design and luxury apartments with direct private pier access.",
+        "gastronomy": "Indulge in fresh grilled lobster, traditional fried fish with tostones, or famous seafood cocktails right on the beach.",
+        "experiences": [
+          {
+            "title": "Private Yacht Voyage",
+            "description": "Personalized navigation through the most exclusive cays with catering and luxury service."
+          },
+          {
+            "title": "Exploration of Caves and Mangroves",
+            "description": "A cultural tour of the Cueva del Indio to see ancestral rock art."
+          },
+          {
+            "title": "Reef Snorkeling",
+            "description": "Guided dives at Playa Mero to discover the colorful underwater fauna of the Caribbean."
+          }
+        ],
+        "testimonials": [
+          {
+            "role": "Frequent Traveler. Italy",
+            "text": "The blue of the water at Cayo Sombrero Cay has nothing to envy the Maldives. Venezuela Voyages organized a private yacht for us and the service was out of this world. We'll definitely come back!\"",
+            "author": "Carolina Vitto"
+          }
+        ],
+        "practical_info": {
+          "climate": "Sunny and tropical year-round (27°C - 32°C).",
+          "currency": "USD in cash (recommended for minor expenses) and digital payments for lodging services.",
+          "useful_tips": "For a maximum peace experience, we recommend weekdays. Don't forget biodegradable sunscreen.",
+          "local_transport": "Fast boats and private yachts.",
+          "how_to_get_there": "Private transfers from Caracas (3.5h) or Valencia (1.5h) directly to the Tucacas marinas."
+        },
+        "must_see_places": [
+          {
+            "name": "Cayo Sombrero Cay ",
+            "image": "https://stbbckupkuxasfthlsys.supabase.co/storage/v1/object/public/cms-images/destinations/1774477342024-pz7gft.jpg",
+            "description": "The park's king. Two white-sand beaches, endless palm groves and coral reefs just a few meters from the shore."
+          },
+          {
+            "name": "Bajo \"Juanes\"",
+            "image": "https://stbbckupkuxasfthlsys.supabase.co/storage/v1/object/public/cms-images/destinations/1774477596177-21jn4x.jpg",
+            "description": "A \"pool\" of saltwater in the middle of the sea where the water reaches your waist. It is the most exclusive meeting point for yachts."
+          },
+          {
+            "name": "Cayo Peraza Cay",
+            "image": "https://stbbckupkuxasfthlsys.supabase.co/storage/v1/object/public/cms-images/destinations/1774477847918-sedgby.jpg",
+            "description": "A tiny, virgin islet surrounded by coral. Perfect for those seeking total privacy."
+          },
+          {
+            "name": "Cuare Lagoon",
+            "image": "https://stbbckupkuxasfthlsys.supabase.co/storage/v1/object/public/cms-images/destinations/1774477999880-d1f3a9.jpg",
+            "description": "Bird refuge where you can see pink flamingos and herons at sunset in a magical mangrove setting."
+          }
+        ],
+        "cultural_description": "Located on the coast of Falcón state, Morrocoy is a refuge of marine biodiversity and postcard-like landscapes that seem frozen in time. This archipelago of islets, protected by a coral barrier, is famous for its crystal-clear, warm and shallow waters, ideal for snorkeling or simply letting yourself be carried by the current in its famous \"bajos\".\\nHistorically, these lands were inhabited by the Caquetíos indigenous people, who left their mark in caves with petroglyphs that you can visit among the mangroves today. Morrocoy is not just a beach destination; it is an exclusivity experience where the luxury of sailing on a private yacht meets the purity of untamed nature. From the vibrant atmosphere of Bajo Juanes to the absolute peace of Cayo Peraza Cay, every corner is designed to disconnect you from the world and reconnect you with paradise."
+      }
+    },
+    {
+      "tabla": "destinations",
+      "columna": "metadata",
+      "tipo": "jsonb",
+      "id": "84688e51-2f28-41b2-94f9-71345e4ffb0f",
+      "antes": {
+        "lodging": "Lodging:\nStay in premium eco-lodges and camps that beautifully combine modern comfort with native materials. Rooms feature private bathrooms, comfortable beds, and electricity, offering a cozy and relaxing sanctuary after a day of intense adventure in the jungle.",
+        "gastronomy": "Gastronomy:\nEnjoy a delicious blend of local and international cuisine. Our packages include full board meals prepared with fresh ingredients, offering traditional flavors of the region alongside universal options, perfectly adapted for international travelers.",
+        "experiences": [
+          {
+            "title": "Angel Falls Overflight",
+            "description": "The most exclusive way to appreciate the immense scale of the tepuys from the air."
+          },
+          {
+            "title": "Curiara Expedition",
+            "description": "Traditional upstream river navigation led by Pemón guides, overnighting in hammocks right in front of Angel Falls for an absolute connection with the jungle."
+          },
+          {
+            "title": "Visit to Pemón Communities",
+            "description": "An authentic cultural exchange to discover their traditions, craftsmanship, and the profound cosmogony of the Gran Sabana."
+          },
+          {
+            "title": "Dining at the Camp",
+            "description": "Enjoy local and international gastronomy in luxury lodges that seamlessly blend modern comfort with native, natural materials."
+          },
+          {
+            "title": "Expedition to the Kavac Caves",
+            "description": "A journey by light aircraft or 4x4 to the Kamarata Valley to enter an ancient stone gorge. You will trek through the river to reach an awe-inspiring waterfall enclosed by 150-meter-high rock walls."
+          },
+          {
+            "title": "Gran Sabana Overland Expedition",
+            "description": "A thrilling 4x4 journey across vast rolling plateaus to witness the prehistoric landscapes of the eastern sector. This rugged adventure takes you to explore the sacred Kueka Stone, the majestic Kama Merú waterfall, and the powerful Yuruaní Curtains, including refreshing swims in Pacheco and El Oasis, and a mystical walk along the red-jasper riverbed of Quebrada de Jaspe."
+          }
+        ],
+        "testimonials": [
+          {
+            "role": "International Travelers.",
+            "text": "An absolute paradise. Venezuela Voyages handled every single logistical detail flawlessly, from our flights leaving Caracas to the magnificent jungle expeditions. We felt incredibly safe, welcomed, and deeply connected to the local Pemón culture throughout the entire journey. Standing in front of Angel Falls is an experience that changes you forever. A flawless and deeply moving adventure",
+            "author": "Sarah & Thomas M"
+          }
+        ],
+        "practical_info": {
+          "climate": "Weather:\nVariable and extreme. At the base, it features tropical heat, but at the summits, the temperature can drop to 5°C (41°F) at night, and it rains frequently.",
+          "currency": "Currency:\nUS Dollars (USD) are primarily used for local guide services and porters.",
+          "useful_tips": "Useful Tips:\nPack quick-dry clothing and protection for your electronic equipment (waterproof dry bags), as waterfall mist and rain are constant. Hiking boots and non-slip socks are highly recommended to fully enjoy the walk behind the waterfalls.",
+          "local_transport": "Local Transportation:\nTransfers in 4x4 vehicles within the village, and navigation in curiaras (indigenous canoes) for all river expeditions.",
+          "how_to_get_there": "Title: How to Get There:\nCanaima is a remote area with no overland road access for tourists; the only way to arrive is by air. Main Flight: You can take a direct commercial flight from Caracas, or fly to Puerto Ordaz (PZO). Secondary Flight: From Puerto Ordaz, you will take a light aircraft or a charter flight to the Canaima Camp Airport (CAJ)."
+        },
+        "must_see_places": [
+          {
+            "name": "Canaima Lagoon",
+            "image": "https://stbbckupkuxasfthlsys.supabase.co/storage/v1/object/public/cms-images/destinations/1780283883353-23dec6.jpg",
+            "description": "A breathtaking mirror of reddish-tan waters—colored naturally by plant tannins—perfectly reflecting the imposing Hacha, Wadaima, Golondrina, and Ucaima falls. It serves as the magical gateway to your entire adventure, where you will navigate in traditional motorized canoes (coiaras) while surrounded by pristine landscapes."
+          },
+          {
+            "name": "El Sapo & Sapito Falls",
+            "image": "https://stbbckupkuxasfthlsys.supabase.co/storage/v1/object/public/cms-images/destinations/1780283901737-b61h8p.jpg",
+            "description": "A thrilling, once-in-a-lifetime experience that allows you to walk along a hidden path directly behind a thundering curtain of water. Feel the immense power, energy, and refreshing mist of the falls as you traverse this natural tunnel carved into the ancient rock."
+          },
+          {
+            "name": "Orchid Island",
+            "image": "https://stbbckupkuxasfthlsys.supabase.co/storage/v1/object/public/cms-images/destinations/1780283923260-3jiins.jpg",
+            "description": "A tranquil and mystical haven located in the middle of the Churún River, ideal for a scenic rest and lunch stop during the upstream boat journey toward Angel Falls. The island is named after the beautiful native orchids that naturally adorn this peaceful river sanctuary."
+          },
+          {
+            "name": "Angel Falls Viewpoint & Base",
+            "image": "https://stbbckupkuxasfthlsys.supabase.co/storage/v1/object/public/cms-images/destinations/1780283944567-vdiqrc.jpg",
+            "description": "The crown jewel of the expedition. After a trek through the lush rainforest, you will reach the viewpoint to behold the majestic Angel Falls—the world's highest uninterrupted waterfall, plunging an astonishing 979 meters. You will sleep in comfortable hammocks at a base camp right in front of the falls, waking up to the most powerful and energetic view on the planet."
+          },
+          {
+            "name": "The Gran Sabana",
+            "image": "https://stbbckupkuxasfthlsys.supabase.co/storage/v1/object/public/cms-images/destinations/1781127323431-9vf86c.jpg",
+            "description": "An immense and ancient plateau of golden grasslands and dramatic valleys. This overland paradise invites you to explore iconic wonders like the mystical Jasper Creek (Quebrada de Jaspe), the powerful Yuruaní Curtains, Kama Merú, and the sacred Kueka Stone, making it the ultimate destination for thrilling 4x4 expeditions."
+          }
+        ],
+        "cultural_description": "Canaima National Park: Home of Angel Falls and The Gran Sabana\nExplore a sacred territory over 2 billion years old where nature manifests in its grandest form. From the mystical western sector, where the majestic Angel Falls stands proud as the world's highest uninterrupted waterfall, to the infinite horizons and ancient tepuis of The Gran Sabana in the east. An exclusive expedition designed for travelers seeking to combine river magic, thrilling 4x4 overland adventures, and a deep cultural connection with the indigenous Pemón people.\n\nAn Ancient Geological Realm\nCanaima National Park spans over 30,000 square kilometers of pristine rainforest and flat-topped tepuis dating back two billion years. Divided into the western riverlands of Angel Falls and the vast highlands of The Gran Sabana, this UNESCO World Heritage Site offers an authentic wilderness expedition untouched by mass tourism.\n\nHighlights of the Expedition\nAngel Falls (Kerepakupai Merú)\nStand before the highest uninterrupted waterfall on Earth, dropping 979 meters into the Amazonian canopy. Reach its base by navigating wild rivers or witness its sheer scale from above on a scenic flightover.\n\nCanaima Lagoon & Surrounding Waterfalls\nCross the tea-colored waters of Canaima Lagoon by boat and trek behind the roaring water curtains of Sapo and Hacha Falls for an incredible perspective of the park's hydrology.\n\nThe Gran Sabana Highlands\nEmbark on overland journeys across rolling plateaus, red-jasper riverbeds, sweeping valleys, and majestic cascades like Kama Merú along the eastern border of the park.\n\nCultural Heritage of the Pemón Guardians\nThe true identity of Canaima is deeply tied to the Pemón people, who have coexisted with this landscape for centuries. For the Pemón, the tepuis are sacred structures revered as the homes of ancestral spirits.\n\nOur expeditions prioritize local indigenous guides, offering travelers a respectful, authentic connection to ancient cosmological traditions and deep jungle navigation.\n\nExpedition Logistics & Seasonal Planning\nAccess & Flight Connections\nReaching this remote wilderness requires specialized transport. Direct flights connect from Caracas (Maiquetía) or Puerto Ordaz straight to the local airstrip in Canaima village.\n\nRiver Navigation & Water Levels\nRiver expeditions to the base of Angel Falls operate primarily during the rainy season (June to December), when river levels allow motorized wooden boats (curiaras) to navigate the Carrao and Churún rivers. During the dry season, aerial flyovers offer the best view of the falls.\n\nAuthentic Accommodations\nStay in eco-lodges around Canaima Lagoon featuring regional architecture and fresh dining. For overnight stays near the base of Angel Falls, experience rustic hammock camps under the stars.\n\nConexión Cultural y Cine\nA Landscape That Inspired Legends\nThis surreal environment served as the direct inspiration for Sir Arthur Conan Doyle's classic novel The Lost World, as well as the cinematic landscapes seen in animated and sci-fi masterpieces like Up and Avatar.\n\nReady to Explore Canaima National Park?\nEvery journey to Canaima requires careful coordination based on seasonal water levels and travel preferences. Let our team organize your flights, local Pemón guides, and river permits for a safe, seamless expedition.   "
+      }
+    },
+    {
+      "tabla": "destinations",
+      "columna": "metadata",
+      "tipo": "jsonb",
+      "id": "ddd8b845-1b64-47ac-bbf7-56be1dffeffb",
+      "antes": {
+        "lodging": "Accommodation\n\nWith no traditional hotel infrastructure available, the exclusive experience is lived through eco-friendly oceanfront campsites featuring luxury Glamping or fully equipped VIP tents right on the sand.",
+        "gastronomy": "Gastronomy\n\nA culinary journey based on the fresh catch of the day. Enjoy freshly fried fish, authentic Caribbean ceviche, and a VIP beachside menu crafted on-site by local camp chefs.",
+        "experiences": [
+          {
+            "title": "Windsurfing & Kitesurfing",
+            "description": "\nDescription: Thanks to steady Trade Winds, Punta Delgada is a world-class spot perfect for gliding over flat, crystal-clear turquoise waters."
+          },
+          {
+            "title": "The Keys Route",
+            "description": "A scenic boat tour navigating through Cayo Herradura and Los Tortuguillos to discover natural shallow pools and completely isolated shores."
+          },
+          {
+            "title": "Reef Snorkeling",
+            "description": "Explore the untouched coral reefs surrounding the island, a marine sanctuary perfect for swimming alongside sea turtles, rays, and tropical fish."
+          },
+          {
+            "title": "Stargazing Night",
+            "description": "Enjoy a private dinner right on the sand under a unique night sky, completely free of light pollution and ideal for viewing the stars."
+          }
+        ],
+        "testimonials": [
+          {
+            "role": "Miami - USA",
+            "text": "A magical and unforgettable experience\nI have no words to describe the feeling of walking along Cayo Herradura. The sand is so white and fine it feels like powder, and the best part is it doesn't burn your feet at all. The boat ride from Higuerote was totally worth it; we even saw dolphins swimming right next to us! Sleeping at the oceanfront campsite under a sky full of stars was unbelievable. Venezuela Voyages' service was flawless from start to finish, taking care of every logistical detail. I will definitely be back!",
+            "author": "Mark T"
+          }
+        ],
+        "practical_info": {
+          "climate": "Climate: \n\nTropical and semi-arid, sunny almost all year round with steady sea breezes. Average temperature of 29°C (84°F).",
+          "currency": "Currency: \n\nThe use of cash foreign currency (USD/Euros) is highly recommended, as there are no card terminals or banking signals on the island.",
+          "useful_tips": "Useful Tips: \n\nBring eco-friendly sunscreen, insect repellent, and lightweight clothing. Remember it is a protected ecosystem: taking shells, corals, or altering the environment is strictly prohibited.",
+          "local_transport": "Local Transportation: \n\nThe island is uninhabited; transfers between nearby keys (such as Los Tortuguillos) are coordinated directly via the camp's speedboats.",
+          "how_to_get_there": "How to get there: \n\n30-minute charter flights from Maiquetía or Caracas Airport, or a 3-to-4-hour open-sea crossing on speedboats or private yachts departing from Higuerote."
+        },
+        "must_see_places": [
+          {
+            "name": "Horseshoe Key",
+            "image": "https://stbbckupkuxasfthlsys.supabase.co/storage/v1/object/public/cms-images/destinations/1781559395004-bm21ya.jpg",
+            "description": "A spectacular tongue of white sand stretching into calm, pool-like crystal waters. It is the heart of the island and home to the eco-campsites."
+          },
+          {
+            "name": "Los Tortuguillos (East & West)",
+            "image": "https://stbbckupkuxasfthlsys.supabase.co/storage/v1/object/public/cms-images/destinations/1781559406359-kzhjqn.jpg",
+            "description": "Two small nearby keys surrounded by coral reefs, ideal for marine wildlife lovers."
+          },
+          {
+            "name": "Punta Delgada",
+            "image": "https://stbbckupkuxasfthlsys.supabase.co/storage/v1/object/public/cms-images/destinations/1781559422023-blj3ms.jpg",
+            "description": "Situated on the eastern tip, featuring great winds for sailing and hosting the island's airstrip."
+          }
+        ],
+        "cultural_description": "La Tortuga Island is the second largest island in Venezuela. Its name originates from the vast number of sea turtles that arrive annually to nest on its secluded shores. In the 17th century, Dutch sailors and pirates used the island as a strategic hub to extract salt from its natural salt pans, leaving behind historical traces that still spark curiosity today.\n\nOn a natural level, it is a unique ecological sanctuary in the southern Caribbean. Its beaches feature coral-origin sand so fine and pure that it does not retain heat, allowing you to walk barefoot at high noon without burning your feet. Its pristine waters flash a breathtaking palette of blues and turquoises that rival the world's top tropical destinations. During the open-sea boat crossing, it is common to witness pods of wild dolphins playing along the waves of the boats, turning the journey into an exciting adventure right from the start."
+      }
+    },
+    {
+      "tabla": "blog_posts",
+      "columna": "cover_image",
+      "tipo": "text",
+      "id": "73357a2c-e1af-475a-9f6b-011046b5cd7e",
+      "antes": "https://stbbckupkuxasfthlsys.supabase.co/storage/v1/object/public/cms-images/blog/1790959976292-82y3db.jpg"
+    },
+    {
+      "tabla": "blog_posts",
+      "columna": "cover_image",
+      "tipo": "text",
+      "id": "a0923d52-a3fc-4b15-9a2a-02823c3e244e",
+      "antes": "https://stbbckupkuxasfthlsys.supabase.co/storage/v1/object/public/cms-images/blog/1788347559822-lloso2.jpg"
+    },
+    {
+      "tabla": "blog_posts",
+      "columna": "cover_image",
+      "tipo": "text",
+      "id": "150ea778-d1dd-4cb1-b3ed-4b23e759b591",
+      "antes": "https://stbbckupkuxasfthlsys.supabase.co/storage/v1/object/public/cms-images/blog/1775435209082-8g0z8i.png"
+    },
+    {
+      "tabla": "blog_posts",
+      "columna": "cover_image",
+      "tipo": "text",
+      "id": "31f5348b-54f4-4d07-9b57-bde01a66cad7",
+      "antes": "https://stbbckupkuxasfthlsys.supabase.co/storage/v1/object/public/cms-images/blog/1789398713641-i3tt7o.jpg"
+    },
+    {
+      "tabla": "blog_posts",
+      "columna": "cover_image",
+      "tipo": "text",
+      "id": "5c8d5e62-3b37-4473-8b45-943e6646a6a5",
+      "antes": "https://stbbckupkuxasfthlsys.supabase.co/storage/v1/object/public/cms-images/blog/1775436164001-vz9wq7.jpg"
+    },
+    {
+      "tabla": "blog_posts",
+      "columna": "cover_image",
+      "tipo": "text",
+      "id": "6f680ab4-a949-42a9-a1e5-5be004cd5bb7",
+      "antes": "https://stbbckupkuxasfthlsys.supabase.co/storage/v1/object/public/cms-images/blog/1789046796555-d775rc.jpeg"
+    },
+    {
+      "tabla": "blog_posts",
+      "columna": "cover_image",
+      "tipo": "text",
+      "id": "8cd44437-1673-4e31-89d7-d5af17fffb61",
+      "antes": "https://stbbckupkuxasfthlsys.supabase.co/storage/v1/object/public/cms-images/blog/1775964528813-zskm4m.jpg"
+    },
+    {
+      "tabla": "blog_posts",
+      "columna": "cover_image",
+      "tipo": "text",
+      "id": "7efc036d-e82f-4cb0-ba66-33031f8678ab",
+      "antes": "https://stbbckupkuxasfthlsys.supabase.co/storage/v1/object/public/cms-images/blog/1789737674290-immmx1.jpg"
+    },
+    {
+      "tabla": "blog_posts",
+      "columna": "cover_image",
+      "tipo": "text",
+      "id": "ec1571d6-5be6-4ef7-82ca-78a3bcb70072",
+      "antes": "https://stbbckupkuxasfthlsys.supabase.co/storage/v1/object/public/cms-images/blog/1788540873770-ipl2j0.jpg"
+    },
+    {
+      "tabla": "blog_posts",
+      "columna": "cover_image",
+      "tipo": "text",
+      "id": "586cdbb1-938a-4145-8838-105b0eea2dcc",
+      "antes": "https://stbbckupkuxasfthlsys.supabase.co/storage/v1/object/public/cms-images/blog/1776463488882-ogxf6x.jpg"
+    },
+    {
+      "tabla": "blog_posts",
+      "columna": "cover_image",
+      "tipo": "text",
+      "id": "49d6f683-2b39-42a9-afcd-a68f9425c84a",
+      "antes": "https://stbbckupkuxasfthlsys.supabase.co/storage/v1/object/public/cms-images/blog/1779410754534-zvf1yq.jpg"
+    },
+    {
+      "tabla": "blog_posts",
+      "columna": "cover_image",
+      "tipo": "text",
+      "id": "38fe6af2-41a1-462e-9b52-6d97d6b64424",
+      "antes": "https://stbbckupkuxasfthlsys.supabase.co/storage/v1/object/public/cms-images/blog/1783247964696-miq0ja.png"
+    },
+    {
+      "tabla": "blog_posts",
+      "columna": "cover_image",
+      "tipo": "text",
+      "id": "e5a0c9bc-4b95-4aee-8d61-39c478c2cd65",
+      "antes": "https://stbbckupkuxasfthlsys.supabase.co/storage/v1/object/public/cms-images/blog/1781721615141-zngogp.jpg"
+    },
+    {
+      "tabla": "blog_posts",
+      "columna": "cover_image",
+      "tipo": "text",
+      "id": "1b4080d6-cdf5-4c9a-b1ff-af39d11dbe47",
+      "antes": "https://stbbckupkuxasfthlsys.supabase.co/storage/v1/object/public/cms-images/blog/1783374007670-7jiggl.jpg"
+    },
+    {
+      "tabla": "blog_posts",
+      "columna": "cover_image",
+      "tipo": "text",
+      "id": "fc18b36f-8c04-4050-b947-498c097dd60e",
+      "antes": "https://stbbckupkuxasfthlsys.supabase.co/storage/v1/object/public/cms-images/blog/1788543800634-a5qmey.png"
+    },
+    {
+      "tabla": "blog_posts",
+      "columna": "cover_image",
+      "tipo": "text",
+      "id": "0e3bb000-4382-4b00-b1ac-e5051f63f3e3",
+      "antes": "https://stbbckupkuxasfthlsys.supabase.co/storage/v1/object/public/cms-images/blog/1790344570316-judjfa.jpg"
+    },
+    {
+      "tabla": "blog_posts",
+      "columna": "cover_image",
+      "tipo": "text",
+      "id": "f19226c7-e4b8-49f8-94a2-66a9b506046a",
+      "antes": "https://stbbckupkuxasfthlsys.supabase.co/storage/v1/object/public/cms-images/blog/1790607020009-orsfj2.jpg"
+    },
+    {
+      "tabla": "service_inventory",
+      "columna": "images",
+      "tipo": "jsonb",
+      "id": "3c716a0d-8754-4bbe-a3cd-75ec4afb3ad8",
+      "antes": [
+        "https://stbbckupkuxasfthlsys.supabase.co/storage/v1/object/public/cms-images/packages/1779833179932-aesdr4.jpg",
+        "https://stbbckupkuxasfthlsys.supabase.co/storage/v1/object/public/cms-images/packages/1779833836021-7w5dia.jpg",
+        "https://stbbckupkuxasfthlsys.supabase.co/storage/v1/object/public/cms-images/packages/1779833866339-jcqh18.jpg",
+        "https://stbbckupkuxasfthlsys.supabase.co/storage/v1/object/public/cms-images/packages/1780285532804-ko7idf.png",
+        "https://stbbckupkuxasfthlsys.supabase.co/storage/v1/object/public/cms-images/packages/1780285544256-22jnl9.jpg",
+        "https://stbbckupkuxasfthlsys.supabase.co/storage/v1/object/public/cms-images/packages/1780285557471-nikyio.jpg",
+        "https://stbbckupkuxasfthlsys.supabase.co/storage/v1/object/public/cms-images/packages/1780285587077-f138g6.jpg",
+        "https://stbbckupkuxasfthlsys.supabase.co/storage/v1/object/public/cms-images/packages/1780285607781-hyfaya.jpg",
+        "https://stbbckupkuxasfthlsys.supabase.co/storage/v1/object/public/cms-images/packages/1781215123243-akpmko.jpg",
+        "https://stbbckupkuxasfthlsys.supabase.co/storage/v1/object/public/cms-images/packages/1781215132098-u1e7zk.jpg",
+        "https://stbbckupkuxasfthlsys.supabase.co/storage/v1/object/public/cms-images/packages/1781215139283-ghhybg.jpg",
+        "https://stbbckupkuxasfthlsys.supabase.co/storage/v1/object/public/cms-images/packages/1781215146393-1lr7yh.jpg"
+      ]
+    },
+    {
+      "tabla": "service_inventory",
+      "columna": "images",
+      "tipo": "jsonb",
+      "id": "cc0630b9-8548-4c66-8147-23736bdff87f",
+      "antes": [
+        "https://stbbckupkuxasfthlsys.supabase.co/storage/v1/object/public/cms-images/packages/1770484504362-u45xdy.jpg",
+        "https://stbbckupkuxasfthlsys.supabase.co/storage/v1/object/public/cms-images/packages/1770484557016-oqo19s.jpg",
+        "https://stbbckupkuxasfthlsys.supabase.co/storage/v1/object/public/cms-images/packages/1770484570896-lzm0ui.jpg",
+        "https://stbbckupkuxasfthlsys.supabase.co/storage/v1/object/public/cms-images/packages/1770484595488-5ze5ro.jpg",
+        "https://stbbckupkuxasfthlsys.supabase.co/storage/v1/object/public/cms-images/packages/1770484758082-y8prgg.jpg"
+      ]
+    },
+    {
+      "tabla": "service_inventory",
+      "columna": "images",
+      "tipo": "jsonb",
+      "id": "512b007b-67d3-49dd-baf5-29776be2ef1f",
+      "antes": [
+        "https://stbbckupkuxasfthlsys.supabase.co/storage/v1/object/public/cms-images/packages/1780676525595-wi9sg5.jpg",
+        "https://stbbckupkuxasfthlsys.supabase.co/storage/v1/object/public/cms-images/packages/1780676573100-wkckgy.jpg",
+        "https://stbbckupkuxasfthlsys.supabase.co/storage/v1/object/public/cms-images/packages/1780676767739-2hdosw.jpg",
+        "https://stbbckupkuxasfthlsys.supabase.co/storage/v1/object/public/cms-images/packages/1780677668488-r6ecv2.jpg",
+        "https://stbbckupkuxasfthlsys.supabase.co/storage/v1/object/public/cms-images/packages/1781215050467-suu6rp.jpeg"
+      ]
+    },
+    {
+      "tabla": "service_inventory",
+      "columna": "images",
+      "tipo": "jsonb",
+      "id": "4a58f01a-b8d4-4682-800f-5ef3210a5950",
+      "antes": [
+        "https://stbbckupkuxasfthlsys.supabase.co/storage/v1/object/public/cms-images/packages/1781044372060-ob00yw.jpg",
+        "https://stbbckupkuxasfthlsys.supabase.co/storage/v1/object/public/cms-images/packages/1781044398517-4foaft.jpg",
+        "https://stbbckupkuxasfthlsys.supabase.co/storage/v1/object/public/cms-images/packages/1781044406994-47a19j.jpg",
+        "https://stbbckupkuxasfthlsys.supabase.co/storage/v1/object/public/cms-images/packages/1781044415165-od6l51.jpg",
+        "https://stbbckupkuxasfthlsys.supabase.co/storage/v1/object/public/cms-images/packages/1781044436065-leiz9y.png",
+        "https://stbbckupkuxasfthlsys.supabase.co/storage/v1/object/public/cms-images/packages/1781044453916-opcg23.jpg"
+      ]
+    },
+    {
+      "tabla": "service_inventory",
+      "columna": "images",
+      "tipo": "jsonb",
+      "id": "711c43a1-8604-4242-935f-71a97e7b4426",
+      "antes": [
+        "https://stbbckupkuxasfthlsys.supabase.co/storage/v1/object/public/cms-images/packages/1777477693988-02z7wu.jpg",
+        "https://stbbckupkuxasfthlsys.supabase.co/storage/v1/object/public/cms-images/packages/1777477709012-ojqs4m.jpg",
+        "https://stbbckupkuxasfthlsys.supabase.co/storage/v1/object/public/cms-images/packages/1777477719732-d2fgtv.jpg"
+      ]
+    },
+    {
+      "tabla": "service_inventory",
+      "columna": "images",
+      "tipo": "jsonb",
+      "id": "c8e3662b-66ce-4b91-b0c9-c99092c1b04e",
+      "antes": [
+        "https://stbbckupkuxasfthlsys.supabase.co/storage/v1/object/public/cms-images/packages/1781386125036-jt4vsg.jpg",
+        "https://stbbckupkuxasfthlsys.supabase.co/storage/v1/object/public/cms-images/packages/1781386144276-7230ca.jpg",
+        "https://stbbckupkuxasfthlsys.supabase.co/storage/v1/object/public/cms-images/packages/1781386156397-mzz3p4.jpg",
+        "https://stbbckupkuxasfthlsys.supabase.co/storage/v1/object/public/cms-images/packages/1781386178732-2u0m84.jpg",
+        "https://stbbckupkuxasfthlsys.supabase.co/storage/v1/object/public/cms-images/packages/1781386206560-x5f7j4.jpg"
+      ]
+    },
+    {
+      "tabla": "service_inventory",
+      "columna": "images",
+      "tipo": "jsonb",
+      "id": "b981e90e-1209-456c-ab95-a2d5f497f8b5",
+      "antes": [
+        "https://stbbckupkuxasfthlsys.supabase.co/storage/v1/object/public/cms-images/packages/1792623833920-jnxc4q.jpg",
+        "https://stbbckupkuxasfthlsys.supabase.co/storage/v1/object/public/cms-images/packages/1792623994163-elhn6g.jfif",
+        "https://stbbckupkuxasfthlsys.supabase.co/storage/v1/object/public/cms-images/packages/1792624010901-7d8z8w.jpg",
+        "https://stbbckupkuxasfthlsys.supabase.co/storage/v1/object/public/cms-images/packages/1792624341586-buel35.jfif",
+        "https://stbbckupkuxasfthlsys.supabase.co/storage/v1/object/public/cms-images/packages/1792645293064-ogbnai.jfif"
+      ]
+    },
+    {
+      "tabla": "service_inventory",
+      "columna": "images",
+      "tipo": "jsonb",
+      "id": "b1c7d81f-4f52-4561-8dee-38f96c998005",
+      "antes": [
+        "https://stbbckupkuxasfthlsys.supabase.co/storage/v1/object/public/cms-images/packages/1776264721690-x98poy.jpg",
+        "https://stbbckupkuxasfthlsys.supabase.co/storage/v1/object/public/cms-images/packages/1776264782817-z4m3fj.jpg",
+        "https://stbbckupkuxasfthlsys.supabase.co/storage/v1/object/public/cms-images/packages/1776264805720-uylrl9.jpg",
+        "https://stbbckupkuxasfthlsys.supabase.co/storage/v1/object/public/cms-images/packages/1776264870401-10jsss.jpg",
+        "https://stbbckupkuxasfthlsys.supabase.co/storage/v1/object/public/cms-images/packages/1783560212337-i97uwy.jpg",
+        "https://stbbckupkuxasfthlsys.supabase.co/storage/v1/object/public/cms-images/packages/1783560220191-g0hix4.jpg"
+      ]
+    },
+    {
+      "tabla": "service_inventory",
+      "columna": "images",
+      "tipo": "jsonb",
+      "id": "865bdff7-9365-4893-afce-7d57e1de1186",
+      "antes": [
+        "https://stbbckupkuxasfthlsys.supabase.co/storage/v1/object/public/cms-images/packages/1792424253806-9s6wdd.jpg",
+        "https://stbbckupkuxasfthlsys.supabase.co/storage/v1/object/public/cms-images/packages/1792424263092-bw2p4y.jfif",
+        "https://stbbckupkuxasfthlsys.supabase.co/storage/v1/object/public/cms-images/packages/1792424273029-bb1v90.jpg",
+        "https://stbbckupkuxasfthlsys.supabase.co/storage/v1/object/public/cms-images/packages/1792424280491-dnjxeb.jfif",
+        "https://stbbckupkuxasfthlsys.supabase.co/storage/v1/object/public/cms-images/packages/1792424288412-3j9g96.jpg"
+      ]
+    },
+    {
+      "tabla": "service_inventory",
+      "columna": "images",
+      "tipo": "jsonb",
+      "id": "71af3641-33d9-4591-980b-f51512b3cd92",
+      "antes": [
+        "https://stbbckupkuxasfthlsys.supabase.co/storage/v1/object/public/cms-images/packages/1795553687652-pfyk81.jpg",
+        "https://stbbckupkuxasfthlsys.supabase.co/storage/v1/object/public/cms-images/packages/1795553700711-e7fq9m.jpg",
+        "https://stbbckupkuxasfthlsys.supabase.co/storage/v1/object/public/cms-images/packages/1795553722480-9n7s1v.jpg",
+        "https://stbbckupkuxasfthlsys.supabase.co/storage/v1/object/public/cms-images/packages/1795553736176-4vf40o.jpg",
+        "https://stbbckupkuxasfthlsys.supabase.co/storage/v1/object/public/cms-images/packages/1795553768545-mtesms.jpg"
+      ]
+    },
+    {
+      "tabla": "service_inventory",
+      "columna": "images",
+      "tipo": "jsonb",
+      "id": "ed0d3334-683a-44df-a77b-616de283ca80",
+      "antes": [
+        "https://stbbckupkuxasfthlsys.supabase.co/storage/v1/object/public/cms-images/packages/1785192204436-m6rd71.jpg",
+        "https://stbbckupkuxasfthlsys.supabase.co/storage/v1/object/public/cms-images/packages/1785192228537-1rf2nz.jpg",
+        "https://stbbckupkuxasfthlsys.supabase.co/storage/v1/object/public/cms-images/packages/1785192237976-73vrcw.jpg",
+        "https://stbbckupkuxasfthlsys.supabase.co/storage/v1/object/public/cms-images/packages/1785192256238-nic0mo.jpg",
+        "https://stbbckupkuxasfthlsys.supabase.co/storage/v1/object/public/cms-images/packages/1785192269824-cd0mn9.jpg"
+      ]
+    },
+    {
+      "tabla": "service_inventory",
+      "columna": "images",
+      "tipo": "jsonb",
+      "id": "fd23961a-bfee-4123-afed-5ee7d01a6438",
+      "antes": [
+        "https://stbbckupkuxasfthlsys.supabase.co/storage/v1/object/public/cms-images/packages/1770500045634-ccwglu.jpeg",
+        "https://stbbckupkuxasfthlsys.supabase.co/storage/v1/object/public/cms-images/packages/1770500097693-225x3y.jpg",
+        "https://stbbckupkuxasfthlsys.supabase.co/storage/v1/object/public/cms-images/packages/1770500108822-xbgl6x.jpg",
+        "https://stbbckupkuxasfthlsys.supabase.co/storage/v1/object/public/cms-images/packages/1770500128799-d4qmrl.jpg",
+        "https://stbbckupkuxasfthlsys.supabase.co/storage/v1/object/public/cms-images/packages/1770500144718-lbh9vk.jpg",
+        "https://stbbckupkuxasfthlsys.supabase.co/storage/v1/object/public/cms-images/packages/1770500164967-9ln8cn.jpg"
+      ]
+    },
+    {
+      "tabla": "service_inventory",
+      "columna": "images",
+      "tipo": "jsonb",
+      "id": "54aca375-4342-447d-a091-21c3ce8df738",
+      "antes": [
+        "https://stbbckupkuxasfthlsys.supabase.co/storage/v1/object/public/cms-images/packages/1789766017819-rs5b1v.jpg",
+        "https://stbbckupkuxasfthlsys.supabase.co/storage/v1/object/public/cms-images/packages/1789766044434-25grz0.jpg",
+        "https://stbbckupkuxasfthlsys.supabase.co/storage/v1/object/public/cms-images/packages/1789767466241-17hw0l.jpg",
+        "https://stbbckupkuxasfthlsys.supabase.co/storage/v1/object/public/cms-images/packages/1789767526824-v35xut.jpg",
+        "https://stbbckupkuxasfthlsys.supabase.co/storage/v1/object/public/cms-images/packages/1789767539189-jnx324.jpg"
+      ]
+    },
+    {
+      "tabla": "service_inventory",
+      "columna": "images",
+      "tipo": "jsonb",
+      "id": "f2e40f4c-225d-45a5-a265-5ed013a2220a",
+      "antes": [
+        "https://stbbckupkuxasfthlsys.supabase.co/storage/v1/object/public/cms-images/packages/1779736488009-qcy2bz.jpg",
+        "https://stbbckupkuxasfthlsys.supabase.co/storage/v1/object/public/cms-images/packages/1779736501443-ufjb3b.jpg",
+        "https://stbbckupkuxasfthlsys.supabase.co/storage/v1/object/public/cms-images/packages/1779736511823-cgzgjg.jpg",
+        "https://stbbckupkuxasfthlsys.supabase.co/storage/v1/object/public/cms-images/packages/1779736524555-btkn8l.jpeg",
+        "https://stbbckupkuxasfthlsys.supabase.co/storage/v1/object/public/cms-images/packages/1779736540999-3lrtpj.jpg",
+        "https://stbbckupkuxasfthlsys.supabase.co/storage/v1/object/public/cms-images/packages/1779736555070-dsf9h2.jpg",
+        "https://stbbckupkuxasfthlsys.supabase.co/storage/v1/object/public/cms-images/packages/1779736570149-g52nz9.jpeg"
+      ]
+    },
+    {
+      "tabla": "service_inventory",
+      "columna": "images",
+      "tipo": "jsonb",
+      "id": "043373f4-25c1-451f-8ae7-1f941217b2ea",
+      "antes": [
+        "https://stbbckupkuxasfthlsys.supabase.co/storage/v1/object/public/cms-images/packages/1782179332938-c0qneq.jpg",
+        "https://stbbckupkuxasfthlsys.supabase.co/storage/v1/object/public/cms-images/packages/1782179351973-xalzno.jpg",
+        "https://stbbckupkuxasfthlsys.supabase.co/storage/v1/object/public/cms-images/packages/1782179361642-knh66u.jpg",
+        "https://stbbckupkuxasfthlsys.supabase.co/storage/v1/object/public/cms-images/packages/1782179370030-8j161t.jpg",
+        "https://stbbckupkuxasfthlsys.supabase.co/storage/v1/object/public/cms-images/packages/1782179390327-d4bu08.jpg",
+        "https://stbbckupkuxasfthlsys.supabase.co/storage/v1/object/public/cms-images/packages/1782179406009-xjvaw0.jpg"
+      ]
+    }
+  ]
+}
