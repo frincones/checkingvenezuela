@@ -90,6 +90,23 @@ bloque comentado y dejar el código original:
 | `lib/auth-supabase.js` | la llamada a `getTempGateSession()` dentro de `auth()` y su import |
 | `app/(pages)/dashboard/layout.js` | el `if (isTempGateEnabled()) redirect("/temp-login")` y su import |
 | `vercel.json` | la entrada de `crons` |
+| `lib/cms.js` | el helper `createCmsReadClient()` y sus dos imports; volver a `createClient()` en las cuatro funciones |
+
+### Qué NO revertir de `lib/cms.js` y compañía
+
+El commit que arregla la sección de destinos trae, además del helper temporal,
+tres correcciones que **deben quedarse**. No son contingencia: son defectos que
+ya existían y que se encontraron al validar.
+
+| Cambio | Por qué se queda |
+|---|---|
+| `lib/cms.js`: `.neq("status", "discontinued")` en el conteo de paquetes | Replica la política RLS `Public read available inventory`. Sin él, un paquete descontinuado al que se olvide quitar `is_published` se cuenta y el botón "View packages (N)" miente. Es correcto con y sin adaptador. |
+| `components/.../VenezuelaDestinations.js`: iconos `Plane` y `Building2` | Faltaban en `categoryIcons`. La categoría "International Destinations" usa `Plane` y mostraba un círculo vacío **desde antes de la contingencia**. |
+| `lib/db/pg/restShim.js`: candidato de clave foránea por alias | Permite resolver `category:destination_categories(...)`, cuya FK es `category_id`. Solo añade un candidato al final; no altera los embeds que ya funcionaban. Si el adaptador se borra entero, se va con él. |
+
+El helper `createCmsReadClient()` **se desactiva solo**: sin
+`PG_FALLBACK_ENABLED` vuelve a `createClient()`. Quitarlo del código es
+limpieza, no urgencia.
 
 Alternativa más limpia si no hubo otros cambios encima:
 

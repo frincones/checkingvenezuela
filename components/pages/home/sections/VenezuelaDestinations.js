@@ -5,17 +5,25 @@ import { Button } from "@/components/ui/button";
 import { DualCTA } from "@/components/ui/DualCTA";
 import { venezuelaDestinations } from "@/data/venezuelaDestinations";
 import { getCategoriesWithDestinationsFromDB } from "@/lib/cms";
-import { Umbrella, Mountain, Church, Zap, Compass, Package as PackageIcon } from "lucide-react";
+import { Umbrella, Mountain, Church, Zap, Compass, Plane, Building2, Package as PackageIcon } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 
 // Mapa de iconos por categoría
+//
+// Las claves son los valores de `destination_categories.icon` en la BD. Faltaba
+// `Plane`, que usa la categoría "International Destinations": el componente hace
+// `{IconComponent && ...}`, así que no fallaba, pero dejaba el círculo vacío.
+// `Building2` se añade porque lo usa la categoría "Popular Hotels", hoy
+// inactiva: si se reactiva desde el CMS, ya tiene icono.
 const categoryIcons = {
   Umbrella,
   Mountain,
   Church,
   Zap,
   Compass,
+  Plane,
+  Building2,
 };
 
 /**
