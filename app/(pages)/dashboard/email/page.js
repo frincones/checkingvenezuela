@@ -84,10 +84,45 @@ export default function EmailPage() {
     fetchEmails();
   }, [fetchEmails]);
 
-  // Auto-refresh every 30 seconds
+  // Refresco automatico de la bandeja.
+  //
+  // Antes era `setInterval(fetchEmails, 30000)` sin mas. Dos problemas:
+  //
+  //  1. Seguia recargando con la pestana en segundo plano. Un CRM abierto toda
+  //     la noche descargaba la bandeja ~2.880 veces sin que nadie la mirase.
+  //  2. 30 s es muy agresivo para el buzon de una agencia.
+  //
+  // Juntos agotaron la cuota de egress de Supabase el 2026-11-27 (6,65 GB de
+  // 5,5 GB) y dejaron la web sin contenido.
+  //
+  // Ahora: 2 minutos, y solo con la pestana visible. Al volver a ella se
+  // refresca de inmediato, asi que quien la retoma no ve datos viejos — en la
+  // practica se percibe igual de fresco que antes.
   useEffect(() => {
-    const interval = setInterval(fetchEmails, 30000);
-    return () => clearInterval(interval);
+    const REFRESH_MS = 120000;
+
+    const tick = () => {
+      if (document.visibilityState === "visible") fetchEmails();
+    };
+
+    let interval = setInterval(tick, REFRESH_MS);
+
+    // Al recuperar el foco: refresco inmediato y se reinicia el contador, para
+    // no encadenar una recarga nada mas volver si el intervalo estaba por
+    // cumplirse.
+    const onVisibility = () => {
+      if (document.visibilityState === "visible") {
+        fetchEmails();
+        clearInterval(interval);
+        interval = setInterval(tick, REFRESH_MS);
+      }
+    };
+
+    document.addEventListener("visibilitychange", onVisibility);
+    return () => {
+      clearInterval(interval);
+      document.removeEventListener("visibilitychange", onVisibility);
+    };
   }, [fetchEmails]);
 
   const handleSelect = useCallback(async (id) => {
